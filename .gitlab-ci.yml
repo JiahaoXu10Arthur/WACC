@@ -1,4 +1,4 @@
-image: sbtscala/scala-sbt:18_1.8.2_2.13.10
+image: sbtscala/scala-sbt:eclipse-temurin-18.0.1.1_1.8.2_2.3.10
 
 stages:
   - compile
