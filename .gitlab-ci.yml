@@ -1,4 +1,4 @@
-image: sbtscala/scala-sbt
+image: sbtscala/scala-sbt:18_1.8.2_2.13.10
 
 stages:
   - compile
