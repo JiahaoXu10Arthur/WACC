@@ -1,0 +1,17 @@
+stages:
+  - compile
+  - test
+
+compile_job:
+  stage: compile
+  script: 
+    - echo "compiling..."
+    - make clean
+    - make
+    - echo "compile successful!"
+
+test_job: 
+  stage: test
+  script:
+    - echo "testing..."
+    - echo "test successful!"
