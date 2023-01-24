@@ -22,7 +22,6 @@ compile_job:
   stage: compile
   script: 
     - echo "compiling..."
-    - make clean
     - sbt clean compile
     - echo "compile successful!"
 
