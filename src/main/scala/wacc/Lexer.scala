@@ -5,6 +5,7 @@ import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc}
 import descriptions.text.{TextDesc, EscapeDesc}
 import parsley.implicits.character.{charLift, stringLift}
 import parsley.token.predicate
+import parsley.Parsley
 
 object Lexer {
   private val keywords = Set("true", "false", "begin", "end", "is", "skip", 
@@ -37,13 +38,16 @@ object Lexer {
     
   )
   val lexer = new Lexer(desc)
+
+  def fully [A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
   
 
   /* Definition for literal tokens */
   val num = lexer.lexeme.numeric.unsigned.number32[Int]
-  val bool = lexer.lexeme("true" <|> "false")
+  val bool = lexer.lexeme("true" #> true <|> "false" #> false)
   val char = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
   val pairLit = lexer.lexeme{"null"}
   val ident = lexer.lexeme.names.identifier
+  val implicits = lexer.lexeme.symbol.implicits
 }
