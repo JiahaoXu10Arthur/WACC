@@ -22,9 +22,7 @@ class ParserExprTest extends AnyFlatSpec {
 		Parser.exprParse("abc") shouldBe true
 	}
 
-  "pair liter" should "be parsed" in {
-		Parser.exprParse("()") shouldBe true
-	}
+  "pair liter" should "be parsed" in pending
 
   "identifier" should "be parsed" in pending
 

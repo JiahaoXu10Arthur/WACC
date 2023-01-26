@@ -7,11 +7,12 @@ object Ast {
     case class BoolLit(value: Boolean) extends Expr
     case class CharLit(value: Char) extends Expr
     case class StrLit(value: String) extends Expr
-    case class PairLit(value1: Expr, value2: Expr) extends Expr
+    case class PairLit(value: String) extends Expr
     case class Ident(name: String) extends Expr
     case class ArrayElem(array: Ident, index: Expr) extends Expr
     case class UnOp(op: UnaryOper, expr: Expr) extends Expr
     case class BinOp(op: BinaryOper, expr1: Expr, expr2: Expr) extends Expr
+    case class Parens(expr: Expr) extends Expr
 
   sealed trait UnaryOper
     case class Not(expr: Expr) extends UnaryOper
