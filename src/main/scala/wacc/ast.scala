@@ -1,4 +1,7 @@
-object ast {
+package wacc
+
+object Ast {
+
   sealed trait Expr
     case class IntLit(value: Int) extends Expr
     case class BoolLit(value: Boolean) extends Expr
