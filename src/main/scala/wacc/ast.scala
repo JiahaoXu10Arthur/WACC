@@ -112,7 +112,13 @@ object Ast {
     object Println extends ParserBridge1[Expr, Stat]
 
     case class If(expr: Expr, stat1: Stat, stat2: Stat) extends Stat
-    object 
+    object If extends ParserBridge3[Expr, Stat, Stat, Stat]
+
+    case class While(expr: Expr, stat: Stat) extends Stat
+    object While extends ParserBridge2[Expr, Stat, Stat]
+
+    case class Seq(stat1: Stat, stat2: Stat) extends Stat
+    object Seq extends ParserBridge2[Stat, Stat, Stat]
 
   sealed trait Type
     case class IntType() extends Type
