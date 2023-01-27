@@ -1,6 +1,7 @@
 package wacc
 
 import parsley.{Parsley, Success, Failure}
+import Parsley.{attempt}
 import parsley.character.char
 import parsley.expr.precedence
 import parsley.implicits.character.{charLift, stringLift}
@@ -37,10 +38,8 @@ object Parser {
     						 (Ast.Sub <# '-')),
 		
 		// binary precedence 3
-		Ops(InfixL) ((Ast.Gt <# '>'),
-    						 (Ast.Gte <# ">="),
-								 (Ast.Lt <# '<'),
-								 (Ast.Lte <# "<=")),
+		Ops(InfixL) ((attempt(Ast.Lte <# "<=")) <|> (Ast.Lt <# "<"),
+    						 (attempt(Ast.Gte <# ">=")) <|> (Ast.Gt <# ">")),
 
 		// binary precedence 4
 		Ops(InfixL) ((Ast.Eq <# "=="),
@@ -59,9 +58,11 @@ object Parser {
 				println(x)
 				Some(x)
 			}
-      case Failure(msg) => None
+      case Failure(msg) => {
+				println(msg)
+				None
+			}
     }
 	}
 
-    
 }

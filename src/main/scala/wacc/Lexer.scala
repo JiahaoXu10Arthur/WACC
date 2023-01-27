@@ -1,7 +1,7 @@
 package wacc
 
 import parsley.token.{Lexer, descriptions}
-import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc}
+import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc}
 import descriptions.text.{TextDesc, EscapeDesc}
 import parsley.token.predicate
 import parsley.Parsley
@@ -16,7 +16,10 @@ object Lexer {
   private val operators = Set("(", ")", ",", "=", ";", "[", "]", "!", "-", 
                               "len", "ord", "chr", "*", "/", "%", "+", ">", 
                               ">=", "<", "<=", "==", "!=", "&&", "||")
-  private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
+  private val escLiterals = Set('\u0000', '\b', '\t', '\n', '\f', '\r', '\"', '\'', '\\')
+
+  def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
+  def isALphaNumericOrUnderscore = predicate.Basic(c => c.isLetter || c == '_' || c.isDigit)
 
   private val desc = LexicalDesc.plain.copy(
     spaceDesc = SpaceDesc.plain.copy(
@@ -33,7 +36,14 @@ object Lexer {
     textDesc = TextDesc.plain.copy(
       escapeSequences = EscapeDesc.plain.copy(
         literals = escLiterals
-      )
+      ),
+      characterLiteralEnd = '\'',
+      stringEnds = Set("\"")
+    ),
+
+    nameDesc = NameDesc.plain.copy(
+      identifierStart = isAlphaOrUnderscore,
+      identifierLetter = isALphaNumericOrUnderscore //TODO: make this elegant
     )
     
   )
