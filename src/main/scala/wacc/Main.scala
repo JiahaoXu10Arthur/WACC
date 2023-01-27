@@ -26,8 +26,8 @@ object Main {
 		// }
 
 		Parser.exprParse(args.head) match {
-				case true => println(s"${args.head} parse success")
-				case false => println(s"${args.head} parse fail")
+			case Some(_) => println(s"${args.head} parse success")
+			case None	 => println(s"${args.head} parse fail")
 		}
 	}
 }
