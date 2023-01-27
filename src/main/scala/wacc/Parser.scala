@@ -3,61 +3,63 @@ package wacc
 import parsley.{Parsley, Success, Failure}
 import parsley.character.char
 import parsley.expr.precedence
-import Ast.{Expr, UnaryOper, BinaryOper}
-
-import parsley.expr.{Atoms, Ops, InfixL, Prefix}
+import parsley.implicits.character.{charLift, stringLift}
+import Ast.{Expr}
+import parsley.expr.{Atoms, SOps, Ops, InfixL, Prefix}
+import parsley.debug._
 
 object Parser {
-	lazy val expr: Parsley[Expr] = precedence(
+	lazy val expr: Parsley[Expr] = precedence[Expr](
 
-		// tightest
-		Atoms(Lexer.num.map(Ast.IntLit(_)),
-					Lexer.bool.map(Ast.BoolLit(_)),
-					Lexer.char.map(Ast.CharLit(_)),
-					Lexer.str.map(Ast.StrLit(_)),
-					Lexer.pairLit.map(Ast.PairLit(_)),
-					Lexer.ident.map(Ast.Ident(_)), 
-					('(' ~> expr.map(Ast.Parens(_)) <~ ')')) :+
-		
-		// unary
-		Ops(Prefix) (('!' #> Ast.Not(_)),
-								 ('-' #> Ast.Neg(_)),
-								 ("len" #> Ast.Len(_)),
-								 ("ord" #> Ast.Ord(_)),
-								 ("chr" #> Ast.Chr(_))) :+
+		//tightest
+		Ast.IntLit(Lexer.num),
+		Ast.BoolLit(Lexer.bool),
+		Ast.CharLit(Lexer.char),
+		Ast.StrLit(Lexer.str),
+		Ast.PairLit(Lexer.pair),
+		Ast.Ident(Lexer.ident),
+		('(' ~> expr <~ ')')) (
 
-		// binary precedence 1
-		Ops(InfixL) (('*' #> Ast.Mul(_, _)),
-								 ('/' #> Ast.Div(_, _)),
-								 ('%' #> Ast.Mod(_, _))) +:
+		// unary precedence 0)
+		Ops(Prefix)((Ast.Not <# '!'),
+								(Ast.Neg <# '-'),
+								(Ast.Len <# "len"),
+								(Ast.Ord <# "ord"),
+								(Ast.Chr <# "chr")),
+									
+		// binary precendence 1
+		Ops(InfixL) ((Ast.Mul <# '*'),
+								 (Ast.Div <# '/'),
+								 (Ast.Mod <# '%')),
 
 		// binary precedence 2
-		Ops(InfixL) (('+' #> Ast.Add(_, _)),
-    							('-' #> Ast.Sub(_, _))) +:
+		Ops(InfixL) ((Ast.Add <# '+'),
+    						 (Ast.Sub <# '-')),
 		
 		// binary precedence 3
-		Ops(InfixL) (('>' #> Ast.Gt(_, _)),
-    						 (">=" #> Ast.Gte(_, _)),
-								 ('<' #> Ast.Lt(_, _)),
-								 ("<=" #> Ast.Lte(_, _))) +:
+		Ops(InfixL) ((Ast.Gt <# '>'),
+    						 (Ast.Gte <# ">="),
+								 (Ast.Lt <# '<'),
+								 (Ast.Lte <# "<=")),
 
 		// binary precedence 4
-		Ops(InfixL) (("==" #> Ast.Eq(_, _)),
-								("!=" #> Ast.Neq(_, _))) +:
+		Ops(InfixL) ((Ast.Eq <# "=="),
+								 (Ast.Neq <# "!=")),
 
 		// binary precedence 5
-		Ops(InfixL) (("&&" #> Ast.And(_, _))) +:
+		Ops(InfixL) ((Ast.And <# "&&")),
 
 		// binary precedence 6
-		Ops(InfixL) (("||" #> Ast.Or(_, _)))
-		
+		Ops(InfixL) ((Ast.Or <# "||"))
 	)
 		
-
-	def exprParse (input: String): Boolean = {
-		expr.parse(input) match {
-      case Success(x) => true
-      case Failure(msg) => false
+	def exprParse (input: String): Option[Expr] = {
+		expr.debug("debug starts").parse(input) match {
+      case Success(x) => {
+				println(x)
+				Some(x)
+			}
+      case Failure(msg) => None
     }
 	}
 

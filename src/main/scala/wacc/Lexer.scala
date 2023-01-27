@@ -3,9 +3,9 @@ package wacc
 import parsley.token.{Lexer, descriptions}
 import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc}
 import descriptions.text.{TextDesc, EscapeDesc}
-import parsley.implicits.character.{charLift, stringLift}
 import parsley.token.predicate
 import parsley.Parsley
+import parsley.implicits.character.{charLift, stringLift}
 
 object Lexer {
   private val keywords = Set("true", "false", "begin", "end", "is", "skip", 
@@ -47,7 +47,6 @@ object Lexer {
   val bool = lexer.lexeme("true" #> true <|> "false" #> false)
   val char = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
-  val pairLit = lexer.lexeme{"null"}
+  val pair = lexer.lexeme{"null"}
   val ident = lexer.lexeme.names.identifier
-  val implicits = lexer.lexeme.symbol.implicits
 }
