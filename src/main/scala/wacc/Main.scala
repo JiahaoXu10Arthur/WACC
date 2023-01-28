@@ -25,7 +25,7 @@ object Main {
 		//     case Failure(msg) => println(msg)
 		// }
 
-		Parser.exprParse(args.head) match {
+		Parser.parse(args.head) match {
 			case Some(_) => println(s"${args.head} parse success")
 			case None	 => println(s"${args.head} parse fail")
 		}

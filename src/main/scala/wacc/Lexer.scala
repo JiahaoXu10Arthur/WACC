@@ -6,6 +6,7 @@ import descriptions.text.{TextDesc, EscapeDesc}
 import parsley.token.predicate
 import parsley.Parsley
 import parsley.implicits.character.{charLift, stringLift}
+import Parsley.{attempt}
 
 object Lexer {
   private val keywords = Set("true", "false", "begin", "end", "is", "skip", 
@@ -50,6 +51,7 @@ object Lexer {
   val lexer = new Lexer(desc)
 
   def fully [A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
+  def token [A](p: Parsley[A]): Parsley[A] = lexer.lexeme(p)
   
 
   /* Definition for literal tokens */
