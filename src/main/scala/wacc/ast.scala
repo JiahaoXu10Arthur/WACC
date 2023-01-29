@@ -85,8 +85,8 @@ object Ast {
     case class Ident(name: String) extends Expr
     object Ident extends ParserBridge1[String, Expr]
 
-    case class ArrayElem(array: Expr, index: Expr) extends Expr
-    object ArrayElem extends ParserBridge2[Expr, Expr, Expr]
+    case class ArrayElem(array: (String, List[Expr])) extends Expr
+    object ArrayElem extends ParserBridge1[(String, List[Expr]), Expr]
 
   /* Statements */
   sealed trait Stat

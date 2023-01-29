@@ -2,7 +2,8 @@ package wacc
 
 import parsley.{Parsley, Success, Failure}
 import Parsley.{attempt}
-import parsley.expr.precedence
+import parsley.expr.{precedence}
+import parsley.combinator.{some}
 import parsley.implicits.character.{charLift, stringLift}
 import Ast.{Expr}
 import parsley.expr.{SOps, InfixL, Prefix}
@@ -16,6 +17,7 @@ object ExprParser {
 		Ast.CharLit(Lexer.char),
 		Ast.StrLit(Lexer.str),
 		Ast.PairLit(Lexer.pair),
+		attempt (Ast.ArrayElem(Lexer.ident <~> some('[' ~> expr <~ ']'))) <|>
 		Ast.Ident(Lexer.ident),
 		('(' ~> expr <~ ')')) (
 
