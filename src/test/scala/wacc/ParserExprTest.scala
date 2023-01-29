@@ -33,7 +33,10 @@ class ParserExprTest extends AnyFlatSpec {
     ExprParser.exprParse("_aBc9").get shouldBe Ident("_aBc9")
   }
 
-  "array element" should "be parsed as expression" in pending 
+  "array element" should "be parsed as expression" in {
+    ExprParser.exprParse("array[1]").get shouldBe ArrayElem("array", List(IntLit(1)))
+    ExprParser.exprParse("array[1][5]").get shouldBe ArrayElem("array", List(IntLit(1), IntLit(5)))
+  }
 
   "unary operator <expr>" should "be parsed as expression" in {
     val testString = "\"String\""
