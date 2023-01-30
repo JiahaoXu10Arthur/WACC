@@ -20,7 +20,7 @@ object Lexer {
   private val escLiterals = Set('\u0000', '\b', '\t', '\n', '\f', '\r', '\"', '\'', '\\')
 
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
-  def isALphaNumericOrUnderscore = predicate.Basic(c => c.isLetter || c == '_' || c.isDigit)
+  def isALphaNumericOrUnderscore = predicate.Basic(c => c.isLetterOrDigit || c == '_')
 
   private val desc = LexicalDesc.plain.copy(
     spaceDesc = SpaceDesc.plain.copy(
@@ -61,4 +61,6 @@ object Lexer {
   val str = lexer.lexeme.text.string.ascii
   val pair = lexer.lexeme{"null"}
   val ident = lexer.lexeme.names.identifier
+
+  val implicitVals = lexer.lexeme.symbol.implicits
 }

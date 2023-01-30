@@ -1,6 +1,7 @@
 package wacc
 
-import parsley.genericbridges.{ParserBridge1, ParserBridge2, ParserBridge3}
+import parsley.genericbridges.{ParserSingletonBridge, ParserBridge1, 
+                               ParserBridge2, ParserBridge3}
 
 object Ast {
 
@@ -90,6 +91,8 @@ object Ast {
 
   /* Statements */
   sealed trait Stat
+    case class Skip() extends Stat
+
     case class Declare(type1: Type, name: Ident, rvalve: Type) extends Stat
     object Declare extends ParserBridge3[Type, Ident, Type, Stat]
 
