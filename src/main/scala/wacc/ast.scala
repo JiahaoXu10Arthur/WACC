@@ -88,11 +88,22 @@ object Ast {
     case class ArrayElem(array: (String, List[Expr])) extends Expr with Lvalue
     object ArrayElem extends ParserBridge1[(String, List[Expr]), Expr with Lvalue]
 
+  /* Separate things */
   sealed trait Lvalue
+
+  sealed trait Rvalue
 
 	sealed trait PairElem
 		case class Pair_Elem(lvalue: Lvalue) extends PairElem with Lvalue
     object Pair_Elem extends ParserBridge1[Lvalue, PairElem with Lvalue]
+  
+  sealed trait ArrayLiter
+    case class ArrayLit(values: List[Expr]) extends ArrayLiter
+    object ArrayLit extends ParserBridge1[List[Expr], ArrayLiter]
+
+  sealed trait ArgList
+    case class Arg_List(values: List[Expr]) extends ArgList
+    object Arg_List extends  ParserBridge1[List[Expr], ArgList]
 
   /* Statements */
   sealed trait Stat
