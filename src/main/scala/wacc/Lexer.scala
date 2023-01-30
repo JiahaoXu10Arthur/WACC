@@ -4,9 +4,13 @@ import parsley.token.{Lexer, descriptions}
 import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc}
 import descriptions.text.{TextDesc, EscapeDesc}
 import parsley.token.predicate
+import parsley.lift.{lift2}
 import parsley.Parsley
 import parsley.implicits.character.{charLift, stringLift}
 import Parsley.{attempt}
+import parsley.expr.chain
+import Types._
+
 
 object Lexer {
   private val keywords = Set("true", "false", "begin", "end", "is", "skip", 
@@ -61,4 +65,22 @@ object Lexer {
   val str = lexer.lexeme.text.string.ascii
   val pair = lexer.lexeme{"null"}
   val ident = lexer.lexeme.names.identifier
+  lazy val type_ = basicType | arrayType | pairType
+  val basicType: Parsley[BasicType] = lexer.lexeme("int") #> IntType() <|> 
+                  lexer.lexeme("bool") #> BoolType() <|>
+                  lexer.lexeme("char") #> CharType() <|>
+                  lexer.lexeme("string") #> StrType()
+
+  val arrayType: Parsley[ArrayType] = chain.postfix1(type_, token("[]") #> (ArrayType))
+
+  val pairTypeIdent: Parsley[PairTypeIdent] = lexer.lexeme("pair") #> PairTypeIdent()
+
+  lazy val pairElemType = basicType | arrayType | pairTypeIdent
+
+  val pairType: Parsley[PairType] = lift2[PairElemType, PairElemType, PairType](
+                                    PairType(_, _),
+                                    "pair(" ~> pairElemType <~ ",",
+                                    pairElemType <~ ")"
+                                    ) 
+  
 }
