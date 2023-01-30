@@ -5,7 +5,7 @@ import parsley.genericbridges.{ParserBridge1, ParserBridge2, ParserBridge3}
 object Ast {
 
   /* Binary Expressions */
-  sealed trait Expr
+  sealed trait Expr extends Rvalue
     /* Arithmetic binary operators */
     case class Mul(expr1: Expr, expr2: Expr) extends Expr
     object Mul extends ParserBridge2[Expr, Expr, Expr]
@@ -92,12 +92,17 @@ object Ast {
   sealed trait Lvalue
 
   sealed trait Rvalue
+    case class NewPair(exprs: (Expr, Expr)) extends Rvalue
+    object NewPair extends ParserBridge1[(Expr, Expr), Rvalue]
 
-	sealed trait PairElem
-		case class Pair_Elem(lvalue: Lvalue) extends PairElem with Lvalue
-    object Pair_Elem extends ParserBridge1[Lvalue, PairElem with Lvalue]
+    case class Call(name: (String, List[Expr])) extends Rvalue
+    object Call extends ParserBridge1[(String, List[Expr]), Rvalue]
+
+	sealed trait PairElem extends Lvalue with Rvalue
+		case class Pair_Elem(lvalue: Lvalue) extends PairElem
+    object Pair_Elem extends ParserBridge1[Lvalue, PairElem]
   
-  sealed trait ArrayLiter
+  sealed trait ArrayLiter extends Rvalue
     case class ArrayLit(values: List[Expr]) extends ArrayLiter
     object ArrayLit extends ParserBridge1[List[Expr], ArrayLiter]
 
