@@ -1,8 +1,8 @@
 package wacc
 
 import ExprParser.{expr}
-import parsley.{Parsley, Success, Failure}
-import parsley.implicits.character.{charLift, stringLift}
+import parsley.{Success, Failure}
+import parsley.implicits.character.{stringLift}
 import parsley.combinator.{eof}
 import Lexer.{token}
 import Ast.Expr

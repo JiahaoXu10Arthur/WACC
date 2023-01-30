@@ -82,11 +82,17 @@ object Ast {
     case class PairLit(value: String) extends Expr
     object PairLit extends ParserBridge1[String, Expr]
 
-    case class Ident(name: String) extends Expr
-    object Ident extends ParserBridge1[String, Expr]
+    case class Ident(name: String) extends Expr with Lvalue
+    object Ident extends ParserBridge1[String, Expr with Lvalue]
 
-    case class ArrayElem(array: (String, List[Expr])) extends Expr
-    object ArrayElem extends ParserBridge1[(String, List[Expr]), Expr]
+    case class ArrayElem(array: (String, List[Expr])) extends Expr with Lvalue
+    object ArrayElem extends ParserBridge1[(String, List[Expr]), Expr with Lvalue]
+
+  sealed trait Lvalue
+
+	sealed trait PairElem
+		case class Pair_Elem(lvalue: Lvalue) extends PairElem with Lvalue
+    object Pair_Elem extends ParserBridge1[Lvalue, PairElem with Lvalue]
 
   /* Statements */
   sealed trait Stat
@@ -132,5 +138,8 @@ object Ast {
     case class ArrayType(arrayType: Type) extends Type
     case class PairType(value1Type: Type, value2Type: Type) extends Type
     
+
+
+
 
 }

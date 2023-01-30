@@ -17,7 +17,7 @@ object ExprParser {
 		Ast.CharLit(Lexer.char),
 		Ast.StrLit(Lexer.str),
 		Ast.PairLit(Lexer.pair),
-		attempt (Ast.ArrayElem(Lexer.ident <~> some('[' ~> expr <~ ']'))) <|>
+		attempt (Ast.ArrayElem(Lexer.ident <~> some('[' ~> expr <~ ']'))),
 		Ast.Ident(Lexer.ident),
 		('(' ~> expr <~ ')')) (
 
