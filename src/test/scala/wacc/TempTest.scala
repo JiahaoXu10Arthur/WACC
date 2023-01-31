@@ -1,5 +1,5 @@
  package wacc
- import org.scalatest.flatspec.AnyFlatSpec
+
  import java.nio.file.Files
  import java.nio.file.Paths
  import java.io.File
@@ -18,7 +18,7 @@
      }
    }
 
-   testSkeleton("wacc_example/valid/pairs/")
+   testSkeleton("wacc_example/valid/expressions/")
 
    def testSkeleton(path: String) = {
     val allFiles = getListOfFiles(path)
