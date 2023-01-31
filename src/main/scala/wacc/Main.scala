@@ -14,7 +14,7 @@ object Main {
 		// 		println(msg)
 		// 	}
 		// }
-		TypeParser.typeParse(args.head) match {
+		ExprParser.exprParse(args.head) match {
 			case Some(x) => {
 				println(s"${args.head} parse success: ")
 				println(x)

@@ -16,8 +16,8 @@ class ParserPairElemTest extends AnyFlatSpec {
 	}
 
 	"Lvalue: Pair Elem" should "be parsed as lvalue" in {
-		ValueParser.lvalueParse("fst p").get shouldBe Pair_Elem(Ident("p"))
-		ValueParser.lvalueParse("snd array[1]").get shouldBe Pair_Elem(ArrayElem(Ident("array"), List(IntLit(1))))
+		ValueParser.lvalueParse("fst p").get shouldBe PairElem(Ident("p"))
+		ValueParser.lvalueParse("snd array[1]").get shouldBe PairElem(ArrayElem(Ident("array"), List(IntLit(1))))
 	}
 
 	"Rvalue: Expression" should "be parsed as rvalue" in {
@@ -32,9 +32,9 @@ class ParserPairElemTest extends AnyFlatSpec {
 	}
 
 	"Rvalue: PairElem" should "be parsed as rvalue" in {
-		ValueParser.rvalueParse("fst p").get shouldBe Pair_Elem(Ident("p"))
-		ValueParser.rvalueParse("snd array[1][5]").get shouldBe Pair_Elem(ArrayElem(Ident("array"), List(IntLit(1), IntLit(5))))
-		ValueParser.rvalueParse("fst fst array[1]").get shouldBe(Pair_Elem(Pair_Elem(ArrayElem(Ident("array"), List(IntLit(1))))))
+		ValueParser.rvalueParse("fst p").get shouldBe PairElem(Ident("p"))
+		ValueParser.rvalueParse("snd array[1][5]").get shouldBe PairElem(ArrayElem(Ident("array"), List(IntLit(1), IntLit(5))))
+		ValueParser.rvalueParse("fst fst array[1]").get shouldBe(PairElem(PairElem(ArrayElem(Ident("array"), List(IntLit(1))))))
 	}
 
 	"Rvalue: NewPair" should "be parsed as rvalue" in {
@@ -52,9 +52,9 @@ class ParserPairElemTest extends AnyFlatSpec {
 	}
 
 	"ArgList: Expressions" should "be not parsed as argLists" in {
-		ValueParser.argListParse("array[5]").get shouldBe Arg_List(List(ArrayElem(Ident("array"), List(IntLit(5)))))
-		ValueParser.argListParse("'p','q','i'").get  shouldBe Arg_List(List(CharLit('p'), CharLit('q'), CharLit('i')))
-		ValueParser.argListParse("1,true,hello").get  shouldBe Arg_List(List(IntLit(1), BoolLit(true), Ident("hello")))
+		ValueParser.argListParse("array[5]").get shouldBe ArgList(List(ArrayElem(Ident("array"), List(IntLit(5)))))
+		ValueParser.argListParse("'p','q','i'").get  shouldBe ArgList(List(CharLit('p'), CharLit('q'), CharLit('i')))
+		ValueParser.argListParse("1,true,hello").get  shouldBe ArgList(List(IntLit(1), BoolLit(true), Ident("hello")))
 	}
 
 	"ArrayLit: Empty" should "be parsed as array lit" in {
@@ -68,18 +68,18 @@ class ParserPairElemTest extends AnyFlatSpec {
 	}
 
 	"PairElem: Lvalue Ident" should "be parsed as pair elem" in {
-		ValueParser.pairElemParse("fst p").get shouldBe Pair_Elem(Ident("p"))
-		ValueParser.pairElemParse("snd q").get shouldBe Pair_Elem(Ident("q"))
+		ValueParser.pairElemParse("fst p").get shouldBe PairElem(Ident("p"))
+		ValueParser.pairElemParse("snd q").get shouldBe PairElem(Ident("q"))
 	}
 
 	"PairElem: Lvalue Array Elem" should "be parsed as pair elem" in {
-		ValueParser.pairElemParse("fst array[1]").get shouldBe Pair_Elem(ArrayElem(Ident("array"), List(IntLit(1))))
-		ValueParser.pairElemParse("snd array[1][5]").get shouldBe Pair_Elem(ArrayElem(Ident("array"), List(IntLit(1), IntLit(5))))
+		ValueParser.pairElemParse("fst array[1]").get shouldBe PairElem(ArrayElem(Ident("array"), List(IntLit(1))))
+		ValueParser.pairElemParse("snd array[1][5]").get shouldBe PairElem(ArrayElem(Ident("array"), List(IntLit(1), IntLit(5))))
 	}
 
 	"PairElem: Lvalue Pair Elem" should "be parsed as pair elem" in {
-		ValueParser.pairElemParse("fst fst array[1]").get shouldBe(Pair_Elem(Pair_Elem(ArrayElem(Ident("array"), List(IntLit(1))))))
-		ValueParser.pairElemParse("snd fst q").get shouldBe(Pair_Elem(Pair_Elem(Ident("q"))))
+		ValueParser.pairElemParse("fst fst array[1]").get shouldBe(PairElem(PairElem(ArrayElem(Ident("array"), List(IntLit(1))))))
+		ValueParser.pairElemParse("snd fst q").get shouldBe(PairElem(PairElem(Ident("q"))))
 	}
 
 }

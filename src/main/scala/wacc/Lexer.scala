@@ -4,9 +4,9 @@ import parsley.token.{Lexer, descriptions}
 import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc}
 import descriptions.text.{TextDesc, EscapeDesc}
 import parsley.token.predicate
-import parsley.character.string
 import parsley.Parsley
 import Parsley.{attempt}
+import parsley.character.string
 
 
 
@@ -58,11 +58,11 @@ object Lexer {
 
   /* Definition for literal tokens */
   val num = lexer.lexeme.numeric.unsigned.number32[Int]
-  val bool = lexer.lexeme.symbol("true") #> true <|> 
+  val bool = lexer.lexeme.symbol("true") #> true | 
              lexer.lexeme.symbol("false") #> false
   val char = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
-  val pair = lexer.lexeme(string("null")) //check the type of this
+  val pair = lexer.lexeme(string("null"))
   val ident = lexer.lexeme.names.identifier
 
   val implicitVals = lexer.lexeme.symbol.implicits
