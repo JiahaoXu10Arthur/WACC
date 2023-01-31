@@ -64,7 +64,7 @@ class ParserPairElemTest extends AnyFlatSpec {
 	"ArrayLit: Expressions" should "be parsed as array lit" in {
 		ValueParser.arryLitParse("[array[5]]").get shouldBe ArrayLit(List(ArrayElem(Ident("array"), List(IntLit(5)))))
 		ValueParser.arryLitParse("['p','q','i']").get shouldBe ArrayLit(List(CharLit('p'), CharLit('q'), CharLit('i')))
-		ValueParser.arryLitParse("[1,true,hello]").get shouldBe ArrayLit(List(IntLit(1), BoolLit(true), Ident("hello")))
+		ValueParser.arryLitParse("[1, true, hello]").get shouldBe ArrayLit(List(IntLit(1), BoolLit(true), Ident("hello")))
 	}
 
 	"PairElem: Lvalue Ident" should "be parsed as pair elem" in {
