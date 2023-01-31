@@ -117,8 +117,8 @@ object Ast {
     case class Declare(type1: Type, name: Ident, rvalve: Type) extends Stat
     object Declare extends ParserBridge3[Type, Ident, Type, Stat]
 
-    case class Assign(lvalue: Type, rvalue: Type) extends Stat
-    object Assign extends ParserBridge2[Type, Type, Stat]
+    case class Assign(lvalue: Lvalue, rvalue: Rvalue) extends Stat
+    object Assign extends ParserBridge2[Lvalue, Rvalue, Stat]
 
     case class Read(lvalue: Type) extends Stat
     object Read extends ParserBridge1[Type, Stat]

@@ -8,7 +8,7 @@ import ExprParser.{expr}
 import Lexer.token
 import Ast.{Lvalue, Rvalue, ArrayLiter, ArgList, PairElem}
 
-object PairElem {
+object ValueParser {
 
 	val pair_elem: Parsley[PairElem] = 
 		Ast.Pair_Elem((token("fst") <|> token("snd")) ~> lvalue)
@@ -23,7 +23,7 @@ object PairElem {
 		 then ArryElem need to check []
 		 if neither matches, parse as identifier */
 	val lvalue: Parsley[Lvalue] = 
-		pair_elem <|>
+		attempt(pair_elem) <|>
 		attempt (Ast.ArrayElem(Lexer.ident <~> some('[' ~> expr <~ ']'))) <|>
 		Ast.Ident(Lexer.ident)
 

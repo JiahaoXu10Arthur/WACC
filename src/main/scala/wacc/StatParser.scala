@@ -27,10 +27,15 @@ object StatParser {
                       ("while" ~> expr),
                       ("do" ~> stmts <~ "done")
                     )
+  val assign = lift2[Ast.Lvalue, Ast.Rvalue, Ast.Stat](
+                 Ast.Assign(_, _), 
+                 ValueParser.lvalue,
+                 ("=" ~> ValueParser.rvalue)
+               )
 
 
   lazy val stmt: Parsley[Stat] = skip_ | exit | print_ | println_ | free | ret | 
-                                 if_ | while_ | begin
+                                 if_ | while_ | begin | assign
   lazy val stmts: Parsley[List[Stat]] = sepBy1(stmt, ";")
 
   def statParse(input: String): Option[List[Stat]] = {
