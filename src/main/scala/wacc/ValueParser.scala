@@ -3,6 +3,7 @@ package wacc
 import parsley.{Parsley, Success, Failure}
 import Parsley.{attempt}
 import parsley.combinator.{some, sepBy, sepBy1}
+import parsley.lift.{lift2}
 import ExprParser.{expr}
 import Ast.{Lvalue, Rvalue, ArrayLiter, ArgList, PairElem}
 import Lexer.implicitVals._
@@ -23,15 +24,25 @@ object ValueParser {
 		 if neither matches, parse as identifier */
 	val lvalue: Parsley[Lvalue] = 
 		pair_elem <|>
-		attempt (Ast.ArrayElem(Lexer.ident <~> some("[" ~> expr <~ "]"))) <|>
+		attempt (lift2[String, List[Ast.Expr], Ast.ArrayElem] (
+			Ast.ArrayElem(_, _),
+			(Lexer.ident),
+			(some("[" ~> expr <~ "]"))
+		)) <|>
 		Ast.Ident(Lexer.ident)
 
 	/* Pair Elem first because it needs to check keywords: fst, snd,
 		 then check key words for NewPair and Call*/
 	val rvalue: Parsley[Rvalue] = 
 		pair_elem <|>
-		Ast.NewPair("newpair" ~> "(" ~> (expr <~> "," ~> expr) <~ ")") <|>
-		Ast.Call("call" ~> Lexer.ident <~> "(" ~> sepBy(expr, ",") <~ ")") <|>
+		lift2[Ast.Expr, Ast.Expr, Ast.NewPair] (
+			Ast.NewPair(_, _), 
+			("newpair" ~> "(" ~> expr), 
+			("," ~> expr <~ ")") ) <|>
+		lift2[String, List[Ast.Expr], Ast.Call] (
+			Ast.Call(_, _), 
+			("call" ~> Lexer.ident), 
+			("(" ~> sepBy(expr, ",") <~ ")") ) <|>
 		arrayLit <|>
 		expr
 

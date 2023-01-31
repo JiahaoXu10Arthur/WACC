@@ -41,14 +41,8 @@ object StatParser {
 
   def statParse(input: String): Option[List[Stat]] = {
     stmts.parse(input) match {
-      case Success(x) => {
-        println(x)
-        Some(x)
-      }
-      case Failure(msg) => {
-        println(msg)
-        None
-      }
+      case Success(x) => Some(x)
+      case Failure(msg) => None
     }
   }
 }

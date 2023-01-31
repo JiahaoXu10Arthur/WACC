@@ -85,18 +85,18 @@ object Ast {
     case class Ident(name: String) extends Expr with Lvalue
     object Ident extends ParserBridge1[String, Expr with Lvalue]
 
-    case class ArrayElem(array: (String, List[Expr])) extends Expr with Lvalue
-    object ArrayElem extends ParserBridge1[(String, List[Expr]), Expr with Lvalue]
+    case class ArrayElem(name: String, dimension: List[Expr]) extends Expr with Lvalue
+    object ArrayElem extends ParserBridge2[String, List[Expr], Expr with Lvalue]
 
   /* Separate things */
   sealed trait Lvalue
 
   sealed trait Rvalue
-    case class NewPair(exprs: (Expr, Expr)) extends Rvalue
-    object NewPair extends ParserBridge1[(Expr, Expr), Rvalue]
+    case class NewPair(expr1: Expr, expr2: Expr) extends Rvalue
+    object NewPair extends ParserBridge2[Expr, Expr, Rvalue]
 
-    case class Call(name: (String, List[Expr])) extends Rvalue
-    object Call extends ParserBridge1[(String, List[Expr]), Rvalue]
+    case class Call(name: String, args: List[Expr]) extends Rvalue
+    object Call extends ParserBridge2[String, List[Expr], Rvalue]
 
 	sealed trait PairElem extends Lvalue with Rvalue
 		case class Pair_Elem(lvalue: Lvalue) extends PairElem
