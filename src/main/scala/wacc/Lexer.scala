@@ -60,7 +60,7 @@ object Lexer {
              lexer.lexeme.symbol("false") #> false
   val char = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
-  val pair = lexer.lexeme.symbol("null") #> Ast.PairLit()
+  val pair = lexer.lexeme.symbol("null")
   val ident = lexer.lexeme.names.identifier
 
   val implicitVals = lexer.lexeme.symbol.implicits

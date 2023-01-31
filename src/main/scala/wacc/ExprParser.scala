@@ -15,7 +15,7 @@ object ExprParser {
 		Ast.BoolLit(Lexer.bool),
 		Ast.CharLit(Lexer.char),
 		Ast.StrLit(Lexer.str),
-		Lexer.pair,
+		(Lexer.pair #> Ast.PairLit()),
 		attempt(Ast.ArrayElem(Ast.Ident(Lexer.ident), some("[" ~> expr <~ "]"))),
 		Ast.Ident(Lexer.ident),
 		("+" ~> expr),
