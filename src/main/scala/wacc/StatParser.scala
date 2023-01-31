@@ -28,21 +28,14 @@ object StatParser {
                       ("do" ~> stmts <~ "done")
                     )
 
-
   lazy val stmt: Parsley[Stat] = skip_ | exit | print_ | println_ | free | ret | 
                                  if_ | while_ | begin
   lazy val stmts: Parsley[List[Stat]] = sepBy1(stmt, ";")
 
   def statParse(input: String): Option[List[Stat]] = {
     stmts.parse(input) match {
-      case Success(x) => {
-        println(x)
-        Some(x)
-      }
-      case Failure(msg) => {
-        println(msg)
-        None
-      }
+      case Success(x) => Some(x)
+      case Failure(msg) => None
     }
   }
 }

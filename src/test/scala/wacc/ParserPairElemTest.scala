@@ -43,8 +43,8 @@ class ParserPairElemTest extends AnyFlatSpec {
 	}
 
 	"Rvalue: Call" should "be parsed as rvalue" in {
-		PairElem.rvalueParse("call func ()").get shouldBe Call(("func", List()))
-		PairElem.rvalueParse("call func (1,3)").get shouldBe Call(("func", List(IntLit(1), IntLit(3))))
+		PairElem.rvalueParse("call func ()").get shouldBe Call("func", List())
+		PairElem.rvalueParse("call func (1,3)").get shouldBe Call("func", List(IntLit(1), IntLit(3)))
 	}
 
 	"ArgList: Empty" should "be not parsed as array lit" in {
