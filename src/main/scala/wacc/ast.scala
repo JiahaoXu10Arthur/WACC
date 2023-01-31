@@ -1,6 +1,7 @@
 package wacc
 
 import parsley.genericbridges.{ParserBridge1, ParserBridge2, ParserBridge3}
+import Types._
 
 object Ast {
 
@@ -148,13 +149,15 @@ object Ast {
     object Begin extends ParserBridge1[List[Stat], Stat]
 
   /* Types */
-  sealed trait Type
-    case class IntType() extends Type
-    case class BoolType() extends Type
-    case class CharType() extends Type
-    case class StrType() extends Type
-    case class ArrayType(arrayType: Type) extends Type
-    case class PairType(value1Type: Type, value2Type: Type) extends Type
+ 
+
+
+ 
+  //class Param(paramType: Type, ident: Ident)
+
+  /* Function */
+ // class Func(type1: Type, ident: Ident, params: List[Param], stat: Stat)
+  //object Function extends ParserBridge3[Type, Ident, List[Param], Stat]
     
 
 
