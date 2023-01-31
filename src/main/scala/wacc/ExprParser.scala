@@ -39,8 +39,10 @@ object ExprParser {
     						 (Ast.Sub <# "-")),
 		
 		// binary precedence 3
-		SOps(InfixL) ((attempt(Ast.Lte <# "<=")) <|> (Ast.Lt <# "<"),
-    						 (attempt(Ast.Gte <# ">=")) <|> (Ast.Gt <# ">")),
+		SOps(InfixL) ((Ast.Lte <# "<="),
+								 (Ast.Lt <# "<"),
+    						 (Ast.Gte <# ">="),
+								 (Ast.Gt <# ">")),
 
 		// binary precedence 4
 		SOps(InfixL) ((Ast.Eq <# "=="),

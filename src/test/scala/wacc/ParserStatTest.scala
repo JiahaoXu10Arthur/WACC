@@ -9,26 +9,24 @@ class ParserStatTest extends AnyFlatSpec{
     StatParser.statParse("begin end") shouldBe None
     StatParser.statParse("begin") shouldBe None
     StatParser.statParse("begin exit 4 end").get shouldBe 
-      Begin(List(
-          Exit(IntLit(4))
-        )
+      List( 
+        Begin(
+          List( 
+            Exit(IntLit(4)) 
+          )
+        ) 
       )
     StatParser.statParse("begin begin skip end end").get shouldBe 
-      Begin(List(
-          Begin(List(Skip()))
-        )
-      )
+      List(Begin(List(Begin(List(Skip())))))
   }
   "exit statements" should "be parsed" in {
-    StatParser.statParse("begin exit 3 end").get shouldBe 
-      Begin(List(
-          Exit(IntLit(3))
-        )
+    StatParser.statParse("exit 3").get shouldBe 
+      List(
+        Exit(IntLit(3))
       )
-    StatParser.statParse("begin exit true end").get shouldBe 
-      Begin(List(
-          Exit(BoolLit(true))
-        )
+    StatParser.statParse("exit true").get shouldBe 
+      List(
+        Exit(BoolLit(true))
       )
   }
 }

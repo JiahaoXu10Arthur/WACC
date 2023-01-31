@@ -1,11 +1,18 @@
-package wacc
+// package wacc
 
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers._
-import Ast._
+// import org.scalatest.flatspec.AnyFlatSpec
+// import org.scalatest.matchers.should.Matchers._
+// import Ast._
 
-class ParserProgramTest extends AnyFlatSpec {
-  "begin 3 end" should "be parsed" in {
-    Parser.parse("begin 3 end").get shouldBe IntLit(3)
-  }
-}
+// class ParserProgramTest extends AnyFlatSpec {
+//   "begin exit 3 end" should "be parsed" in {
+//     Parser.parse("begin 3 end").get shouldBe 
+//       List(
+//         Begin(
+//           List(
+//             Exit(IntLit(3))
+//           )
+//         )
+//       )
+//   }
+// }

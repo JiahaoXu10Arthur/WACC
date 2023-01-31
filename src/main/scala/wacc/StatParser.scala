@@ -4,10 +4,8 @@ import parsley.{Parsley, Success, Failure}
 import parsley.lift.{lift2, lift3}
 import parsley.combinator.{sepBy1}
 import Ast.{Stat}
-import Lexer.{token, fully}
 import Lexer.implicitVals._
 import ExprParser.{expr}
-import parsley.debug._
 
 object StatParser {
   val exit = ("exit" ~> expr).map(Ast.Exit(_))
@@ -33,11 +31,10 @@ object StatParser {
 
   lazy val stmt: Parsley[Stat] = skip_ | exit | print_ | println_ | free | ret | 
                                  if_ | while_ | begin
-  lazy val stmts: Parsley[List[Stat]] = sepBy1(token(stmt), token(";"))
-  lazy val program: Parsley[Stat] = fully(begin)
+  lazy val stmts: Parsley[List[Stat]] = sepBy1(stmt, ";")
 
-  def statParse(input: String): Option[Stat] = {
-    program.parse(input) match {
+  def statParse(input: String): Option[List[Stat]] = {
+    stmts.parse(input) match {
       case Success(x) => {
         println(x)
         Some(x)

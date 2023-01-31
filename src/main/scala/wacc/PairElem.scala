@@ -2,7 +2,7 @@ package wacc
 
 import parsley.{Parsley, Success, Failure}
 import Parsley.{attempt}
-import parsley.combinator.{some, sepBy, sepBy1, optionalAs}
+import parsley.combinator.{some, sepBy, sepBy1}
 import parsley.implicits.character.{charLift, stringLift}
 import ExprParser.{expr}
 import Lexer.token

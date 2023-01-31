@@ -1,7 +1,6 @@
 package wacc
 
-import parsley.genericbridges.{ParserSingletonBridge, ParserBridge1, 
-                               ParserBridge2, ParserBridge3}
+import parsley.genericbridges.{ParserBridge1, ParserBridge2, ParserBridge3}
 
 object Ast {
 

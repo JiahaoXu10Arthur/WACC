@@ -1,25 +1,14 @@
 package wacc
 
-import ExprParser.{expr}
-import parsley.{Success, Failure}
-import parsley.implicits.character.{stringLift}
+import parsley.{Parsley}
 import parsley.combinator.{eof}
-import Lexer.{token}
-import Ast.Expr
+import Lexer.{fully}
+import Ast.{Stat}
+import StatParser.{stmts}
+import Lexer.implicitVals._
 
 object Parser {
-  val program = token("begin") ~> expr <~ token("end") <~ eof
+  val program: Parsley[List[Stat]] = fully("begin" ~> stmts <~ "end" <~ eof)
   
-  def parse(input: String): Option[Expr] = {
-    program.parse(input) match {
-      case Success(x) => {
-				println(x)
-				Some(x)
-			}
-      case Failure(msg) => {
-				println(msg)
-				None
-			}
-    }
-  }
+  val parse = (input: String) => program.parse(input)
 }
