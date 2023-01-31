@@ -120,8 +120,8 @@ object Ast {
     case class Assign(lvalue: Lvalue, rvalue: Rvalue) extends Stat
     object Assign extends ParserBridge2[Lvalue, Rvalue, Stat]
 
-    case class Read(lvalue: Type) extends Stat
-    object Read extends ParserBridge1[Type, Stat]
+    case class Read(lvalue: Lvalue) extends Stat
+    object Read extends ParserBridge1[Lvalue, Stat]
 
     case class Free(expr: Expr) extends Stat
     object Free extends ParserBridge1[Expr, Stat]

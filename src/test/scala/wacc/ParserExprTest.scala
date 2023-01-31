@@ -6,41 +6,41 @@ import Ast._
 
 class ParserExprTest extends AnyFlatSpec {
     
-  "int liter" should "be parsed as expression" in {
+  "Expr: int liter" should "be parsed as expression" in {
 		ExprParser.exprParse("1").get shouldBe IntLit(1)
 	}
     
-  "bool liter" should "be parsed as expression" in {
+  "Expr: bool liter" should "be parsed as expression" in {
 		ExprParser.exprParse("true").get shouldBe BoolLit(true)
 		ExprParser.exprParse("false").get shouldBe BoolLit(false)
 	}
 
-  "char liter" should "be parsed as expression" in {
+  "Expr: char liter" should "be parsed as expression" in {
 		ExprParser.exprParse("'a'").get shouldBe CharLit('a')
 	}
 
-  "string liter" should "be parsed as expression" in {
+  "Expr: string liter" should "be parsed as expression" in {
 		ExprParser.exprParse("\"abc\"").get shouldBe StrLit("abc")
     ExprParser.exprParse("\"t\"").get shouldBe StrLit("t")
     ExprParser.exprParse("\"a b c\"").get shouldBe StrLit("a b c")
 	}
 
-  "pair liter" should "be parsed as expression" in {
+  "Expr: pair liter" should "be parsed as expression" in {
     ExprParser.exprParse("null").get shouldBe PairLit("null")
   }
 
-  "identifier" should "be parsed as expression" in {
+  "Expr: identifier" should "be parsed as expression" in {
     ExprParser.exprParse("_").get shouldBe Ident("_")
     ExprParser.exprParse("a").get shouldBe Ident("a")
     ExprParser.exprParse("_aBc9").get shouldBe Ident("_aBc9")
   }
 
-  "array element" should "be parsed as expression" in {
+  "Expr: array element" should "be parsed as expression" in {
     ExprParser.exprParse("array[1]").get shouldBe ArrayElem("array", List(IntLit(1)))
     ExprParser.exprParse("array[1][5]").get shouldBe ArrayElem("array", List(IntLit(1), IntLit(5)))
   }
 
-  "unary operator <expr>" should "be parsed as expression" in {
+  "Expr: unary operator" should "be parsed as expression" in {
     val testString = "\"String\""
     ExprParser.exprParse("!true").get shouldBe Not(BoolLit(true))
     ExprParser.exprParse("!'a'").get shouldBe Not(CharLit('a'))
@@ -51,7 +51,7 @@ class ParserExprTest extends AnyFlatSpec {
     ExprParser.exprParse("chr97").get shouldBe Chr(IntLit(97))
   }
 
-  "<expr> binary operator <expr>" should "be parsed as expression" in {
+  "Expr: binary operator" should "be parsed as expression" in {
     ExprParser.exprParse("1+2").get shouldBe Add(IntLit(1), IntLit(2))
     ExprParser.exprParse("1-2").get shouldBe Sub(IntLit(1), IntLit(2))
     ExprParser.exprParse("1*2").get shouldBe Mul(IntLit(1), IntLit(2))
@@ -69,7 +69,7 @@ class ParserExprTest extends AnyFlatSpec {
     ExprParser.exprParse("true||true").get shouldBe Or(BoolLit(true),BoolLit(true))
   }
 
-  "( <expr> )" should "be parsed as expression" in {
+  "Expr: ( <expr> )" should "be parsed as expression" in {
     ExprParser.exprParse("(1)").get shouldBe IntLit(1)
     ExprParser.exprParse("(true)").get shouldBe BoolLit(true)
     ExprParser.exprParse("(\"abc\")").get shouldBe StrLit("abc")
