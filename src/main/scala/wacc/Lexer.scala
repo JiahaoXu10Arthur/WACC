@@ -51,7 +51,7 @@ object Lexer {
   val lexer = new Lexer(desc)
 
   def fully [A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
-  def token [A](p: Parsley[A]): Parsley[A] = lexer.lexeme(p)
+  def token [A](p: Parsley[A]): Parsley[A] = lexer.lexeme(attempt(p))
   
 
   /* Definition for literal tokens */
@@ -59,7 +59,7 @@ object Lexer {
   val bool = lexer.lexeme("true" #> true <|> "false" #> false)
   val char = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
-  val pair = lexer.lexeme{"null"}
+  val pair = lexer.lexeme("null")
   val ident = lexer.lexeme.names.identifier
 
   val implicitVals = lexer.lexeme.symbol.implicits
