@@ -4,9 +4,9 @@ import parsley.{Parsley, Success, Failure}
 import Parsley.{attempt}
 import parsley.expr.{precedence}
 import parsley.combinator.{some}
-import parsley.implicits.character.{charLift, stringLift}
 import Ast.{Expr}
 import parsley.expr.{SOps, InfixL, Prefix}
+import Lexer.implicitVals._
 
 object ExprParser {
 	lazy val expr: Parsley[Expr] = precedence[Expr](
@@ -17,25 +17,26 @@ object ExprParser {
 		Ast.CharLit(Lexer.char),
 		Ast.StrLit(Lexer.str),
 		Ast.PairLit(Lexer.pair),
-		attempt (Ast.ArrayElem(Lexer.ident <~> some('[' ~> expr <~ ']'))),
+		attempt (Ast.ArrayElem(Lexer.ident <~> some("[" ~> expr <~ "]"))),
 		Ast.Ident(Lexer.ident),
-		('(' ~> expr <~ ')')) (
+		("(" ~> expr <~ ")")) (
 
+		//TODO: fix tokens
 		// unary precedence 0)
-		SOps(Prefix)((Ast.Not <# '!'),
-								(Ast.Neg <# '-'),
+		SOps(Prefix)((Ast.Not <# "!"),
+								(Ast.Neg <# "-"),
 								(Ast.Len <# "len"),
 								(Ast.Ord <# "ord"),
 								(Ast.Chr <# "chr")),
 									
 		// binary precendence 1
-		SOps(InfixL) ((Ast.Mul <# '*'),
-								 (Ast.Div <# '/'),
-								 (Ast.Mod <# '%')),
+		SOps(InfixL) ((Ast.Mul <# "*"),
+								 (Ast.Div <# "/"),
+								 (Ast.Mod <# "%")),
 
 		// binary precedence 2
-		SOps(InfixL) ((Ast.Add <# '+'),
-    						 (Ast.Sub <# '-')),
+		SOps(InfixL) ((Ast.Add <# "+"),
+    						 (Ast.Sub <# "-")),
 		
 		// binary precedence 3
 		SOps(InfixL) ((attempt(Ast.Lte <# "<=")) <|> (Ast.Lt <# "<"),

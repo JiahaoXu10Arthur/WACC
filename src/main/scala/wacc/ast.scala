@@ -1,6 +1,7 @@
 package wacc
 
-import parsley.genericbridges.{ParserBridge1, ParserBridge2, ParserBridge3}
+import parsley.genericbridges.{ParserSingletonBridge, ParserBridge1, 
+                               ParserBridge2, ParserBridge3}
 
 object Ast {
 
@@ -112,6 +113,8 @@ object Ast {
 
   /* Statements */
   sealed trait Stat
+    case class Skip() extends Stat
+
     case class Declare(type1: Type, name: Ident, rvalve: Type) extends Stat
     object Declare extends ParserBridge3[Type, Ident, Type, Stat]
 
@@ -136,14 +139,14 @@ object Ast {
     case class Println(expr: Expr) extends Stat
     object Println extends ParserBridge1[Expr, Stat]
 
-    case class If(expr: Expr, stat1: Stat, stat2: Stat) extends Stat
-    object If extends ParserBridge3[Expr, Stat, Stat, Stat]
+    case class If(expr: Expr, stat1: List[Stat], stat2: List[Stat]) extends Stat
+    object If extends ParserBridge3[Expr, List[Stat], List[Stat], Stat]
 
-    case class While(expr: Expr, stat: Stat) extends Stat
-    object While extends ParserBridge2[Expr, Stat, Stat]
+    case class While(expr: Expr, stat: List[Stat]) extends Stat
+    object While extends ParserBridge2[Expr, List[Stat], Stat]
 
-    case class Seq(stat1: Stat, stat2: Stat) extends Stat
-    object Seq extends ParserBridge2[Stat, Stat, Stat]
+    case class Begin(stat: List[Stat]) extends Stat
+    object Begin extends ParserBridge1[List[Stat], Stat]
 
   /* Types */
   sealed trait Type

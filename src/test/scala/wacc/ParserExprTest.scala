@@ -21,6 +21,8 @@ class ParserExprTest extends AnyFlatSpec {
 
   "string liter" should "be parsed as expression" in {
 		ExprParser.exprParse("\"abc\"").get shouldBe StrLit("abc")
+    ExprParser.exprParse("\"t\"").get shouldBe StrLit("t")
+    ExprParser.exprParse("\"a b c\"").get shouldBe StrLit("a b c")
 	}
 
   "pair liter" should "be parsed as expression" in {
