@@ -17,7 +17,6 @@ class ParserPairElemTest extends AnyFlatSpec {
 
 	"Lvalue: Pair Elem" should "be parsed as lvalue" in {
 		PairElem.lvalueParse("fst p").get shouldBe Pair_Elem(Ident("p"))
-		PairElem.lvalueParse("fstp").get shouldBe Pair_Elem(Ident("p"))
 		PairElem.lvalueParse("snd array[1]").get shouldBe Pair_Elem(ArrayElem("array", List(IntLit(1))))
 	}
 

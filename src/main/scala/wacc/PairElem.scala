@@ -3,36 +3,36 @@ package wacc
 import parsley.{Parsley, Success, Failure}
 import Parsley.{attempt}
 import parsley.combinator.{some, sepBy, sepBy1}
-import parsley.implicits.character.{charLift, stringLift}
+// import parsley.implicits.character.{charLift}
 import ExprParser.{expr}
-import Lexer.token
 import Ast.{Lvalue, Rvalue, ArrayLiter, ArgList, PairElem}
+import Lexer.implicitVals._
 
 object PairElem {
 
 	val pair_elem: Parsley[PairElem] = 
-		Ast.Pair_Elem((token("fst") <|> token("snd")) ~> lvalue)
+		Ast.Pair_Elem(("fst" <|> "snd") ~> lvalue)
 
 	val argList: Parsley[ArgList] =
-		Ast.Arg_List(sepBy1(expr, ','))
+		Ast.Arg_List(sepBy1(expr, ","))
 
 	val arrayLit: Parsley[ArrayLiter] = 
-		Ast.ArrayLit('[' ~> sepBy(expr, ',') <~ ']')
+		Ast.ArrayLit("[" ~> sepBy(expr, ",") <~ "]")
 
 	/* Pair Elem first because it needs to check keywords: fst, snd,
 		 then ArryElem need to check []
 		 if neither matches, parse as identifier */
 	val lvalue: Parsley[Lvalue] = 
 		pair_elem <|>
-		attempt (Ast.ArrayElem(Lexer.ident <~> some('[' ~> expr <~ ']'))) <|>
+		attempt (Ast.ArrayElem(Lexer.ident <~> some("[" ~> expr <~ "]"))) <|>
 		Ast.Ident(Lexer.ident)
 
 	/* Pair Elem first because it needs to check keywords: fst, snd,
 		 then check key words for NewPair and Call*/
 	val rvalue: Parsley[Rvalue] = 
 		pair_elem <|>
-		Ast.NewPair("newpair" ~> '(' ~> (expr <~> ',' ~> expr) <~ ')') <|>
-		Ast.Call(token("call") ~> Lexer.ident <~> '(' ~> sepBy(expr, ',') <~ ')') <|>
+		Ast.NewPair("newpair" ~> "(" ~> (expr <~> "," ~> expr) <~ ")") <|>
+		Ast.Call("call" ~> Lexer.ident <~> "(" ~> sepBy(expr, ",") <~ ")") <|>
 		arrayLit <|>
 		expr
 
