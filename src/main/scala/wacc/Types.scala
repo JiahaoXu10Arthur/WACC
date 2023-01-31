@@ -2,9 +2,9 @@ package wacc
 
 object Types {
   sealed trait Type
+    case class PairType(elem1: PairElemType, elem2: PairElemType) extends Type
     case class ArrayType(arrayType: Type) extends Type with PairElemType
      
-
   sealed trait PairElemType
     case class PairTypeIdent() extends PairElemType
 
@@ -14,6 +14,5 @@ object Types {
     case class CharType() extends BasicType
     case class StrType() extends BasicType
 
-  sealed trait PairTypeTrait extends Type
-      case class PairType(elem1: PairElemType, elem2: PairElemType) extends PairTypeTrait
+  
 }
