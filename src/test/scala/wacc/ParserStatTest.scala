@@ -10,6 +10,17 @@ class ParserStatTest extends AnyFlatSpec{
     StatParser.statParse("skip").get shouldBe List(Skip())
   }
 
+  "Stat: assignment" should "be parsed as statement" in {
+    StatParser.statParse("p = 5").get shouldBe List(Assign(Ident("p"), IntLit(5)))
+    StatParser.statParse("array[2] = call func ()").get shouldBe List(Assign(
+      ArrayElem(Ident("array"), List(IntLit(2))), Call(Ident("func"), List()) ) )
+  }
+
+  "Stat: read" should "be parsed as statement" in {
+    StatParser.statParse("read p").get shouldBe List(Read(Ident("p")))
+    StatParser.statParse("read fst arg").get shouldBe List(Read(Pair_Elem(Ident("arg"))))
+  }
+
   "Stat: free" should "be parsed as statement" in {
     StatParser.statParse("free 1").get shouldBe List(Free(IntLit(1)))
     StatParser.statParse("free p").get shouldBe List(Free(Ident("p")))
