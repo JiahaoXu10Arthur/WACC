@@ -18,6 +18,7 @@ class ParserStatTest extends AnyFlatSpec{
 
   "Stat: read" should "be parsed as statement" in {
     StatParser.statParse("read p").get shouldBe List(Read(Ident("p")))
+    StatParser.statParse("read fst arg").get shouldBe List(Read(Pair_Elem(Ident("arg"))))
   }
 
   "Stat: free" should "be parsed as statement" in {
