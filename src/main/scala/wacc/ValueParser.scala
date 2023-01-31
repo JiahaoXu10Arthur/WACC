@@ -3,7 +3,7 @@ package wacc
 import parsley.{Parsley, Success, Failure}
 import Parsley.{attempt}
 import parsley.combinator.{some, sepBy, sepBy1}
-import parsley.lift.{lift2}
+import parsley.lift.{lift1, lift2}
 import ExprParser.{expr}
 import Ast.{Lvalue, Rvalue, ArrayLiter, ArgList, PairElem}
 import Lexer.implicitVals._
@@ -24,9 +24,9 @@ object ValueParser {
 		 if neither matches, parse as identifier */
 	val lvalue: Parsley[Lvalue] = 
 		pair_elem <|>
-		attempt (lift2[String, List[Ast.Expr], Ast.ArrayElem] (
+		attempt (lift2[Ast.Ident, List[Ast.Expr], Ast.ArrayElem] (
 			Ast.ArrayElem(_, _),
-			(Lexer.ident),
+			lift1[String, Ast.Ident] (Ast.Ident(_), Lexer.ident),
 			(some("[" ~> expr <~ "]"))
 		)) <|>
 		Ast.Ident(Lexer.ident)
@@ -39,9 +39,9 @@ object ValueParser {
 			Ast.NewPair(_, _), 
 			("newpair" ~> "(" ~> expr), 
 			("," ~> expr <~ ")") ) <|>
-		lift2[String, List[Ast.Expr], Ast.Call] (
+		lift2[Ast.Ident, List[Ast.Expr], Ast.Call] (
 			Ast.Call(_, _), 
-			("call" ~> Lexer.ident), 
+			(lift1[String, Ast.Ident] (Ast.Ident(_), "call" ~> Lexer.ident)), 
 			("(" ~> sepBy(expr, ",") <~ ")") ) <|>
 		arrayLit <|>
 		expr

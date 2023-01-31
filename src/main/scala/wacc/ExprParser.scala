@@ -6,7 +6,7 @@ import parsley.expr.{precedence}
 import parsley.combinator.{some}
 import Ast.{Expr}
 import parsley.expr.{SOps, InfixL, Prefix}
-import parsley.lift.{lift2}
+import parsley.lift.{lift1, lift2}
 import Lexer.implicitVals._
 
 object ExprParser {
@@ -18,9 +18,9 @@ object ExprParser {
 		Ast.CharLit(Lexer.char),
 		Ast.StrLit(Lexer.str),
 		Ast.PairLit(Lexer.pair),
-		attempt (lift2[String, List[Ast.Expr], Ast.ArrayElem] (
+		attempt (lift2[Ast.Ident, List[Ast.Expr], Ast.ArrayElem] (
 			Ast.ArrayElem(_, _),
-			(Lexer.ident),
+			(lift1[String, Ast.Ident] (Ast.Ident(_), Lexer.ident)),
 			(some("[" ~> expr <~ "]"))
 		)) <|>
 		Ast.Ident(Lexer.ident),

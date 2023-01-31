@@ -36,8 +36,8 @@ class ParserExprTest extends AnyFlatSpec {
   }
 
   "Expr: array element" should "be parsed as expression" in {
-    ExprParser.exprParse("array[1]").get shouldBe ArrayElem("array", List(IntLit(1)))
-    ExprParser.exprParse("array[1][5]").get shouldBe ArrayElem("array", List(IntLit(1), IntLit(5)))
+    ExprParser.exprParse("array[1]").get shouldBe ArrayElem(Ident("array"), List(IntLit(1)))
+    ExprParser.exprParse("array[1][5]").get shouldBe ArrayElem(Ident("array"), List(IntLit(1), IntLit(5)))
   }
 
   "Expr: unary operator" should "be parsed as expression" in {
