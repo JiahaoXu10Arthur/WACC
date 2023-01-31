@@ -5,8 +5,6 @@ import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc}
 import descriptions.text.{TextDesc, EscapeDesc}
 import parsley.token.predicate
 import parsley.Parsley
-import Parsley.{attempt}
-import parsley.character.string
 
 
 
@@ -19,15 +17,15 @@ object Lexer {
   private val operators = Set("(", ")", ",", "=", ";", "[", "]", "!", "-", 
                               "len", "ord", "chr", "*", "/", "%", "+", ">", 
                               ">=", "<", "<=", "==", "!=", "&&", "||")
-  private val escLiterals = Set('\u0000', '\b', '\t', '\n', '\f', '\r', '\"', '\'', '\\')
+  private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
 
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
   def isALphaNumericOrUnderscore = predicate.Basic(c => c.isLetterOrDigit || c == '_')
 
   private val desc = LexicalDesc.plain.copy(
     spaceDesc = SpaceDesc.plain.copy(
-      commentStart = "#",
-      commentEnd = "\n",
+      commentLine = "#",
+      commentLineAllowsEOF = true,
       space = predicate.Basic(Character.isWhitespace)
     ),
 
@@ -38,6 +36,7 @@ object Lexer {
 
     textDesc = TextDesc.plain.copy(
       escapeSequences = EscapeDesc.plain.copy(
+        escBegin = '\\',
         literals = escLiterals
       ),
       characterLiteralEnd = '\'',
@@ -53,7 +52,6 @@ object Lexer {
   val lexer = new Lexer(desc)
 
   def fully [A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
-  def token [A](p: Parsley[A]): Parsley[A] = lexer.lexeme(attempt(p))
   
 
   /* Definition for literal tokens */
@@ -62,7 +60,7 @@ object Lexer {
              lexer.lexeme.symbol("false") #> false
   val char = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
-  val pair = lexer.lexeme(string("null"))
+  val pair = lexer.lexeme.symbol("null") #> Ast.PairLit()
   val ident = lexer.lexeme.names.identifier
 
   val implicitVals = lexer.lexeme.symbol.implicits

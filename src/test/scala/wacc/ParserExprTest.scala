@@ -26,7 +26,7 @@ class ParserExprTest extends AnyFlatSpec {
 	}
 
   "Expr: pair liter" should "be parsed as expression" in {
-    ExprParser.exprParse("null").get shouldBe PairLit("null")
+    ExprParser.exprParse("null").get shouldBe PairLit()
   }
 
   "Expr: identifier" should "be parsed as expression" in {
@@ -73,7 +73,7 @@ class ParserExprTest extends AnyFlatSpec {
     ExprParser.exprParse("(1)").get shouldBe IntLit(1)
     ExprParser.exprParse("(true)").get shouldBe BoolLit(true)
     ExprParser.exprParse("(\"abc\")").get shouldBe StrLit("abc")
-    ExprParser.exprParse("(null)").get shouldBe PairLit("null")
+    ExprParser.exprParse("(null)").get shouldBe PairLit()
     ExprParser.exprParse("(_)").get shouldBe Ident("_")
   }
 

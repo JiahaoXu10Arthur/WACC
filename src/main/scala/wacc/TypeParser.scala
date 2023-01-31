@@ -10,18 +10,20 @@ import Lexer.implicitVals._
 
 object TypeParser {
 
-  val basicType: Parsley[BasicType] = "int" #> IntType() <|> 
-                  "bool" #> BoolType() <|>
-                  "char" #> CharType() <|>
-                  "string" #> StrType()
+  val basicType: Parsley[BasicType] 
+    = attempt("int" #> IntType() |
+              "bool" #> BoolType() |
+              "char" #> CharType() |
+              "string" #> StrType())
 
   val pairTypeIdent: Parsley[PairTypeIdent] = "pair" #> PairTypeIdent()
 
-  val pairType: Parsley[PairType] = lift2[PairElemType, PairElemType, PairType](
-                                  PairType(_, _),
-                                  ("pair(" ~> pairElemType),
-                                  ("," ~> pairElemType <~ ")")
-                                  )
+  val pairType: Parsley[PairType] 
+    = attempt(lift2[PairElemType, PairElemType, PairType](
+                PairType(_, _),
+                ("pair(" ~> pairElemType),
+                ("," ~> pairElemType <~ ")")
+                ))
 
   val arrayType: Parsley[ArrayType] 
     = attempt(chain.postfix1(basicType | pairType, "[]" #> (ArrayType)))

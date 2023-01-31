@@ -18,7 +18,7 @@
      }
    }
 
-   testSkeleton("wacc_example/valid/basic/exit/")
+   testSkeleton("wacc_example/valid/pairs/")
 
    def testSkeleton(path: String) = {
     val allFiles = getListOfFiles(path)
@@ -35,8 +35,14 @@
       if (filename.contains("valid")) {
         "A successful compilation return the exit status 0 " ++ filename in {
            (Parser.parse(string) match {
-               case Success(_) => true
-               case Failure(_) => false
+               case Success(x) => {
+                println(x)
+                true
+               }
+               case Failure(msg) => {
+                println(msg)
+                false
+               }
            }) shouldBe true
         }
       } else if (filename.contains("invalid")) {

@@ -1,9 +1,12 @@
 package wacc
 
-import parsley.genericbridges.{ParserBridge1, ParserBridge2, ParserBridge3, ParserBridge4}
+import parsley.genericbridges.{ParserSingletonBridge, ParserBridge1, ParserBridge2, ParserBridge3, ParserBridge4}
 import Types._
 
 object Ast {
+  /* Program */  
+  case class Program(funcs: List[Func], stats: List[Stat])
+  object Program extends ParserBridge2[List[Func], List[Stat], Program]
 
   /* Binary Expressions */
   sealed trait Expr extends Rvalue
@@ -80,8 +83,10 @@ object Ast {
     case class StrLit(value: String) extends Expr
     object StrLit extends ParserBridge1[String, StrLit]
 
-    case class PairLit(value: String) extends Expr
-    object PairLit extends ParserBridge1[String, PairLit]
+    case class PairLit() extends Expr
+    object PairLit extends ParserSingletonBridge[PairLit] {
+      override def con = PairLit()
+    }
 
     case class Ident(name: String) extends Expr with Lvalue
     object Ident extends ParserBridge1[String, Ident]
@@ -112,6 +117,9 @@ object Ast {
   /* Statements */
   sealed trait Stat
     case class Skip() extends Stat
+    object Skip extends ParserSingletonBridge[Skip] {
+      override def con = Skip()
+    }
 
     case class Declare(type1: Type, name: Ident, rvalve: Rvalue) extends Stat
     object Declare extends ParserBridge3[Type, Ident, Rvalue, Declare]
@@ -154,10 +162,5 @@ object Ast {
   case class Func(type1: Type, ident: Ident, params: List[Param], 
                   stats: List[Stat])
   object Func extends ParserBridge4[Type, Ident, List[Param], List[Stat], Func]
-
-    
-
-
-
 
 }

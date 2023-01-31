@@ -3,6 +3,7 @@ package wacc
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 import Ast._
+import Types._
 
 class ParserStatTest extends AnyFlatSpec{
 
@@ -72,6 +73,11 @@ class ParserStatTest extends AnyFlatSpec{
     StatParser.statParse(";") shouldBe None
     StatParser.statParse("skip;") shouldBe None
     StatParser.statParse("skip; return 5").get shouldBe List(Skip(), Return(IntLit(5)))
+  }
+
+  "Stat: declare" should "be parsed as statement" in {
+    StatParser.statParse("bool b = true").get shouldBe List(Declare(BoolType(), Ident("b"), BoolLit(true)))
+    StatParser.statParse("int i = 1").get shouldBe List(Declare(IntType(), Ident("i"), IntLit(1)))
   }
 
 

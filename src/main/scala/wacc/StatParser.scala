@@ -19,14 +19,13 @@ object StatParser {
   lazy val if_ = Ast.If("if" ~> expr, "then" ~> stmts, "else" ~> stmts <~ "fi")
   lazy val while_ = Ast.While("while" ~> expr, "do" ~> stmts <~ "done")
   val assign_ = Ast.Assign(ValueParser.lvalue, "=" ~> ValueParser.rvalue)
-  val declare_ = Ast.Declare(TypeParser.type_, 
-                             Ast.Ident(Lexer.ident), 
+  val declare_ = Ast.Declare(TypeParser.type_, Ast.Ident(Lexer.ident), 
                              "=" ~> ValueParser.rvalue)
 
 
   lazy val stmt: Parsley[Stat] = skip_ | exit_ | print_ | println_ | free_ | 
-                                 ret_ | if_ | while_ | begin_ | assign_ | 
-                                 declare_ | read_ 
+                                 ret_ | if_ | while_ | begin_ | declare_ | 
+                                 assign_ | read_ 
   lazy val stmts: Parsley[List[Stat]] = sepBy1(stmt, ";")
 
   def statParse(input: String): Option[List[Stat]] = {

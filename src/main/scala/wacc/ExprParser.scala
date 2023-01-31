@@ -7,7 +7,6 @@ import parsley.combinator.{some}
 import Ast.{Expr}
 import parsley.expr.{GOps, InfixL, Prefix}
 import Lexer.implicitVals._
-import parsley.debug._
 
 object ExprParser {
 	lazy val expr: Parsley[Expr] = precedence[Expr](
@@ -16,7 +15,7 @@ object ExprParser {
 		Ast.BoolLit(Lexer.bool),
 		Ast.CharLit(Lexer.char),
 		Ast.StrLit(Lexer.str),
-		Ast.PairLit(Lexer.pair),
+		Lexer.pair,
 		attempt(Ast.ArrayElem(Ast.Ident(Lexer.ident), some("[" ~> expr <~ "]"))),
 		Ast.Ident(Lexer.ident),
 		("(" ~> expr <~ ")")) (

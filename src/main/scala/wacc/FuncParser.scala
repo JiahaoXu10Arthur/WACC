@@ -1,7 +1,8 @@
 package wacc
 
 import parsley.{Parsley, Success, Failure}
-import parsley.combinator.sepBy
+import Parsley.attempt
+import parsley.combinator.{sepBy, many}
 import Lexer.implicitVals._
 import Ast._
 import TypeParser.type_
@@ -14,6 +15,7 @@ object FuncParser {
     "(" ~> sepBy(param, ",") <~ ")",
     "is" ~> StatParser.stmts <~ "end"
   )
+  val funcs: Parsley[List[Func]] = many(attempt(func))
 
   def funcParse (input: String): Option[Func] = {
 		func.parse(input) match {
