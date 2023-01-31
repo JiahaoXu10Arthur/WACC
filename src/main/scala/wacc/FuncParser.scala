@@ -1,6 +1,6 @@
 package wacc
 
-import parsley.Parsley
+import parsley.{Parsley, Success, Failure}
 import parsley.combinator.sepBy
 import Lexer.implicitVals._
 import Ast._
@@ -14,4 +14,15 @@ object FuncParser {
     "(" ~> sepBy(param, ",") <~ ")",
     "is" ~> StatParser.stmts <~ "end"
   )
+
+  def funcParse (input: String): Option[Func] = {
+		func.parse(input) match {
+      case Success(x) => {
+				Some(x)
+			}
+      case Failure(msg) => {
+				None
+			}
+    }
+	}
 }

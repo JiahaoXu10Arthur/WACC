@@ -1,7 +1,7 @@
 package wacc
 
 import parsley.{Parsley, Success, Failure}
-import Parsley.{attempt, pure}
+import Parsley.{attempt}
 import parsley.expr.{precedence}
 import parsley.combinator.{some}
 import Ast.{Expr}
@@ -55,8 +55,7 @@ object ExprParser {
 	)
 		
 	def exprParse (input: String): Option[Expr] = {
-		println("input: " + input)
-		expr.debug("sds").parse(input) match {
+		expr.parse(input) match {
       case Success(x) => {
 				Some(x)
 			}
