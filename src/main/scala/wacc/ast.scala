@@ -109,7 +109,7 @@ object Ast {
 
   sealed trait ArgList
     case class Arg_List(values: List[Expr]) extends ArgList
-    object Arg_List extends  ParserBridge1[List[Expr], ArgList]
+    object Arg_List extends ParserBridge1[List[Expr], ArgList]
 
   /* Statements */
   sealed trait Stat
