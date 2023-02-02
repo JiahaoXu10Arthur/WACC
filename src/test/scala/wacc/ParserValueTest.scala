@@ -4,7 +4,7 @@
 // import org.scalatest.matchers.should.Matchers._
 // import Ast._
 
-// class ParserPairElemTest extends AnyFlatSpec {
+// class ParserValueTest extends AnyFlatSpec {
 
 //   "Lvalue: Identifier" should "be parsed as lvalue" in {
 // 		ValueParser.lvalueParse("p").get shouldBe Ident("p")

@@ -1,8 +1,12 @@
 package wacc
 
 import Ast.Expr
+import SymbolObject._
 
-class SemanticChecker {
+object SemanticChecker {
+
+  var ST: SymbolTable = new SymbolTable(null)
+
   def checkExpr(expr: Expr): Boolean = {
     true
   }

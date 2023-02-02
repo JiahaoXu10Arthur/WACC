@@ -2,6 +2,7 @@ package wacc
 
 import ParserPositionBridge.{ParserSingletonBridgePos,ParserBridgePos1, ParserBridgePos2, ParserBridgePos3, ParserBridgePos4}
 import Types._
+import SymbolObject._
 
 object Ast {
   /* Program */  
@@ -72,23 +73,39 @@ object Ast {
   /* Literals */
   sealed trait Atom extends Term    
     case class IntLit(value: Int)(val pos: (Int, Int)) extends Expr
-    object IntLit extends ParserBridgePos1[Int, IntLit]
+    object IntLit extends ParserBridgePos1[Int, IntLit] {
+      val exprType = IntType()
+    }
 
     case class BoolLit(value: Boolean)(val pos: (Int, Int)) extends Expr
-    object BoolLit extends ParserBridgePos1[Boolean, BoolLit]
+    object BoolLit extends ParserBridgePos1[Boolean, BoolLit] {
+      val exprType = BoolType()
+    }
 
     case class CharLit(value: Char)(val pos: (Int, Int)) extends Expr
-    object CharLit extends ParserBridgePos1[Char, CharLit]
+    object CharLit extends ParserBridgePos1[Char, CharLit] {
+      val exprType = CharType()
+    }
 
     case class StrLit(value: String)(val pos: (Int, Int)) extends Expr
-    object StrLit extends ParserBridgePos1[String, StrLit]
+    object StrLit extends ParserBridgePos1[String, StrLit] {
+      val exprType = StrType()
+    }
 
     case class PairLit()(val pos: (Int, Int)) extends Expr
     object PairLit extends ParserSingletonBridgePos[PairLit] {
+      val exprType = PairTypeIdent()
       override def con(pos: (Int, Int)) = this()(pos)
     }
 
-    case class Ident(name: String)(val pos: (Int, Int)) extends Expr with Lvalue
+    case class Ident(name: String)(val pos: (Int, Int)) extends Expr with Lvalue {
+      val n = name
+      var exprType: Type = null
+      
+      def check(st: SymbolTable) = {
+        exprType = st.lookUp(n).get.getType()
+      }
+    }
     object Ident extends ParserBridgePos1[String, Ident]
 
     case class ArrayElem(name: Ident, 
@@ -110,7 +127,11 @@ object Ast {
   object PairElem extends ParserBridgePos1[Lvalue, PairElem]
   
   case class ArrayLit(values: List[Expr])(val pos: (Int, Int)) extends Rvalue
-  object ArrayLit extends ParserBridgePos1[List[Expr], ArrayLit]
+  object ArrayLit extends ParserBridgePos1[List[Expr], ArrayLit]{
+      def check(st: SymbolTable) = {
+        /* elements in values should  have the same type */
+      }
+    }
 
   case class ArgList(values: List[Expr])(val pos: (Int, Int))
   object ArgList extends  ParserBridgePos1[List[Expr], ArgList]
