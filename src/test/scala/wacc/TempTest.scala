@@ -9,6 +9,7 @@
  import org.scalatest.wordspec.AnyWordSpec
  
  class TempTest extends AnyWordSpec {
+
    def getListOfFiles(dir: String):List[File] = {
      val d = new File(dir)
      if (d.exists && d.isDirectory) {
@@ -18,42 +19,65 @@
      }
    }
 
-   testSkeleton("wacc_example/valid/expressions/")
+  def getListOfSubDirectories(directoryName: String): List[String] = {
+    (new File(directoryName))
+        .listFiles
+        .filter(_.isDirectory)
+        .map(_.getName).toList
+  }
 
-   def testSkeleton(path: String) = {
+  var testNum = 0
+  var testRun = 0
+  var testPass = 0
+  var testFail = 0
+  var testSkip = 0
+
+  println("Running all tests")
+  testSkeleton("wacc_example/")
+
+  def testSkeleton(path: String) :Unit = {
     val allFiles = getListOfFiles(path)
+    val subDirs = getListOfSubDirectories(path)
 
     "A bunch of generated ScalaTest tests" should {
-        allFiles.foreach{x => testFile(path, x)}
+      allFiles.foreach{x => testFile(path, x)}
+      if (subDirs.nonEmpty) {
+        subDirs.foreach{x => testSkeleton(path ++ "/" ++ x ++ "/")}
+      }
     }
-   }
-   
+  }
 
-   def testFile(path: String, f: File) = {
+   def testFile(path: String, f: File)= {
+      testNum += 1
+      testRun += 1
       val filename = path ++ f.getName()
       val string = new String(Files.readAllBytes(Paths.get(filename)))
-      if (filename.contains("valid")) {
-        "A successful compilation return the exit status 0 " ++ filename in {
+
+      if (path.contains("/valid/")) {
+          "A successful compilation return the exit status 0 " ++ filename in {
            (Parser.parse(string) match {
                case Success(x) => {
-                println(x)
+                // println(x)
+                testPass += 1
                 true
                }
                case Failure(msg) => {
                 println(msg)
+                testFail += 1
                 false
                }
            }) shouldBe true
         }
-      } else if (filename.contains("invalid")) {
-        if (filename.contains("semanticErr")) {
-            "A compilation that fails due to syntax errors return the exit status 100" in {
-            }
-        } else if (filename.contains("syntaxErr")) {
-            "a compilation that fails due to semantic errors return the exit status 200" in {
-            }
-        }
+      } else if (path.contains("syntaxErr")) {
+        testSkip += 1
+        "A compilation that fails due to syntax errors return the exit status 100" ++ filename in pending
+      } else if (path.contains("semanticErr")) {
+        testSkip += 1
+        "A compilation that fails due to semantic errors return the exit status 200" ++ filename in pending
       }
     }
+
+
+
    
  }
