@@ -13,7 +13,7 @@ object StatParser {
   val free_ = "free" ~> Ast.Free(expr)
   val read_ = "read" ~> Ast.Read(ValueParser.lvalue)
   val ret_ = "return" ~> Ast.Return(expr)
-  val skip_ = "skip" #> Ast.Skip()
+  val skip_ = Ast.Skip <# "skip"
 
   lazy val begin_ = "begin" ~> Ast.Begin(stmts) <~ "end"
   lazy val if_ = Ast.If("if" ~> expr, "then" ~> stmts, "else" ~> stmts <~ "fi")
