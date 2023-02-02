@@ -1,29 +1,26 @@
 package wacc
 
-import parsley.{Parsley, Success, Failure}
-import parsley.character.digit
-import parsley.expr.chain
-import parsley.implicits.character.charLift
+import parsley.{Success, Failure}
+import java.nio.file.Files
+import java.nio.file.Paths
 
 object Main {
-    def main(args: Array[String]): Unit = {
-        println("Hello WACC_17!")
+	def main(args: Array[String]): Unit = {
+		val filename = args.head
+		val string = new String(Files.readAllBytes(Paths.get(filename)))
 
-        lazy val integer = digit.foldLeft1[BigInt](0)((n, d) => n * 10 + d.asDigit)
-
-        val add = (x: BigInt, y: BigInt) => x + y
-        val sub = (x: BigInt, y: BigInt) => x - y
-
-        lazy val expr: Parsley[BigInt] =
-            chain.left1[BigInt](
-                ('(' ~> expr <~ ')') <|> integer,
-                ('+' #> add) <|> ('-' #> sub)
-            )
-
-        expr.parse(args.head) match {
-            case Success(x) => println(s"${args.head} = $x")
-            case Failure(msg) => println(msg)
-        }
-    }
+		Parser.parse(string) match {
+			case Success(x) => {
+				println(s"${args.head} parse success: ")
+				println(x)
+				System.exit(0)
+			}
+			case Failure(msg)	=> {
+				println(s"${args.head} parse fail: ")
+				println(msg)
+				System.exit(100)
+			}
+		}
+	}
 }
 
