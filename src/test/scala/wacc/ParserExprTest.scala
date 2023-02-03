@@ -1,10 +1,10 @@
-// package wacc
+package wacc
 
-// import org.scalatest.flatspec.AnyFlatSpec
-// import org.scalatest.matchers.should.Matchers._
-// import Ast._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers._
+import Ast._
 
-// class ParserExprTest extends AnyFlatSpec {
+class ParserExprTest extends AnyFlatSpec {
     
 //   "Expr: int liter" should "be parsed as expression" in {
 // 		ExprParser.exprParse("1").get shouldBe IntLit(1)
@@ -77,5 +77,5 @@
 //     ExprParser.exprParse("(_)").get shouldBe Ident("_")
 //   }
 
-// }
+}
 
