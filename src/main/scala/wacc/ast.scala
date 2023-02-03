@@ -14,6 +14,9 @@ object Ast {
     def check(st: SymbolTable): Type
   }
     /* Arithmetic binary operators */
+    /* Arg1 Type: Int
+       Arg2 Type: Int
+       Return Type: Int */
     case class Mul(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Expr {
       override def check(st: SymbolTable): Type = 
         arithmeticsCheck(expr1, expr2, st)
@@ -44,7 +47,10 @@ object Ast {
     }
     object Sub extends ParserBridgePos2[Expr, Expr, Sub]
     
-    // /* Comparison binary operators */
+    /* Comparison binary operators */
+    /* Arg1 Type: Int/Char
+       Arg2 Type: Same as Arg1
+       Return Type: Bool */
     case class Gt(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Expr {
       override def check(st: SymbolTable): Type = {
         compareCheck(expr1, expr2, st)
@@ -73,6 +79,9 @@ object Ast {
     }
     object Lte extends ParserBridgePos2[Expr, Expr, Lte]
 
+    /* Arg1 Type: T
+       Arg2 Type: T
+       Return Type: Bool */
     case class Eq(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Expr {
       override def check(st: SymbolTable): Type = {
         eqCheck(expr1, expr2, st)
@@ -88,6 +97,9 @@ object Ast {
     object Neq extends ParserBridgePos2[Expr, Expr, Neq]
 
     /* Logical binary operators */
+    /* Arg1 Type: Bool
+       Arg2 Type: Bool
+       Return Type: Bool */
     case class And(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Expr {
       override def check(st: SymbolTable): Type = {
         logiCheck(expr1, expr2, st)
@@ -104,9 +116,9 @@ object Ast {
     
   /* Unary operators */
   sealed trait Term extends Expr
+    /* Arg type: Bool
+       Return type: Bool */
     case class Not(expr: Expr)(val pos: (Int, Int)) extends Expr {
-      /* Arugument type: bool
-         Return type: bool */
       override def check(st: SymbolTable): Type = {
         if (expr.check(st) != BoolType()) {
           semanticErr("Not: argument not bool")
@@ -116,9 +128,9 @@ object Ast {
     }
     object Not extends ParserBridgePos1[Expr, Not]
 
+    /* Arg type: Int
+       Return type: Int */
     case class Neg(expr: Expr)(val pos: (Int, Int)) extends Expr {
-      /* Arugument type: int
-         Return type: int */
       override def check(st: SymbolTable): Type = {
         if (expr.check(st) != IntType()) {
           semanticErr("Neg: argument not int")
@@ -128,9 +140,9 @@ object Ast {
     }
     object Neg extends ParserBridgePos1[Expr, Neg]
 
+    /* Arg type: T[]
+       Return type: Int */
     case class Len(expr: Expr)(val pos: (Int, Int)) extends Expr {
-      /* Arugument type: T[]
-         Return type: int */
       override def check(st: SymbolTable): Type = {
         expr.check(st) match {
           case ArrayType(_) => 
@@ -141,9 +153,9 @@ object Ast {
     }
     object Len extends ParserBridgePos1[Expr, Len]
 
+    /* Arg type: Char
+       Return type: Int */
     case class Ord(expr: Expr)(val pos: (Int, Int)) extends Expr {
-      /* Arugument type: char
-         Return type: int */
       override def check(st: SymbolTable): Type = {
         if (expr.check(st) != CharType()) {
           semanticErr("Ord: argument not char")
@@ -153,9 +165,9 @@ object Ast {
     }
     object Ord extends ParserBridgePos1[Expr, Ord]
 
+    /* Arg type: Int
+       Return type: Char */
     case class Chr(expr: Expr)(val pos: (Int, Int)) extends Expr {
-      /* Arugument type: int
-         Return type: char */
       override def check(st: SymbolTable): Type = {
         if (expr.check(st) != IntType()) {
           semanticErr("Chr: argument not int")
@@ -194,9 +206,10 @@ object Ast {
       override def con(pos: (Int, Int)) = this()(pos)
     }
 
+    /* Expr Type: refer to st */
     case class Ident(name: String)(val pos: (Int, Int)) extends Expr with Lvalue {
       override def check(st: SymbolTable): Type = {
-        st.lookUp(name) match {
+        st.lookUpAll(name) match {
           case Some(symObj) => symObj.getType()
           case None => semanticErr("Ident: not in symbol table")
         }
@@ -204,6 +217,9 @@ object Ast {
     }
     object Ident extends ParserBridgePos1[String, Ident]
 
+    /* Arg1: Ident -> Refer to ArrayObj in st -> T[]
+       Arg2: Int[] -> every element Int
+       Return: T */
     case class ArrayElem(ident: Ident, 
                          index: List[Expr])
                          (val pos: (Int, Int)) extends Expr with Lvalue {
@@ -211,7 +227,7 @@ object Ast {
         var returnType: Type = null
 
         /* First argument type should be T[] */
-        st.lookUp(ident.name) match {
+        st.lookUpAll(ident.name) match {
           case Some(symObj) => { 
             symObj match {
             /* Return type should be T */
@@ -219,7 +235,6 @@ object Ast {
             case _ => semanticErr("ArrayElem: fst arg not arrayObj")
           }
         }
-
           case None => semanticErr("ArrayElem: not in symbol table")
         }
 
@@ -227,20 +242,22 @@ object Ast {
         index.foreach{x => if (x.check(st) != IntType()) 
                                { semanticErr("ArrayElem: index not int type")}}
 
-        /* If out of bound, run time error */
         returnType
       }
     }
     object ArrayElem extends ParserBridgePos2[Ident, List[Expr], ArrayElem]
 
-  /* Separate things */
+  /* Values */
   sealed trait Lvalue {
-    def check(st: SymbolTable): Type = {null}
+    def check(st: SymbolTable): Type
   }
   sealed trait Rvalue {
-    def check(st: SymbolTable): Type = {null}
+    def check(st: SymbolTable): Type
   }
 
+  /* Arg1: PairElementType
+     Arg2: PairElementType
+     Return: PairType(Arg1Type, Arg2Type) */
   case class NewPair(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Rvalue {
     override def check(st: SymbolTable): Type = {
       val type1 = castToPairElem(expr1.check(st))
@@ -258,6 +275,10 @@ object Ast {
   }
   object NewPair extends ParserBridgePos2[Expr, Expr, NewPair]
 
+  /* Arg1: Ident -> Refer to FuncObj in st
+     FuncObj(returnType, args, argc, st) 
+     Arg2: args -> type match to FuncObj(args)
+     Return: FuncObj(returnType) */
   case class Call(ident: Ident, args: List[Expr])(val pos: (Int, Int)) extends Rvalue {
     override def check(st: SymbolTable): Type = {
       var funcObj: FuncObj = null
@@ -307,6 +328,9 @@ object Ast {
   }
   object Call extends ParserBridgePos2[Ident, List[Expr], Call]
 
+  /* Arg1: fst/snd
+     Arg2: PairType(T1, T2)
+     Return: if fst -> T1; if snd -> T2 */
   case class PairElem(index: String, lvalue: Lvalue)(val pos: (Int, Int)) extends Lvalue with Rvalue {
     override def check(st: SymbolTable): Type = {
       var returnType: Type = null
@@ -333,23 +357,82 @@ object Ast {
   }
   object PairElem extends ParserBridgePos2[String, Lvalue, PairElem]
   
-  case class ArrayLit(values: List[Expr])(val pos: (Int, Int)) extends Rvalue 
+  /* Arg: All elements in List same type T
+     Return: ArrayType(T)
+     OR
+     Arg: [] -> empty list
+     Return: ArrayType(AnyType) */
+  case class ArrayLit(values: List[Expr])(val pos: (Int, Int)) extends Rvalue {
+    override def check(st: SymbolTable): Type = {
+      /* check empty */
+      if (values.length == 0) {
+        ArrayType(AnyType())
+      }
+      
+      /* check every parameter's type */
+      for (i <- 0 until values.length - 1) {
+        // checkValueRef(args(i), st)
+        if (values(i).check(st) != values(i + 1).check(st)) {
+          semanticErr("ArrayLit: Array literals are not of the same type")
+        }
+      }
+      ArrayType(values(1).check(st))
+    }
+  }
   object ArrayLit extends ParserBridgePos1[List[Expr], ArrayLit]
 
   case class ArgList(values: List[Expr])(val pos: (Int, Int))
-  object ArgList extends  ParserBridgePos1[List[Expr], ArgList]
+  object ArgList extends ParserBridgePos1[List[Expr], ArgList]
 
   /* Statements */
-  sealed trait Stat
+  sealed trait Stat {
+    def check(st: SymbolTable): Unit = {}
+  }
     case class Skip()(val pos: (Int, Int)) extends Stat
     object Skip extends ParserSingletonBridgePos[Skip] {
       override def con(pos: (Int, Int)) = this()(pos)
     }
 
-    case class Declare(type1: Type, name: Ident, rvalve: Rvalue)(val pos: (Int, Int)) extends Stat
+    /* name must not clash keywords and other variables in scope 
+       Initial value type should match type of variable*/
+    case class Declare(type1: Type, ident: Ident, initValue: Rvalue)(val pos: (Int, Int)) extends Stat {
+      override def check(st: SymbolTable): Unit = {
+        /* Check existence, Create new VariableObj */
+        st.lookUp(ident.name) match {
+          case Some(_) => semanticErr("Declare: Variable name already exists")
+          case None => st.add(ident.name, VariableObj(type1))
+        }
+
+        /* Initial value should match the type */
+        if (type1 != initValue.check(st)) {
+          semanticErr("Declare: Initial value wrong type")
+        }
+      }
+    }
     object Declare extends ParserBridgePos3[Type, Ident, Rvalue, Declare]
 
-    case class Assign(lvalue: Lvalue, rvalue: Rvalue)(val pos: (Int, Int)) extends Stat
+    /* target type: variable, array element, pair element
+       newValue type: expr, arrayLit, function call, pair constr, pair element */
+    case class Assign(target: Lvalue, newValue: Rvalue)(val pos: (Int, Int)) extends Stat {
+      override def check(st: SymbolTable): Unit = {
+        newValue match {
+          case newValue: Expr => retCheck(st)
+          case newValue: ArrayLit => retCheck(st)
+          case newValue: Call => retCheck(st)
+          case newValue: NewPair => retCheck(st)
+          case newValue: PairElem => retCheck(st)
+          case _ => semanticErr("Assign: wrong target type")
+        }
+      }
+
+      /* Target type match newValue type */
+      def retCheck(st: SymbolTable) {
+        if (target.check(st) != newValue.check(st)) {
+          semanticErr("Assign: assign value mismatch target ")
+        }
+      }
+
+    }
     object Assign extends ParserBridgePos2[Lvalue, Rvalue, Assign]
 
     case class Read(lvalue: Lvalue)(val pos: (Int, Int)) extends Stat
