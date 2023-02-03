@@ -31,7 +31,7 @@ class ParserStatTest extends AnyFlatSpec{
 			case List(Read(Ident("p"))) =>
 		}
     StatParser.statParse("read fst arg").get should matchPattern {
-			case List(Read(PairElem(Ident("arg")))) =>
+			case List(Read(PairElem("fst", Ident("arg")))) =>
 		} 
   }
 

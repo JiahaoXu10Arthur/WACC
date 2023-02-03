@@ -11,7 +11,6 @@ object Ast {
 
   /* Binary Expressions */
   sealed trait Expr extends Rvalue {
-    // var exprType: Type = null
     def check(st: SymbolTable): Type
   }
     /* Arithmetic binary operators */
@@ -189,7 +188,7 @@ object Ast {
     object StrLit extends ParserBridgePos1[String, StrLit]
 
     case class PairLit()(val pos: (Int, Int)) extends Expr {
-      def check(st: SymbolTable): Type = PairType(AnyType(), AnyType())
+      override def check(st: SymbolTable): Type = PairType(AnyType(), AnyType())
     }
     object PairLit extends ParserSingletonBridgePos[PairLit] {
       override def con(pos: (Int, Int)) = this()(pos)
@@ -235,19 +234,106 @@ object Ast {
     object ArrayElem extends ParserBridgePos2[Ident, List[Expr], ArrayElem]
 
   /* Separate things */
-  sealed trait Lvalue
-  sealed trait Rvalue
+  sealed trait Lvalue {
+    def check(st: SymbolTable): Type = {null}
+  }
+  sealed trait Rvalue {
+    def check(st: SymbolTable): Type = {null}
+  }
 
-  case class NewPair(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Rvalue
+  case class NewPair(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Rvalue {
+    override def check(st: SymbolTable): Type = {
+      val type1 = castToPairElem(expr1.check(st))
+      val type2 = castToPairElem(expr2.check(st))
+
+      PairType(type1, type2)
+    }
+
+    def castToPairElem(t: Type): PairElemType = {
+      t match {
+        case t: PairElemType => t
+        case _ => semanticErr("New Pair: arg not PairElemType")
+      }
+    }
+  }
   object NewPair extends ParserBridgePos2[Expr, Expr, NewPair]
 
-  case class Call(name: Ident, args: List[Expr])(val pos: (Int, Int)) extends Rvalue
+  case class Call(ident: Ident, args: List[Expr])(val pos: (Int, Int)) extends Rvalue {
+    override def check(st: SymbolTable): Type = {
+      var funcObj: FuncObj = null
+      /* Find funcObj */
+      st.lookUpAll(ident.name) match {
+        case Some(symObj) =>  { 
+            symObj match {
+            case symObj: FuncObj => funcObj = symObj
+            case _ => semanticErr("ArrayElem: fst arg not funcObj")
+          }
+        }
+        case None => semanticErr("Call: function name not in symbol table")
+      }
+
+      /* check number of parameters */
+      if (args.length != funcObj.argc) {
+        semanticErr("Call: wrong argument number")
+      }
+
+      /* check every parameter's type */
+      for (i <- 0 until args.length) {
+        checkValueRef(args(i), st)
+        if (args(i).check(st) != funcObj.args(i).getType()) {
+          semanticErr("Call: function name not in symbol table")
+        }
+      }
+
+      /* Return type */
+      funcObj.returnType
+    }
+  
+    /* Check pass parameter by value or by ref */
+    def checkValueRef(expr: Expr, st: SymbolTable) = {
+      expr match {
+        // Int, Bool, Char should by value
+        case IntLit(_) | BoolLit(_) | CharLit(_)  =>
+        // String, Array, Pair should by reference
+        case Ident(_) => expr.check(st) match {
+          case StrType() =>
+          case ArrayType(_) =>
+          case PairType(_, _) =>
+          case _ => semanticErr("Call: wrong by value Or by reference")
+        }
+        case _ => semanticErr("Call: wrong by value Or by reference")
+      }
+    }
+  }
   object Call extends ParserBridgePos2[Ident, List[Expr], Call]
 
-  case class PairElem(lvalue: Lvalue)(val pos: (Int, Int)) extends Lvalue with Rvalue
-  object PairElem extends ParserBridgePos1[Lvalue, PairElem]
+  case class PairElem(index: String, lvalue: Lvalue)(val pos: (Int, Int)) extends Lvalue with Rvalue {
+    override def check(st: SymbolTable): Type = {
+      var returnType: Type = null
+
+      /* Lvalue should be a pair */
+      val lType = lvalue.check(st)
+      lType match {
+        case PairType(t1, t2) => index match {
+          case "fst" => returnType = castToType(t1)
+          case "snd" => returnType = castToType(t2)
+        }
+        case _ => semanticErr("Pair elem: not Pair Type")
+      }
+
+      returnType
+    }
+
+    def castToType(t: PairElemType): Type = {
+      t match {
+        case t: Type => t
+        case _ => semanticErr("Pair elem: arg not Type")
+      }
+    }
+  }
+  object PairElem extends ParserBridgePos2[String, Lvalue, PairElem]
   
-  case class ArrayLit(values: List[Expr])(val pos: (Int, Int)) extends Rvalue
+  case class ArrayLit(values: List[Expr])(val pos: (Int, Int)) extends Rvalue 
   object ArrayLit extends ParserBridgePos1[List[Expr], ArrayLit]
 
   case class ArgList(values: List[Expr])(val pos: (Int, Int))

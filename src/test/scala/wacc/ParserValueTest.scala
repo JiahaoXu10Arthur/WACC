@@ -23,10 +23,10 @@ class ParserValueTest extends AnyFlatSpec {
 
 	"Lvalue: Pair Elem" should "be parsed as lvalue" in {
 		ValueParser.lvalueParse("fst p").get should matchPattern {
-			case PairElem(Ident("p")) =>
+			case PairElem("fst", Ident("p")) =>
 		} 
 		ValueParser.lvalueParse("snd array[1]").get should matchPattern {
-			case PairElem(ArrayElem(Ident("array"), List(IntLit(1)))) =>
+			case PairElem("snd", ArrayElem(Ident("array"), List(IntLit(1)))) =>
 		} 
 	}
 
@@ -53,13 +53,13 @@ class ParserValueTest extends AnyFlatSpec {
 
 	"Rvalue: PairElem" should "be parsed as rvalue" in {
 		ValueParser.rvalueParse("fst p").get should matchPattern {
-			case PairElem(Ident("p")) =>
+			case PairElem("fst", Ident("p")) =>
 		} 
 		ValueParser.rvalueParse("snd array[1][5]").get should matchPattern {
-			case PairElem(ArrayElem(Ident("array"), List(IntLit(1), IntLit(5)))) =>
+			case PairElem("snd", ArrayElem(Ident("array"), List(IntLit(1), IntLit(5)))) =>
 		} 
 		ValueParser.rvalueParse("fst fst array[1]").get should matchPattern {
-			case (PairElem(PairElem(ArrayElem(Ident("array"), List(IntLit(1)))))) =>
+			case (PairElem("fst", PairElem("fst", ArrayElem(Ident("array"), List(IntLit(1)))))) =>
 		}
 	}
 
@@ -117,29 +117,29 @@ class ParserValueTest extends AnyFlatSpec {
 
 	"PairElem: Lvalue Ident" should "be parsed as pair elem" in {
 		ValueParser.pairElemParse("fst p").get should matchPattern {
-			case PairElem(Ident("p")) =>
+			case PairElem("fst", Ident("p")) =>
 		} 
 		ValueParser.pairElemParse("snd q").get should matchPattern {
-			case PairElem(Ident("q")) =>
+			case PairElem("snd", Ident("q")) =>
 		} 
 	}
 
 	"PairElem: Lvalue Array Elem" should "be parsed as pair elem" in {
 		ValueParser.pairElemParse("fst array[1]").get should matchPattern {
-			case PairElem(ArrayElem(Ident("array"), List(IntLit(1)))) =>
+			case PairElem("fst", ArrayElem(Ident("array"), List(IntLit(1)))) =>
 		}
 
 		ValueParser.pairElemParse("snd array[1][5]").get should matchPattern {
-			case PairElem(ArrayElem(Ident("array"), List(IntLit(1), IntLit(5)))) =>
+			case PairElem("snd", ArrayElem(Ident("array"), List(IntLit(1), IntLit(5)))) =>
 		} 
 	}
 
 	"PairElem: Lvalue Pair Elem" should "be parsed as pair elem" in {
 		ValueParser.pairElemParse("fst fst array[1]").get should matchPattern {
-			case PairElem(PairElem(ArrayElem(Ident("array"), List(IntLit(1))))) =>
+			case PairElem("fst", PairElem("fst", ArrayElem(Ident("array"), List(IntLit(1))))) =>
 		}
 		ValueParser.pairElemParse("snd fst q").get should matchPattern {
-			case PairElem(PairElem(Ident("q"))) =>
+			case PairElem("snd", PairElem("fst", Ident("q"))) =>
 		}
 	}
 

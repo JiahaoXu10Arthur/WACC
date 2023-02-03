@@ -10,7 +10,7 @@ import Lexer.implicitVals._
 object ValueParser {
 
 	val pair_elem: Parsley[PairElem] = 
-		Ast.PairElem(("fst" <|> "snd") ~> lvalue)
+		Ast.PairElem(Lexer.pairElem, lvalue)
 
 	val argList: Parsley[ArgList] =
 		Ast.ArgList(sepBy1(expr, ","))

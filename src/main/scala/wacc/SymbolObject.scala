@@ -12,15 +12,16 @@ object SymbolObject {
 			override def getType(): Type = t
 		}
 		
-		// case class ParamObj(val t: Type) extends SymbolObj {
-		// 	override def getType(): Type = t
-		// }
+		case class ParamObj(val t: Type) extends SymbolObj {
+			override def getType(): Type = t
+		}
 
-		// case class FunctionObj(val returnType: Type, 
-		// 											 val args: ParamObj, 
-		// 											 val symTable: SymbolTable) extends SymbolObj {
-		// 	override def getType(): Type = returnType
-		// }
+		case class FuncObj(val returnType: Type, 
+											 val args: List[ParamObj], 
+											 val argc: Int,
+											 val symTable: SymbolTable) extends SymbolObj {
+			override def getType(): Type = returnType
+		}
 
 		case class ArrayObj(val elemType: Type, val elemNum: Int) extends SymbolObj {
 			override def getType(): Type = ArrayType(elemType)
