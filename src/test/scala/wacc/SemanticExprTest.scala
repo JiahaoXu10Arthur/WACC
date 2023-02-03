@@ -5,9 +5,10 @@ import org.scalatest.matchers.should.Matchers._
 import Ast._
 import Types._
 import SymbolObject._
-import Ast.st
 
 class SemanticExprTest extends AnyFlatSpec {
+	val st = new SymbolTable(null)
+
 	"Expr: int liter" should "be IntType" in {
 		IntLit(1)(0, 0).check(st) shouldBe IntType()
 	}
@@ -25,17 +26,20 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Identifer" should "refer type in symbolTable" in {
+		val st = new SymbolTable(null)
 		val testIdent = Ident("ident")(0, 0)
 
 		/* No symbol table, semantic error */
 		an [SemanticErr] should be thrownBy testIdent.check(st)
 
+		/* int ident */
 		st.add("ident", new VariableObj(IntType()))
 		/* After add symbol table, should get type */
 		testIdent.check(st) shouldBe IntType()
 	}
 
 	"Expr: Array Elem" should "refer type in symbolTable" in {
+		val st = new SymbolTable(null)
 		/* array[1][5] */
 		val testArray1 = ArrayElem(Ident("array")(0,0), List(IntLit(1)(0, 0), 
 															 IntLit(5)(0, 0))) (0, 0)
@@ -59,6 +63,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Unary Operator: Not" should "return BoolType" in {
+		val st = new SymbolTable(null)
 		/* !true */
 		val testNot1 = Not(BoolLit(true)(0,0))(0,0)
 		/* !2 */
@@ -72,6 +77,5 @@ class SemanticExprTest extends AnyFlatSpec {
 		val testNot3 = Not(Ident("boolValue")(0,0))(0,0)
 		st.add("boolValue", new VariableObj(BoolType()))
 		testNot3.check(st) shouldBe BoolType()
-
 	}
 }

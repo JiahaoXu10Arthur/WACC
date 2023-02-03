@@ -4,19 +4,7 @@ import ParserPositionBridge.{ParserSingletonBridgePos,ParserBridgePos1, ParserBr
 import Types._
 import SymbolObject._
 
-/* 现在的问题：
-  1. Expr 有exprType，初始化为null，在某些case里会update（Literal）
-  2. check（）进行semantic check，如果有error，直接报错返回，最后return 这个expr evaluate的type
-     这一步会更改exprType，但需确认是否一定能够更改，并且access exprType得在更改后
-     e.g. ！<expr> 里 expr可以是个ident，ident必须call过check（）之后，才能更新type，不然永远是null
-  3. 可否把check（）变成Expr的默认function，需要考虑，有的check（）take in symbolTable，有的不需要
-  4. 怎么define symbol table？是永远check（）take in parameter，还是有一个global？怎么test？
-*/
-
 object Ast {
-  /* Global symbol table */
-  val st = new SymbolTable(null)
-
   /* Program */  
   case class Program(funcs: List[Func], stats: List[Stat])(val pos: (Int, Int))
   object Program extends ParserBridgePos2[List[Func], List[Stat], Program]
@@ -157,8 +145,7 @@ object Ast {
     object StrLit extends ParserBridgePos1[String, StrLit]
 
     case class PairLit()(val pos: (Int, Int)) extends Expr {
-      /* Pair Elem type extends Type? */
-      // def check(): Type = PairTypeIdent()
+      // def check(): Type = PairType()
     }
     object PairLit extends ParserSingletonBridgePos[PairLit] {
       override def con(pos: (Int, Int)) = this()(pos)
