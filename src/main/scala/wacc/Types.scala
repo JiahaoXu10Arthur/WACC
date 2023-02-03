@@ -13,4 +13,6 @@ object Types {
     case class BoolType() extends BasicType
     case class CharType() extends BasicType
     case class StrType() extends BasicType
+
+  case class AnyType() extends Type with PairElemType
 }
