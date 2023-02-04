@@ -9,16 +9,19 @@ object Main {
 		val filename = args.head
 		val string = new String(Files.readAllBytes(Paths.get(filename)))
 
+
+
 		Parser.parse(string) match {
 			case Success(x) => {
 				println(s"${args.head} parse success: ")
 				println(x)
-				System.exit(0)
+			//  Comment out for stopping sbt shutting down	
+			//	System.exit(0)
 			}
 			case Failure(msg)	=> {
 				println(s"${args.head} parse fail: ")
 				println(msg)
-				System.exit(100)
+			//	System.exit(100)
 			}
 		}
 	}
