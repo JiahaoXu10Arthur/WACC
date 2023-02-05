@@ -1,6 +1,6 @@
 package wacc
 
-import Types._
+import SemanticType._
 
 object SymbolObject {
 
