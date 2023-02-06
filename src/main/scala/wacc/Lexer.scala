@@ -1,11 +1,13 @@
 package wacc
 
 import parsley.token.{Lexer, descriptions}
+import parsley.character.{char, digit}
 import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc, numeric}
 import descriptions.text.{TextDesc, EscapeDesc}
 import numeric.PlusSignPresence.Optional
 import parsley.token.predicate
 import parsley.Parsley
+import Parsley.{notFollowedBy, attempt}
 
 
 
@@ -65,12 +67,13 @@ object Lexer {
   val num = lexer.lexeme.numeric.signed.number32[Int]
   val bool = lexer.lexeme.symbol("true") #> true | 
              lexer.lexeme.symbol("false") #> false
-  val char = lexer.lexeme.text.character.ascii
+  val character = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
   val pair = lexer.lexeme.symbol("null")
   val ident = lexer.lexeme.names.identifier
   val pairElem = lexer.lexeme.symbol("fst") #> "fst" | 
                  lexer.lexeme.symbol("snd") #> "snd"
+  val negate = attempt(lexer.lexeme(char('-') ~> notFollowedBy(digit)))
 
   val implicitVals = lexer.lexeme.symbol.implicits
 }

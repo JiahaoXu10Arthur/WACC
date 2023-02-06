@@ -13,7 +13,7 @@ object ExprParser {
 		//tightest
 		Ast.IntLit(Lexer.num),
 		Ast.BoolLit(Lexer.bool),
-		Ast.CharLit(Lexer.char),
+		Ast.CharLit(Lexer.character),
 		Ast.StrLit(Lexer.str),
 		(Ast.PairLit <# Lexer.pair),
 		attempt(Ast.ArrayElem(Ast.Ident(Lexer.ident), some("[" ~> expr <~ "]"))),
@@ -23,7 +23,7 @@ object ExprParser {
 
 		// unary precedence 0)
 		GOps(Prefix)((Ast.Not <# "!"),
-								(Ast.Neg <# "-"),
+								(Ast.Neg <# Lexer.negate),
 								(Ast.Len <# "len"),
 								(Ast.Ord <# "ord"),
 								(Ast.Chr <# "chr")),
