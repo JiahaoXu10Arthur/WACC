@@ -4,6 +4,7 @@ import SemanticType._
 import SemanticChecker.semanticErr
 import ExprSemantic._
 import SymbolObject._
+import SymbolObjectType._
 
 object ValueSemantic {
   def checkLvalue(lvalue: Lvalue, st: SymbolTable): Type = {
@@ -39,11 +40,11 @@ object ValueSemantic {
   def callCheck(ident: Ident, args: List[Expr], st: SymbolTable): Type = { 
     var funcObj: FuncObj = null
     /* Find funcObj */
-    st.lookUpAll(ident.name) match {
+    st.lookUpAll(ident.name, FunctionType()) match {
       case Some(symObj) =>  { 
           symObj match {
           case symObj: FuncObj => funcObj = symObj
-          case _ => semanticErr("ArrayElem: fst arg not funcObj")
+          case _ => semanticErr("Call: fst arg not funcObj")
         }
       }
       case None => semanticErr("Call: function name not in symbol table")
@@ -56,7 +57,6 @@ object ValueSemantic {
 
     /* check every parameter's type */
     for (i <- 0 until args.length) {
-      checkValueRef(args(i), st)
       if (checkExpr(args(i), st) != funcObj.args(i).getType()) {
         semanticErr("Call: function name not in symbol table")
       }
@@ -64,22 +64,6 @@ object ValueSemantic {
 
     /* Return type */
     funcObj.returnType
-  }
-
-  /* Check pass parameter by value or by ref */
-  def checkValueRef(expr: Expr, st: SymbolTable) = {
-    expr match {
-        // Int, Bool, Char should by value
-        case IntLit(_) | BoolLit(_) | CharLit(_)  =>
-        // String, Array, Pair should by reference
-        case Ident(_) => checkExpr(expr, st) match {
-        case StrType() =>
-        case ArrayType(_) =>
-        case PairType(_, _) =>
-        case _ => semanticErr("Call: wrong by value Or by reference")
-      }
-      case _ => semanticErr("Call: wrong by value Or by reference")
-    }
   }
 
   /* Arg1: fst/snd

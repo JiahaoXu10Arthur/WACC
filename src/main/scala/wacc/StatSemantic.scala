@@ -5,6 +5,7 @@ import SemanticChecker.semanticErr
 import ExprSemantic._
 import ValueSemantic._
 import SymbolObject._
+import SymbolObjectType._
 
 object StatSemantic {
   def checkStat(stat: Stat, st: SymbolTable): Boolean = {
@@ -31,9 +32,13 @@ object StatSemantic {
   def declareCheck(type1: Types.Type, ident: Ident, initValue: Rvalue, st: SymbolTable): Unit = {
     val semType: Type = convertType(type1)
     /* Check existence, Create new VariableObj */
-    st.lookUp(ident.name) match {
-      case Some(_) => semanticErr("Declare: Variable name already exists")
-      case None => st.add(ident.name, VariableObj(semType))
+    st.lookUp(ident.name, VariableType()) match {
+      case Some(VariableObj(_)) => semanticErr("Declare: Variable name already exists")
+      case Some(ParamObj(_)) => {
+        st.remove(ident.name, VariableType())
+        st.add(ident.name, VariableType(), VariableObj(semType))
+      }
+      case _ => st.add(ident.name, VariableType(), VariableObj(semType))
     }
 
     /* Initial value should match the type */
@@ -116,22 +121,33 @@ object StatSemantic {
   /* Find the return type of the function in scope of st */
   def findFuncRetType(st: SymbolTable): Type = {
     var retType: Type = null
-    var found = false
+    var recurse_st: SymbolTable = st
+
+    while(recurse_st.encSymTable != null) {
+      retType = findOneRet(st)
+
+      if (retType != null) {
+        return retType
+      } else {
+        recurse_st = recurse_st.encSymTable
+      }
+    }
+
+    semanticErr("Return: no function in scope")
+  }
+
+  /* Recursive return finding */
+  def findOneRet(st: SymbolTable): Type = {
+    var retType: Type = null
 
     for ((name, obj) <- st.dictionary) {
       /* find function in this scope */
       obj match {
-        case obj: FuncObj => {
-          retType = obj.returnType
-          found = true
-        }
+        case obj: FuncObj => retType = obj.returnType
         case _ =>
       }
     }
-    /* if not in function body, fail */
-    if (!found) {
-      semanticErr("Return: no function found in st")
-    }
+    
     retType
   }
 
@@ -150,8 +166,11 @@ object StatSemantic {
     if (checkExpr(expr, st) != BoolType()) {
       semanticErr("If: condition not bool")
     }
-    stat1.foreach{s => checkStat(s, st)}
-    stat2.foreach{s => checkStat(s, st)}
+    val new_st1 = new SymbolTable(st)
+    stat1.foreach{s => checkStat(s, new_st1)}
+
+    val new_st2 = new SymbolTable(st)
+    stat2.foreach{s => checkStat(s, new_st2)}
   }
 
   /* Expr type: Bool
@@ -160,7 +179,9 @@ object StatSemantic {
     if (checkExpr(expr, st) != BoolType()) {
       semanticErr("If: condition not bool")
     }
-    stat.foreach{s => checkStat(s, st)}
+
+    val new_st = new SymbolTable(st)
+    stat.foreach{s => checkStat(s, new_st)}
   }
 
   /* Check validity of stat 

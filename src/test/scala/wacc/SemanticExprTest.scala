@@ -5,6 +5,7 @@ import org.scalatest.matchers.should.Matchers._
 import Ast._
 import SemanticType._
 import SymbolObject._
+import SymbolObjectType._
 import ExprSemantic._
 import SemanticChecker._
 
@@ -39,7 +40,7 @@ class SemanticExprTest extends AnyFlatSpec {
 		an [SemanticErr] should be thrownBy checkExpr(testIdent, st)
 
 		/* int ident */
-		st.add("ident", new VariableObj(IntType()))
+		st.add("ident", VariableType(), new VariableObj(IntType()))
 		/* After add symbol table, should get type */
 		checkExpr(testIdent, st) shouldBe IntType()
 	}
@@ -57,10 +58,10 @@ class SemanticExprTest extends AnyFlatSpec {
 		an [SemanticErr] should be thrownBy checkExpr(testArray1, st)
 
 		/* TypeObj in symbol table is wrong, semantic error */
-		st.add("array", new VariableObj(IntType()))
+		st.add("array", VariableType(), new VariableObj(IntType()))
 		an [SemanticErr] should be thrownBy checkExpr(testArray1, st)
 		
-		st.add("array", new VariableObj(ArrayType(IntType())))
+		st.add("array", VariableType(), new VariableObj(ArrayType(ArrayType(IntType()))))
 		/* After add symbol table, should get type */
 		checkExpr(testArray1, st) shouldBe IntType()
 
@@ -81,7 +82,7 @@ class SemanticExprTest extends AnyFlatSpec {
 		/* bool boolValue = true
 			 !boolValue */
 		val testNot3 = Not(Ident("boolValue")(0,0))(0,0)
-		st.add("boolValue", new VariableObj(BoolType()))
+		st.add("boolValue", VariableType(), new VariableObj(BoolType()))
 		checkExpr(testNot3, st) shouldBe BoolType()
 	}
 
@@ -105,11 +106,11 @@ class SemanticExprTest extends AnyFlatSpec {
 		an [SemanticErr] should be thrownBy checkExpr(testLen1, st)
 
 		/* int array1 */
-		st.add("array1", VariableObj(IntType()))
+		st.add("array1", VariableType(), VariableObj(IntType()))
 		an [SemanticErr] should be thrownBy checkExpr(testLen1, st)
 
 		/* int[] array2 */
-		st.add("array2", VariableObj(ArrayType(IntType())))
+		st.add("array2", VariableType(), VariableObj(ArrayType(IntType())))
 		checkExpr(testLen2, st) shouldBe IntType()
 	}
 
@@ -179,7 +180,7 @@ class SemanticExprTest extends AnyFlatSpec {
 		an [SemanticErr] should be thrownBy checkExpr(testeq4, st)
 
 		/* string stringIdent */
-		st.add("stringIdent", VariableObj(StrType()))
+		st.add("stringIdent", VariableType(), VariableObj(StrType()))
 		checkExpr(testeq4, st) shouldBe BoolType()
 	}
 

@@ -9,6 +9,7 @@ object SemanticChecker {
   def semanticCheck(p: Program): Unit = {
     val st: SymbolTable = new SymbolTable(null)
 
+    p.funcs.foreach{f => readInFunctionHeader(f, st)}
     p.funcs.foreach{f => checkFuncDeclare(f, st)}
     p.stats.foreach{s => {
       s match {
