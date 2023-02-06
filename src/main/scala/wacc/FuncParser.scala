@@ -14,20 +14,23 @@ object FuncParser {
       case Return(_) | Exit(_) => true
       case If(_, s1, s2) => bodyEndsWithRet(s1) &&
                             bodyEndsWithRet(s2)
+      case Begin(s) => bodyEndsWithRet(s)
       case _ => false
     }
   }
   val param = Param(type_, Ast.Ident(Lexer.ident))
-  val func: Parsley[Func] = Func(
+
+  val func: Parsley[Func] = attempt(Func(
     type_,
     Ast.Ident(Lexer.ident),
     "(" ~> sepBy(param, ",") <~ ")",
     "is" ~> StatParser.stmts <~ "end"
-  ).guardAgainst {
+  )).guardAgainst {
     case Func(_, _, _, body) if !bodyEndsWithRet(body) =>
       Seq("Function body does not end with a return statement")
   }
-  val funcs: Parsley[List[Func]] = many(attempt(func))
+
+  val funcs: Parsley[List[Func]] = many(func)
 
   def funcParse (input: String): Option[Func] = {
 		func.parse(input) match {
