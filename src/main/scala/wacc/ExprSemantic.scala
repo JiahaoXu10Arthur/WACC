@@ -2,6 +2,7 @@ package wacc
 import Ast._
 import SemanticType._
 import SemanticChecker.semanticErr
+import SymbolObjectType._
 
 object ExprSemantic {
 
@@ -127,7 +128,7 @@ object ExprSemantic {
 
   /* refer to st */
   def identCheck(name: String, st: SymbolTable): Type = {
-    st.lookUpAll(name) match {
+    st.lookUpAll(name, VariableType()) match {
       case Some(symObj) => symObj.getType()
       case None => semanticErr("Ident: not in symbol table")
     }
