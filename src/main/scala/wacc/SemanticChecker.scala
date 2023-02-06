@@ -1,14 +1,19 @@
 package wacc
 
-import Ast.Expr
 import SymbolObject._
+import Ast._
+import SemanticType._
 
 object SemanticChecker {
 
-  var ST: SymbolTable = new SymbolTable(null)
+  var st: SymbolTable = new SymbolTable(null)
 
-  def checkExpr(expr: Expr): Boolean = {
-    true
+  def semanticErr(where: String) = {
+    throw new SemanticErr("Semantic Error in " + where)
   }
-  
+
+  case class SemanticErr(private val message: String = "Semantic Error", 
+                         private val cause: Throwable = None.orNull)
+                         extends Exception(message, cause) 
+
 }
