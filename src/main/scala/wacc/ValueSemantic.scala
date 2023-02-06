@@ -109,7 +109,7 @@ object ValueSemantic {
   def arrayLitCheck(values: List[Expr], st: SymbolTable): Type = { 
     /* check empty */
     if (values.length == 0) {
-      ArrayType(AnyType())
+      return ArrayType(AnyType())
     }
     
     /* check every parameter's type */

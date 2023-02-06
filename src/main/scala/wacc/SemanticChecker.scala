@@ -2,13 +2,21 @@ package wacc
 
 import Ast._
 import StatSemantic._
+import FunctionSemantic._
 
 object SemanticChecker {
 
-  var st: SymbolTable = new SymbolTable(null)
-
   def semanticCheck(p: Program): Unit = {
-    
+    val st: SymbolTable = new SymbolTable(null)
+
+    p.funcs.foreach{f => checkFuncDeclare(f, st)}
+    p.stats.foreach{s => {
+      s match {
+        case Return(_) => semanticErr("Main cannot return")
+        case _ => checkStat(s, st)
+      }
+    }
+   }
   }
 
   def semanticErr(where: String) = {

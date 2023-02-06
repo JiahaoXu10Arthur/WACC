@@ -19,10 +19,10 @@ class SymbolTable(st: SymbolTable) {
     var s = this
     while (s != null) {
         val obj = s.lookUp(name)
-        s = s.encSymTable
         if (obj != None) {
-            obj
+          return obj
         }
+        s = s.encSymTable
     }
 
     None

@@ -18,15 +18,4 @@ object SymbolObject {
 											 val symTable: SymbolTable) extends SymbolObj {
 			override def getType(): Type = returnType
 		}
-
-		// case class ArrayObj(val elemType: Type, val elemNum: Int) extends SymbolObj {
-		// 	override def getType(): Type = ArrayType(elemType)
-		// }
-
-		// case class PairObj(val fstType: Type, 
-		// 								   val sndType: Type) extends SymbolObj {
-		// 	override def getType(): Type = PairType(fstType, sndType)
-		// }
-
-
 	}
