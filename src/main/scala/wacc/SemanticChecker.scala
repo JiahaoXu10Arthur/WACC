@@ -1,12 +1,15 @@
 package wacc
 
-import SymbolObject._
 import Ast._
-import SemanticType._
+import StatSemantic._
 
 object SemanticChecker {
 
   var st: SymbolTable = new SymbolTable(null)
+
+  def semanticCheck(p: Program): Unit = {
+    
+  }
 
   def semanticErr(where: String) = {
     throw new SemanticErr("Semantic Error in " + where)

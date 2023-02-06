@@ -3,6 +3,7 @@ package wacc
 object SemanticType {
   sealed trait Type
     case class AnyType() extends Type
+    
     case class IntType() extends Type
     case class BoolType() extends Type
     case class CharType() extends Type

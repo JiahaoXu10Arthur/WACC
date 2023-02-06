@@ -2,7 +2,6 @@ package wacc
 import Ast._
 import SemanticType._
 import SemanticChecker.semanticErr
-import SymbolObject._
 
 object ExprSemantic {
 
@@ -141,16 +140,11 @@ object ExprSemantic {
     var returnType: Type = null
 
     /* First argument type should be T[] */
-    st.lookUp(ident.name) match {
-      case Some(symObj) => { 
-        symObj match {
-        /* Return type should be T */
-        case symObj: ArrayObj => returnType = symObj.elemType
-        case _ => semanticErr("ArrayElem: fst arg not arrayObj")
+    checkExpr(ident, st) match {
+      case ArrayType(t) => returnType = t
+      case _ => semanticErr("ArrayElem: fst arg not arrayObj")
       }
-    }
-      case None => semanticErr("ArrayElem: not in symbol table")
-    }
+    
 
     /* Second argument should be Int */
     indexes.foreach{i => if (checkExpr(i, st) != IntType()) 
@@ -158,6 +152,5 @@ object ExprSemantic {
 
     returnType
   }
-
 
 }

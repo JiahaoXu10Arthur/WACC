@@ -69,8 +69,24 @@
            }) shouldBe true
         }
       } else if (path.contains("syntaxErr")) {
-        testSkip += 1
         "A compilation that fails due to syntax errors return the exit status 100" ++ filename in pending
+        
+        // {
+        //   (Parser.parse(string) match {
+        //       case Success(x) => {
+        //       // println(x)
+        //       testFail += 1
+        //       true
+        //       }
+        //       case Failure(msg) => {
+        //       println(msg)
+        //       testPass += 1
+        //       false
+        //       }
+        //   }) shouldBe false
+        // }
+
+
       } else if (path.contains("semanticErr")) {
         testSkip += 1
         "A compilation that fails due to semantic errors return the exit status 200" ++ filename in pending
