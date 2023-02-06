@@ -33,11 +33,11 @@ object StatSemantic {
     /* Check existence, Create new VariableObj */
     st.lookUp(ident.name) match {
       case Some(_) => semanticErr("Declare: Variable name already exists")
-      case None =>
+      case None => st.add(ident.name, VariableObj(semType))
     }
 
     /* Initial value should match the type */
-    if (semType != checkRvalue(initValue, st)) {
+    if (!equalType(semType, checkRvalue(initValue, st))) {
       semanticErr("Declare: Initial value wrong type")
     }
   }
@@ -79,7 +79,7 @@ object StatSemantic {
 
   /* Target type match newValue type */
   def retCheck(target: Lvalue, newValue: Rvalue, st: SymbolTable) = {
-    if (checkLvalue(target, st) != checkRvalue(newValue, st)) {
+    if (!equalType(checkLvalue(target, st), checkRvalue(newValue, st))) {
       semanticErr("Assign: assign value mismatch target ")
     }
   }
@@ -108,7 +108,7 @@ object StatSemantic {
   /* Need be in a non-main function
      Expr type should match return type of function */
   def returnCheck(expr: Expr, st: SymbolTable): Unit = {
-    if (findFuncRetType(st) != checkExpr(expr, st)) {
+    if (!equalType(findFuncRetType(st), checkExpr(expr, st))) {
       semanticErr("Return: not matching return type")
     }
   }
@@ -119,10 +119,6 @@ object StatSemantic {
     var found = false
 
     for ((name, obj) <- st.dictionary) {
-      /* Cannot return from main function */
-      if (name == "main") {
-        semanticErr("Return: return in main function")
-      }
       /* find function in this scope */
       obj match {
         case obj: FuncObj => {
@@ -167,9 +163,26 @@ object StatSemantic {
     stat.foreach{s => checkStat(s, st)}
   }
 
-  /* Check validity of stat */
+  /* Check validity of stat 
+     Start new scope */
   def beginCheck(stat: List[Stat], st: SymbolTable): Unit = {
-    stat.foreach{s => checkStat(s, st)}
+    val new_st = new SymbolTable(st)
+    stat.foreach{s => checkStat(s, new_st)}
+  }
+
+  /* Type equality involve AnyType */
+  def equalType(type1: Type, type2: Type): Boolean = {
+    if (type1 == type2) {
+      return true
+    }
+
+    (type1, type2) match {
+      case (PairType(_, _), PairType(AnyType(), AnyType())) => return true
+      case (PairType(AnyType(), AnyType()), PairType(_, _)) => return true
+      case (ArrayType(_), ArrayType(AnyType())) => return true
+      case (ArrayType(AnyType()), ArrayType(_)) => return true
+      case _ => return false
+    }
   }
 
 }

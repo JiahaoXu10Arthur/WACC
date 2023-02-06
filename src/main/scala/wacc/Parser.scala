@@ -10,7 +10,7 @@ import Lexer.implicitVals._
 
 object Parser {
   val program: Parsley[Program] 
-    = fully("begin" ~> Program(funcs, stmts)<~ "end")
+    = fully("begin" ~> Program(funcs, stmts) <~ "end")
 
   val parse = (input: String) => program.parse(input)
 }

@@ -127,7 +127,7 @@ object ExprSemantic {
 
   /* refer to st */
   def identCheck(name: String, st: SymbolTable): Type = {
-    st.lookUp(name) match {
+    st.lookUpAll(name) match {
       case Some(symObj) => symObj.getType()
       case None => semanticErr("Ident: not in symbol table")
     }
@@ -137,20 +137,27 @@ object ExprSemantic {
      Arg2: Int[] -> every element Int
      Return: T */
   def arrayElemCheck(ident: Ident, indexes: List[Expr], st: SymbolTable): Type = {
-    var returnType: Type = null
+    var thisLayer = checkExpr(ident, st)
+
+    for (i <- indexes) {
+      thisLayer = oneArrayElemCheck(thisLayer, i, st)
+    }
+
+    thisLayer
+  }
+
+  /* One layer of array elem check */
+  def oneArrayElemCheck(t: Type, index: Expr, st: SymbolTable): Type = {
+    if (checkExpr(index, st) != IntType()) {
+      semanticErr("ArrayElem: index not int type")
+    }
 
     /* First argument type should be T[] */
-    checkExpr(ident, st) match {
-      case ArrayType(t) => returnType = t
+    t match {
+      case ArrayType(t1) => return t1
       case _ => semanticErr("ArrayElem: fst arg not arrayObj")
-      }
-    
-
-    /* Second argument should be Int */
-    indexes.foreach{i => if (checkExpr(i, st) != IntType()) 
-                            { semanticErr("ArrayElem: index not int type")}}
-
-    returnType
+    }
   }
 
 }
+
