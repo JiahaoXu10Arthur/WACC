@@ -1,10 +1,13 @@
 package wacc
 
 import parsley.token.{Lexer, descriptions}
-import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc}
+import parsley.character.{char, digit}
+import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc, numeric}
 import descriptions.text.{TextDesc, EscapeDesc}
+import numeric.PlusSignPresence.Optional
 import parsley.token.predicate
 import parsley.Parsley
+import Parsley.{notFollowedBy, attempt}
 
 
 
@@ -23,6 +26,10 @@ object Lexer {
   def isALphaNumericOrUnderscore = predicate.Basic(c => c.isLetterOrDigit || c == '_')
 
   private val desc = LexicalDesc.plain.copy(
+    numericDesc = numeric.NumericDesc.plain.copy(
+      positiveSign = Optional,
+
+    ),
     spaceDesc = SpaceDesc.plain.copy(
       commentLine = "#",
       commentLineAllowsEOF = true,
@@ -37,10 +44,12 @@ object Lexer {
     textDesc = TextDesc.plain.copy(
       escapeSequences = EscapeDesc.plain.copy(
         escBegin = '\\',
-        literals = escLiterals
+        literals = escLiterals,
+        gapsSupported = false
       ),
       characterLiteralEnd = '\'',
-      stringEnds = Set("\"")
+      stringEnds = Set("\""),
+      graphicCharacter = predicate.Basic(c => c >= ' ' && c != '\"' && c != '\\' && c != '\'')
     ),
 
     nameDesc = NameDesc.plain.copy(
@@ -55,13 +64,16 @@ object Lexer {
   
 
   /* Definition for literal tokens */
-  val num = lexer.lexeme.numeric.unsigned.number32[Int]
+  val num = lexer.lexeme.numeric.signed.number32[Int]
   val bool = lexer.lexeme.symbol("true") #> true | 
              lexer.lexeme.symbol("false") #> false
-  val char = lexer.lexeme.text.character.ascii
+  val character = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
   val pair = lexer.lexeme.symbol("null")
   val ident = lexer.lexeme.names.identifier
+  val pairElem = lexer.lexeme.symbol("fst") #> "fst" | 
+                 lexer.lexeme.symbol("snd") #> "snd"
+  val negate = attempt(lexer.lexeme(char('-') ~> notFollowedBy(digit)))
 
   val implicitVals = lexer.lexeme.symbol.implicits
 }
