@@ -1,86 +1,66 @@
 package wacc
 
-import parsley.errors.{ErrorBuilder, tokenextractors}
+
 
 object Errors {
 // Structure checking
-  case class SyntaxError(pos: String, lines: SyntaxErrorLines)
-  
-  sealed trait SyntaxErrorLines
-  case class VanillaError(unexpected: String, expecteds: String, reasons: Set[String], lineInfo: String) extends SyntaxErrorLines
-  case class SpecialisedError(msgs: Set[String]) extends SyntaxErrorLines
-  
-  sealed trait SyntaxErrorItem {def get: String}
-  case class Unexpected(item: String) extends SyntaxErrorItem {
-    def get: String = item
-  }
-  case class Expected(item: String) extends SyntaxErrorItem {
-    def get: String = item
-  }
-  case object SyntaxEndOfInput extends SyntaxErrorItem {
-    def get: String = ""
-  }
-
-  class SyntaxErrorBuilder extends ErrorBuilder[SyntaxError] with tokenextractors.MatchParserDemand {
-
-    override def lineInfo(line: String, linesBefore: Seq[String], linesAfter: Seq[String], errorPointsAt: Int, errorWidth: Int): String = 
-        // line: (begin skp end) errorPointAt: 10 errorWidth: 1  first occurence of error: e
-        line ++ s" $errorPointsAt "++s"$errorWidth " .appended(line.charAt(errorPointsAt))
-
-        // Final output format into SyntaxError()
-    override def format(pos: Position, source: Source, lines: ErrorInfoLines): SyntaxError = SyntaxError(pos, lines)
-
-    type Position = String
-    override def pos(line: Int, col: Int): Position = s"line $line:$col"
-
-    // Source file (ignore)
-    type Source = Unit
-    override def source(sourceName: Option[String]): Source = ()
-
-    type ErrorInfoLines = SyntaxErrorLines
-    override def vanillaError(unexpected: UnexpectedLine, expected: ExpectedLine, reasons: Messages, line: LineInfo): ErrorInfoLines =
-        VanillaError(unexpected, expected, reasons, line)
-
-        // Expect: Expected { [, = } Already change to string
-    type ExpectedItems = Option[String]
-    override def combineExpectedItems(alts: Set[Item]): ExpectedItems = {
-        if (alts.isEmpty)
-            None
-        else 
-            Some("Expected { " ++ alts.map(_.get).mkString(", ") ++ " }")
+  case class WACCError(source: Option[String], pos: (Int, Int), lines: WACCErrorLines) {
+    override def toString(): String = {
+      val sourceMsg = source match {
+        case Some(x) => s"In $x:"
+        case None    => ""
+      }
+      val lineMsg = s"line ${pos._1} : column ${pos._2}\n"
+      val errorMsg = sourceMsg ++ lineMsg ++ lines.toString()
+      errorMsg
     }
+  }
 
-    type Messages = Set[String]
-    override def combineMessages(alts: Seq[Message]): Messages = alts.toSet
-
-    // Unexpected: mismatched input 'e'
-    type UnexpectedLine = String
-    override def unexpected(item: Option[Item]): UnexpectedLine = item match {
+  case class ErrorLineInfo(line: String, errorPointsAt: Int, errorWidth: Int)
+  
+  sealed trait WACCErrorLines
+  case class VanillaError(unexpected: Option[WACCErrorItem], 
+                          expecteds: Set[WACCErrorItem], 
+                          reasons: Seq[String], 
+                          lineInfo: ErrorLineInfo) extends WACCErrorLines {
+    override def toString(): String = {
+      val unexpected_ = unexpected match {
         case None => ""
-        case Some(value) => "mismatched input \'" ++ value.get ++ "\'"
+        case Some(value) => "mismatched input \'" ++ value.toString ++ "\'"
+      }
+
+      val expecteds_ = {
+        if (expecteds.isEmpty)
+            ""
+        else 
+            "Expected { " ++ expecteds.map(_.toString()).mkString(", ") ++ " }" }
+
+      val reasons_ = reasons.mkString("\n")
+    
+      val lineInfo_ = lineInfoFormat(lineInfo).mkString("\n")
+
+      unexpected_ ++ "\n" ++ expecteds_ ++ "\n" ++ reasons_ ++ lineInfo_
     }
-
-    type ExpectedLine = String
-    override def expected(alts: ExpectedItems): ExpectedLine = alts.get
-
-    override def specialisedError(msgs: Messages, line: LineInfo): ErrorInfoLines = SpecialisedError(msgs)
-
-    type Message = String
-    override def reason(reason: String): Message = reason
-    override def message(msg: String): Message = msg
-
-    type LineInfo = String
-
-    override val numLinesBefore: Int = 1
-
-    override val numLinesAfter: Int = 1
-
-    type Item = SyntaxErrorItem
-    type Raw = Unexpected
-    type Named = Expected
-    type EndOfInput = SyntaxEndOfInput.type
-    override def raw(item: String): Raw = Unexpected(item)
-    override def named(item: String): Named = Expected(item)
-    override val endOfInput: EndOfInput = SyntaxEndOfInput
   }
+
+  private def lineInfoFormat(lineInfo: ErrorLineInfo): Seq[String] = {
+    Seq(s"$errorLineStart${lineInfo.line}", 
+        s"${" " * errorLineStart.length}${errorPointer(lineInfo.errorPointsAt, lineInfo.errorWidth)}")
+  }
+
+  private val errorLineStart = ">"
+  private def errorPointer(caretAt: Int, caretWidth: Int) = s"${" " * caretAt}${"^" * caretWidth}"
+
+  case class SpecialisedError(msgs: Seq[String], lineInfo: ErrorLineInfo) extends WACCErrorLines
+  
+  sealed trait WACCErrorItem
+  case class WACCRaw(item: String) extends WACCErrorItem {
+    override def toString() = item
+  }
+  case class WACCNamed(item: String) extends WACCErrorItem {
+    override def toString() = item
+  }
+  case object WACCEndOfInput extends WACCErrorItem {
+    override def toString: String = ""
+  }  
 }
