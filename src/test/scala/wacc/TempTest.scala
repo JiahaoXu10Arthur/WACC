@@ -70,7 +70,19 @@
         }
       } else if (path.contains("syntaxErr")) {
         testSkip += 1
-        "A compilation that fails due to syntax errors return the exit status 100" ++ filename in pending
+        "A compilation that fails due to syntax errors return the exit status 100" ++ filename in {
+           (Parser.parse(string) match {
+               case Success(x) => {
+                testFail += 1
+                false
+               }
+               case Failure(msg) => {
+                println(msg)
+                testPass += 1
+                true
+               }
+           }) shouldBe true
+        }
       } else if (path.contains("semanticErr")) {
         testSkip += 1
         "A compilation that fails due to semantic errors return the exit status 200" ++ filename in pending
