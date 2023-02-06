@@ -2,16 +2,26 @@ package wacc
 import Ast._
 import SemanticType._
 import SemanticChecker.semanticErr
+import ExprSemantic._
 import ValueSemantic._
 import SymbolObject._
 
 object StatSemantic {
-  def checkState(stat: Stat, st: SymbolTable): Boolean = {
+  def checkStat(stat: Stat, st: SymbolTable): Boolean = {
     stat match {
+      case Skip() =>
       /* check for declaration: what object is created? */
       case Declare(type1, ident, initValue) => declareCheck(type1, ident, initValue, st)
       case Assign(target, newValue) => assignCheck(target, newValue, st)
-      case _ => false
+      case Read(lvalue) => readCheck(lvalue, st)
+      case Free(expr) => freeCheck(expr, st)
+      case Return(expr) => returnCheck(expr, st)
+      case Exit(expr) => exitCheck(expr, st)
+      case Print(expr) => checkExpr(expr, st)
+      case Println(expr) => checkExpr(expr, st)
+      case If(expr, stat1, stat2) => ifCheck(expr, stat1, stat2, st)
+      case While(expr, stat) => whileCheck(expr, stat, st)
+      case Begin(stat) => beginCheck(stat, st)
     }
     true
   }
@@ -74,6 +84,92 @@ object StatSemantic {
     }
   }
   
-  
+  /* Special assignment:
+     Input from standard input: String
+     Target type: Int / Char */
+  def readCheck(target: Lvalue, st: SymbolTable): Unit = {
+    checkLvalue(target, st) match {
+      case IntType() => 
+      case CharType() => 
+      case _ => semanticErr("Read: target not int or char")
+    }
+  }
+
+  /* Target type: pair / array
+     free is not recursive */
+  def freeCheck(expr: Expr, st: SymbolTable): Unit = {
+    checkExpr(expr, st) match {
+      case PairType(_, _) => 
+      case ArrayType(_) => 
+      case _ => semanticErr("Free: target not pair or array")
+    }
+  }
+
+  /* Need be in a non-main function
+     Expr type should match return type of function */
+  def returnCheck(expr: Expr, st: SymbolTable): Unit = {
+    if (findFuncRetType(st) != checkExpr(expr, st)) {
+      semanticErr("Return: not matching return type")
+    }
+  }
+
+  /* Find the return type of the function in scope of st */
+  def findFuncRetType(st: SymbolTable): Type = {
+    var retType: Type = null
+    var found = false
+
+    for ((name, obj) <- st.dictionary) {
+      /* Cannot return from main function */
+      if (name == "main") {
+        semanticErr("Return: return in main function")
+      }
+      /* find function in this scope */
+      obj match {
+        case obj: FuncObj => {
+          retType = obj.returnType
+          found = true
+        }
+        case _ =>
+      }
+    }
+    /* if not in function body, fail */
+    if (!found) {
+      semanticErr("Return: no function found in st")
+    }
+    retType
+  }
+
+  /* Can be in body of any function
+     Arg type: Int */
+  def exitCheck(expr: Expr, st: SymbolTable): Unit = {
+    if (checkExpr(expr, st) != IntType()) {
+      semanticErr("Exit: arg not int")
+    }
+  }
+
+  /* Expr type: Bool
+     Check validity of stat1, stat2 */
+  def ifCheck(expr: Expr, stat1: List[Stat], 
+              stat2: List[Stat], st: SymbolTable): Unit = {
+    if (checkExpr(expr, st) != BoolType()) {
+      semanticErr("If: condition not bool")
+    }
+    stat1.foreach{s => checkStat(s, st)}
+    stat2.foreach{s => checkStat(s, st)}
+  }
+
+  /* Expr type: Bool
+     Check validity of stat */
+  def whileCheck(expr: Expr, stat: List[Stat], st: SymbolTable): Unit = {
+    if (checkExpr(expr, st) != BoolType()) {
+      semanticErr("If: condition not bool")
+    }
+    stat.foreach{s => checkStat(s, st)}
+  }
+
+  /* Check validity of stat */
+  def beginCheck(stat: List[Stat], st: SymbolTable): Unit = {
+    stat.foreach{s => checkStat(s, st)}
+  }
 
 }
