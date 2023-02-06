@@ -33,7 +33,7 @@ object StatSemantic {
     /* Check existence, Create new VariableObj */
     st.lookUp(ident.name) match {
       case Some(_) => semanticErr("Declare: Variable name already exists")
-      case None => st.add(ident.name, VariableObj(semType))
+      case None =>
     }
 
     /* Initial value should match the type */

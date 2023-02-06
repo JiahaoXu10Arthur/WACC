@@ -69,10 +69,10 @@ object ValueSemantic {
   /* Check pass parameter by value or by ref */
   def checkValueRef(expr: Expr, st: SymbolTable) = {
     expr match {
-      // Int, Bool, Char should by value
-      case IntLit(_) | BoolLit(_) | CharLit(_)  =>
-      // String, Array, Pair should by reference
-      case Ident(_) => checkExpr(expr, st) match {
+        // Int, Bool, Char should by value
+        case IntLit(_) | BoolLit(_) | CharLit(_)  =>
+        // String, Array, Pair should by reference
+        case Ident(_) => checkExpr(expr, st) match {
         case StrType() =>
         case ArrayType(_) =>
         case PairType(_, _) =>

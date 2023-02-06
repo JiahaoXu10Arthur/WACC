@@ -60,7 +60,7 @@ class SemanticExprTest extends AnyFlatSpec {
 		st.add("array", new VariableObj(IntType()))
 		an [SemanticErr] should be thrownBy checkExpr(testArray1, st)
 		
-		st.add("array", new ArrayObj(IntType(), 3))
+		st.add("array", new VariableObj(ArrayType(IntType())))
 		/* After add symbol table, should get type */
 		checkExpr(testArray1, st) shouldBe IntType()
 
@@ -109,7 +109,7 @@ class SemanticExprTest extends AnyFlatSpec {
 		an [SemanticErr] should be thrownBy checkExpr(testLen1, st)
 
 		/* int[] array2 */
-		st.add("array2", ArrayObj(IntType(), 3))
+		st.add("array2", VariableObj(ArrayType(IntType())))
 		checkExpr(testLen2, st) shouldBe IntType()
 	}
 
