@@ -69,26 +69,6 @@
            }) shouldBe true
         }
       } else if (path.contains("syntaxErr")) {
-<<<<<<< HEAD
-        "A compilation that fails due to syntax errors return the exit status 100" ++ filename in pending
-        
-        // {
-        //   (Parser.parse(string) match {
-        //       case Success(x) => {
-        //       // println(x)
-        //       testFail += 1
-        //       true
-        //       }
-        //       case Failure(msg) => {
-        //       println(msg)
-        //       testPass += 1
-        //       false
-        //       }
-        //   }) shouldBe false
-        // }
-
-
-=======
         testSkip += 1
         "A compilation that fails due to syntax errors return the exit status 100" ++ filename in {
            (Parser.parse(string) match {
@@ -103,7 +83,6 @@
                }
            }) shouldBe true
         }
->>>>>>> 7e7062fe6637fd3709fd84dc64416edd73d55b7f
       } else if (path.contains("semanticErr")) {
         testSkip += 1
         "A compilation that fails due to semantic errors return the exit status 200" ++ filename in pending
