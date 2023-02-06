@@ -75,7 +75,7 @@ class ParserExprTest extends AnyFlatSpec {
 			case Not(CharLit('a')) =>
 		} 
     ExprParser.exprParse("-1").get should matchPattern {
-			case Neg(IntLit(1)) =>
+			case IntLit(-1) =>
 		} 
     ExprParser.exprParse(s"-$testString").get should matchPattern {
 			case Neg(StrLit("String")) =>
