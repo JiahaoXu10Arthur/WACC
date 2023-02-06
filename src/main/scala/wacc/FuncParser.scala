@@ -18,7 +18,7 @@ object FuncParser {
       case _ => false
     }
   }
-  val param = Param(type_, Ast.Ident(Lexer.ident))
+  val param = Param(type_, Ast.Ident(Lexer.ident)).label("function parameter")
 
   val func: Parsley[Func] = attempt(Func(
     type_,
@@ -28,7 +28,7 @@ object FuncParser {
   )).guardAgainst {
     case Func(_, _, _, body) if !bodyEndsWithRet(body) =>
       Seq("Function body does not end with a return statement")
-  }
+  }.label("function")
 
   val funcs: Parsley[List[Func]] = many(func)
 
