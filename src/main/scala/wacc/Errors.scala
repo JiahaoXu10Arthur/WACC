@@ -1,25 +1,24 @@
 package wacc
 
 object Errors {
-  case class WACCError(source: Option[String], pos: (Int, Int), lines: WACCErrorLines) {
+  case class WACCError(errType: String, source: Option[String], pos: (Int, Int), lines: WACCErrorLines) {
     override def toString(): String = {
+      val errTypeMsg = s"$errType error "
       val sourceMsg = source match {
-        case Some(x) => s"In $x:"
+        case Some(x) => s"in $x:"
         case None    => ""
       }
-      val lineMsg = s"line ${pos._1} : column ${pos._2}\n"
-      val errorMsg = sourceMsg ++ lineMsg ++ lines.toString()
+      val lineMsg = s"at line ${pos._1} : column ${pos._2}\n"
+      val errorMsg = errTypeMsg ++ sourceMsg ++ lineMsg ++ lines.toString()
       errorMsg
     }
   }
-
-  case class ErrorLineInfo(line: String, errorPointsAt: Int, errorWidth: Int)
   
   sealed trait WACCErrorLines
   case class VanillaError(unexpected: Option[WACCErrorItem], 
                           expecteds: Set[WACCErrorItem], 
                           reasons: Seq[String], 
-                          lineInfo: ErrorLineInfo) extends WACCErrorLines {
+                          lineInfo: Seq[String]) extends WACCErrorLines {
     override def toString(): String = {
       val unexpected_ = unexpected match {
         case None => ""
@@ -30,25 +29,18 @@ object Errors {
         else "Expected " ++ expecteds.map(_.toString()).mkString(", ")
       }
       val reasons_ = reasons.mkString("\n")
-      val lineInfo_ = lineInfoFormat(lineInfo).mkString("\n")
-      unexpected_ ++ "\n" ++ expecteds_ ++ "\n" ++ reasons_ ++ lineInfo_
+      val lineInfo_ = lineInfo.mkString("\n")
+      unexpected_ ++ "\n" ++ expecteds_ ++ "\n" ++ reasons_ ++ "\n" ++ lineInfo_
     }
   }
 
-  case class SpecialisedError(msgs: Seq[String], lineInfo: ErrorLineInfo) extends WACCErrorLines {
+  case class SpecialisedError(msgs: Seq[String], lineInfo: Seq[String]) extends WACCErrorLines {
     override def toString(): String = {
       val msgs_ = msgs.mkString("\n")
-      val lineInfo_ = lineInfoFormat(lineInfo).mkString("\n")
-      msgs_ ++ lineInfo_
+      val lineInfo_ = lineInfo.mkString("\n")
+      msgs_ ++ "\n" ++ lineInfo_
     }
   }
-
-  private def lineInfoFormat(lineInfo: ErrorLineInfo): Seq[String] = {
-    Seq(s"$errorLineStart${lineInfo.line}", 
-        s"${" " * errorLineStart.length}${errorPointer(lineInfo.errorPointsAt, lineInfo.errorWidth)}")
-  }
-  private val errorLineStart = ">"
-  private def errorPointer(caretAt: Int, caretWidth: Int) = s"${" " * caretAt}${"^" * caretWidth}"
   
   sealed trait WACCErrorItem
   case class WACCRaw(item: String) extends WACCErrorItem {

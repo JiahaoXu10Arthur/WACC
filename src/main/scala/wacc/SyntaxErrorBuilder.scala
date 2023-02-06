@@ -6,18 +6,20 @@ import parsley.errors.{ErrorBuilder, tokenextractors}
 class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.MatchParserDemand{
 
     override def lineInfo(line: String, linesBefore: Seq[String], linesAfter: Seq[String], errorPointsAt: Int, errorWidth: Int): LineInfo = {
-        ErrorLineInfo(line, errorPointsAt, errorWidth)
+        Seq(
+            s"$errorLineStart${line}", 
+            s"${" " * errorLineStart.length}${errorPointer(errorPointsAt, errorWidth)}"
+        )
     }
-        // line: (begin skp end) errorPointAt: 10 errorWidth: 1  first occurence of error: e
 
+    private val errorLineStart = ">"
+    private def errorPointer(caretAt: Int, caretWidth: Int) = s"${" " * caretAt}${"^" * caretWidth}"
 
-        // Final output format into SyntaxError()
-    override def format(pos: Position, source: Source, lines: ErrorInfoLines): WACCError = WACCError(source, pos, lines)
+    override def format(pos: Position, source: Source, lines: ErrorInfoLines): WACCError = WACCError("Syntax", source, pos, lines)
 
     type Position = (Int, Int)
-    override def pos(line: Int, col: Int): Position = (line, col)  //s"line $line:$col"
+    override def pos(line: Int, col: Int): Position = (line, col)
 
-    // Source file (ignore)
     type Source = Option[String]
     override def source(sourceName: Option[String]): Source = sourceName
 
@@ -52,7 +54,7 @@ class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.Ma
     override def reason(reason: String): Message = reason
     override def message(msg: String): Message = msg
 
-    type LineInfo = ErrorLineInfo
+    type LineInfo = Seq[String]
 
     override val numLinesBefore: Int = 0
 
