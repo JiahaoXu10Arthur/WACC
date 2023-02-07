@@ -1,6 +1,7 @@
 package wacc
 
 import scala.io.Source
+import scala.collection.mutable.ListBuffer
 
 object Errors {
   case class WACCError(errType: String, source: Option[String], 
@@ -59,8 +60,12 @@ object Errors {
   def extractErrorLines(source: String, errorPos: (Int, Int)): Seq[String] = {
     val file = Source.fromFile(source).getLines().toArray
     val length = file.length
-    val errorLines =  Seq(file(errorPos._1 - 1), file(errorPos._1), file(errorPos._1 + 1))
-    errorLines.foreach(println)
-    errorLines
+    val errorLines = ListBuffer(file(errorPos._1))
+    if (errorPos._1 > 0)
+      errorLines.prepend((file(errorPos._1 - 1)))
+    if (errorPos._1 < length)
+      errorLines.append(file(errorPos._1 + 1))  
+
+    errorLines.toSeq
   }
 }
