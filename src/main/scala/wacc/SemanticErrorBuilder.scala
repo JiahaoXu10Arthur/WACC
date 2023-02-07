@@ -15,14 +15,14 @@ object SemanticErrorBuilder {
     val unexpected_named = Some(WACCNamed(unexpected))
     val expected_named: Set[WACCErrorItem] = expected.map(WACCNamed(_))
     val lines = VanillaError(unexpected_named, expected_named, 
-                             reasons, Seq(lineInfo))
+                             reasons, ErrorLineInfo(lineInfo, Seq(""), Seq(""), 0, 0))
     build(errorType, source, pos, lines)
   }
 
   private def buildWithMsg(errorType: String, source: Option[String], 
                            pos: (Int, Int), msg: Seq[String], 
                            lineInfo: String): WACCError = {
-    val lines = SpecialisedError(msg, Seq(lineInfo))
+    val lines = SpecialisedError(msg, ErrorLineInfo(lineInfo, Seq(""), Seq(""), 0, 0))
     build(errorType, source, pos, lines)
   }
 

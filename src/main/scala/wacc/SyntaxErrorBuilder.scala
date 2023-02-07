@@ -5,15 +5,11 @@ import parsley.errors.{ErrorBuilder, tokenextractors}
 
 class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.MatchParserDemand{
 
-    override def lineInfo(line: String, linesBefore: Seq[String], linesAfter: Seq[String], errorPointsAt: Int, errorWidth: Int): LineInfo = {
-        linesBefore.map(x => errorLineStart ++ x) ++ Seq (
-            s"$errorLineStart${line}", 
-            s"${" " * errorLineStart.length}${errorPointer(errorPointsAt, errorWidth)}"
-        ) ++ linesAfter.map(x => errorLineStart ++ x)
+    override def lineInfo(line: String, linesBefore: Seq[String], 
+                          linesAfter: Seq[String], errorPointsAt: Int, 
+                          errorWidth: Int): LineInfo = {
+        ErrorLineInfo(line, linesBefore, linesAfter, errorPointsAt, errorWidth)
     }
-
-    private val errorLineStart = ">"
-    private def errorPointer(caretAt: Int, caretWidth: Int) = s"${" " * caretAt}${"^" * caretWidth}"
 
     override def format(pos: Position, source: Source, lines: ErrorInfoLines): WACCError = WACCError("Syntax", source, pos, lines)
 
@@ -54,7 +50,7 @@ class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.Ma
     override def reason(reason: String): Message = reason
     override def message(msg: String): Message = msg
 
-    type LineInfo = Seq[String]
+    type LineInfo = ErrorLineInfo
 
     override val numLinesBefore: Int = 1
 
