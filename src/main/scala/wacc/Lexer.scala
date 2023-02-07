@@ -69,7 +69,10 @@ object Lexer {
     
   )
   private val errorConfig = new ErrorConfig {
-    override def filterIntegerOutOfBounds(min: BigInt, max: BigInt, nativeRadix: Int): FilterConfig[BigInt] = new SpecialisedMessage[BigInt] {
+    override def filterIntegerOutOfBounds(min: BigInt, max: BigInt, 
+                                          nativeRadix: Int
+                                          ): FilterConfig[BigInt] 
+    = new SpecialisedMessage[BigInt] {
         def message(n: BigInt) = Seq(s"number is not within the range ${min.toString(nativeRadix)} to ${max.toString(nativeRadix)}")
     }
 

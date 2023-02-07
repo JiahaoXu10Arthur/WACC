@@ -1,7 +1,8 @@
 package wacc
 
 object Errors {
-  case class WACCError(errType: String, source: Option[String], pos: (Int, Int), lines: WACCErrorLines) {
+  case class WACCError(errType: String, source: Option[String], 
+                       pos: (Int, Int), lines: WACCErrorLines) {
     override def toString(): String = {
       val errTypeMsg = s"$errType error "
       val sourceMsg = source match {
