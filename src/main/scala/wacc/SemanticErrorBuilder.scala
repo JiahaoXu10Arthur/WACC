@@ -3,30 +3,34 @@ package wacc
 import Errors._
 
 object SemanticErrorBuilder {
-  def build(errorType: String, source: Option[String], pos: (Int, Int), 
+  private def build(errorType: String, source: Option[String], pos: (Int, Int), 
             lines: WACCErrorLines): WACCError = {
     WACCError(errorType, source, pos, lines)
   }
 
-  def buildWithUnexpected(errorType: String, source: Option[String], pos: (Int, Int), 
-                          unexpected: String, expected: Set[String],
-                          reasons: Seq[String], lineInfo: String): WACCError = {
+  private def buildWithUnexpected(errorType: String, source: Option[String], 
+                                  pos: (Int, Int), unexpected: String, 
+                                  expected: Set[String], reasons: Seq[String], 
+                                  lineInfo: String): WACCError = {
     val unexpected_named = Some(WACCNamed(unexpected))
     val expected_named: Set[WACCErrorItem] = expected.map(WACCNamed(_))
-    val lines = VanillaError(unexpected_named, expected_named, reasons, Seq(lineInfo))
+    val lines = VanillaError(unexpected_named, expected_named, 
+                             reasons, Seq(lineInfo))
     build(errorType, source, pos, lines)
   }
 
-  def buildWithMsg(errorType: String, source: Option[String], pos: (Int, Int), 
-                   msg: Seq[String], lineInfo: String): WACCError = {
+  private def buildWithMsg(errorType: String, source: Option[String], 
+                           pos: (Int, Int), msg: Seq[String], 
+                           lineInfo: String): WACCError = {
     val lines = SpecialisedError(msg, Seq(lineInfo))
     build(errorType, source, pos, lines)
   }
 
-  def buildTypeError(source : Option[String], pos: (Int, Int), unexpectedType: String, 
-                    expectedType: Set[String], msg: Seq[String],
-                    lineInfo: String): WACCError = {
-    buildWithUnexpected("Type", source, pos, unexpectedType, expectedType, msg, lineInfo)
+  def buildTypeError(source : Option[String], pos: (Int, Int), 
+                    unexpectedType: String, expectedType: Set[String], 
+                    msg: Seq[String], lineInfo: String): WACCError = {
+    buildWithUnexpected("Type", source, pos, unexpectedType, expectedType, 
+                        msg, lineInfo)
   }
 
   def buildScopeError(source: Option[String], pos: (Int, Int), id: String, 
@@ -38,29 +42,39 @@ object SemanticErrorBuilder {
   }
 
   def buildReturnPlacementError(source: Option[String], pos: (Int, Int), 
-                                msg: Seq[String], lineInfo: String): WACCError = {
+                                msg: Seq[String], 
+                                lineInfo: String): WACCError = {
     buildWithMsg("Return placement", source, pos, msg, lineInfo)
   }
 
   def buildFuncRedefError(source: Option[String], pos: (Int, Int), 
                           errFuncName: String, otherFuncPos: (Int, Int), 
                           msg: Seq[String], lineInfo: String): WACCError = {
-    val errorMsg = msg :+ s"Previously defined at line ${otherFuncPos._1}: column ${otherFuncPos._2}"
-    buildWithMsg("Function redefinition", source, pos, errorMsg, lineInfo)
+    buildRedefError(source, pos, "Function redefinition", errFuncName, 
+                    otherFuncPos, msg, lineInfo)
   }
 
   def buildVarRedefError(source: Option[String], pos: (Int, Int), 
                          errVarName: String, otherVarPos: (Int, Int), 
                          msg: Seq[String], lineInfo: String): WACCError = {
-    val errorMsg = msg :+ s"Previously defined at line ${otherVarPos._1}: column ${otherVarPos._2}"
-    buildWithMsg("Variable redefinition", source, pos, errorMsg, lineInfo)
+    buildRedefError(source, pos, "Variable redefinition", errVarName, 
+                    otherVarPos, msg, lineInfo)
   }
 
   def buildParamRedefError(source: Option[String], pos: (Int, Int), 
                            errParamName: String, otherParamPos: (Int, Int), 
                            msg: Seq[String], lineInfo: String): WACCError = {
-    val errorMsg = msg :+ s"Previously defined at line ${otherParamPos._1}: column ${otherParamPos._2}"
-    buildWithMsg("Parameter redefinition", source, pos, errorMsg, lineInfo)
+    buildRedefError(source, pos, "Parameter redefinition", errParamName, 
+                    otherParamPos, msg, lineInfo)
+  }
+  
+  private def buildRedefError(source: Option[String], pos: (Int, Int), 
+                              redefType: String, errName: String, 
+                              otherPos: (Int, Int), msg: Seq[String], 
+                              lineInfo: String): WACCError = {
+    val errorMsg = msg :+ "Previously defined at" ++ 
+                          s"line ${otherPos._1}: column ${otherPos._2}"
+    buildWithMsg(redefType, source, pos, errorMsg, lineInfo)
   }
 }
 
