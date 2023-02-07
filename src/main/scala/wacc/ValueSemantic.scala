@@ -47,7 +47,7 @@ object ValueSemantic {
           case _ => semanticErr("Call: fst arg not funcObj")
         }
       }
-      case None => semanticErr("Call: function name not in symbol table")
+      case None => semanticErr(s"Call: function name ${ident.name} not in symbol table")
     }
 
     /* check number of parameters */
@@ -57,8 +57,8 @@ object ValueSemantic {
 
     /* check every parameter's type */
     for (i <- 0 until args.length) {
-      if (checkExpr(args(i), st) != funcObj.args(i).getType()) {
-        semanticErr("Call: function name not in symbol table")
+      if (!equalType(checkExpr(args(i), st), funcObj.args(i).getType())) {
+        semanticErr("Call: argument type does not match")
       }
     }
 

@@ -5,6 +5,7 @@ import SymbolObject._
 import SymbolObjectType._
 import StatSemantic._
 import StatSemantic.{convertType}
+import SemanticChecker.semanticErr
 import scala.collection.mutable.ListBuffer
 
 
@@ -14,6 +15,10 @@ object FunctionSemantic {
 			val args = new ListBuffer[ParamObj]()
 			func.params.foreach {p => 
 				args += new ParamObj(convertType(p.paramType))
+			}
+
+			if (st.lookUp(func.ident.name, FunctionType()) != None) {
+				semanticErr("Function header read: function already defined")
 			}
 
 			/* add func to main scope */
@@ -30,6 +35,9 @@ object FunctionSemantic {
 			val args = new ListBuffer[ParamObj]()
 
 			func.params.foreach {p => 
+				if (new_st.lookUp(p.ident.name, VariableType()) != None) {
+					semanticErr("Function: parameter already defined")
+				}
 				new_st.add(p.ident.name, VariableType(), new ParamObj(convertType(p.paramType)))
 				args += new ParamObj(convertType(p.paramType))
 			}

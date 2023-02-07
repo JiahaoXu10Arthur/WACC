@@ -68,7 +68,7 @@ object ExprSemantic {
      Argument2 type: Same as Arg1,
      Return type   : Bool */
   def compareCheck(expr1: Expr, expr2: Expr, st: SymbolTable): Type = {
-    if (checkExpr(expr1, st) == checkExpr(expr2, st)) {
+    if (equalType(checkExpr(expr1, st), checkExpr(expr2, st))) {
       if (checkExpr(expr1, st) == IntType() || checkExpr(expr2, st) == CharType()) {
         /* return type */
         BoolType()
@@ -84,7 +84,7 @@ object ExprSemantic {
      Argument2 type: T,
      Return type   : Bool */
   def eqCheck(expr1: Expr, expr2: Expr, st: SymbolTable): Type = {
-    if (checkExpr(expr1, st) == checkExpr(expr2, st)) {
+    if (equalType(checkExpr(expr1, st), checkExpr(expr2, st))) {
       BoolType()
     } else {
       semanticErr("EqBio: Both expressions are not of the same type")
@@ -130,7 +130,7 @@ object ExprSemantic {
   def identCheck(name: String, st: SymbolTable): Type = {
     st.lookUpAll(name, VariableType()) match {
       case Some(symObj) => symObj.getType()
-      case None => semanticErr("Ident: not in symbol table")
+      case None => semanticErr(s"Ident: $name not in symbol table")
     }
   }
 
