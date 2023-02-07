@@ -124,7 +124,7 @@ object StatSemantic {
     var recurse_st: SymbolTable = st
 
     while(recurse_st.encSymTable != null) {
-      retType = findOneRet(st)
+      retType = findOneRet(recurse_st)
 
       if (retType != null) {
         return retType
