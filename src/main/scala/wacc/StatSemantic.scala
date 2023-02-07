@@ -41,10 +41,16 @@ object StatSemantic {
       case _ => st.add(ident.name, VariableType(), VariableObj(semType))
     }
 
-    /* Initial value should match the type */
-    if (!equalType(semType, checkRvalue(initValue, st))) {
-      semanticErr("Declare: Initial value wrong type")
+    /* if intial value is nested pair, pass */
+    initValue match {
+      case PairElem(_, PairElem(_, _)) => 
+      case _ => /* Initial value should match the type */
+        if (!equalType(semType, checkRvalue(initValue, st))) {
+          semanticErr(s"Declare: Initial value wrong type. \n Expect: $semType, actual ${checkRvalue(initValue, st)}")
+        }
     }
+
+    
   }
 
   /* Convert syntax type to semantics type */
@@ -77,7 +83,7 @@ object StatSemantic {
       case newValue: ArrayLit => retCheck(target, newValue, st)
       case newValue: Call => retCheck(target, newValue, st)
       case newValue: NewPair => retCheck(target, newValue, st)
-      case newValue: PairElem => retCheck(target, newValue, st)
+      case newValue: PairElem => pairCheck(target, newValue, st)
       case _ => semanticErr("Assign: wrong target type")
     }
   }
@@ -87,6 +93,35 @@ object StatSemantic {
     if (!equalType(checkLvalue(target, st), checkRvalue(newValue, st))) {
       semanticErr("Assign: assign value mismatch target ")
     }
+  }
+
+  def pairCheck(target: Lvalue, newValue: Rvalue, st: SymbolTable): Unit = {
+    var firstNested = false
+    var secondNested = false
+
+    // left side nested pair
+    target match {
+      case PairElem(_, PairElem(_, _)) => {
+        checkRvalue(newValue, st)
+        firstNested = true
+      }
+      case _ =>
+    }
+
+    // right side nested pair
+    newValue match {
+      case PairElem(_, PairElem(_, _)) => {
+        checkLvalue(target, st)
+        secondNested = true
+      }
+      case _ =>
+    }
+
+    // cannot both be nested
+    if (firstNested && secondNested) {
+      semanticErr("Assign: pair cannot both be nested")
+    }
+
   }
   
   /* Special assignment:
@@ -191,19 +226,6 @@ object StatSemantic {
     stat.foreach{s => checkStat(s, new_st)}
   }
 
-  /* Type equality involve AnyType */
-  def equalType(type1: Type, type2: Type): Boolean = {
-    if (type1 == type2) {
-      return true
-    }
 
-    (type1, type2) match {
-      case (PairType(_, _), PairType(AnyType(), AnyType())) => return true
-      case (PairType(AnyType(), AnyType()), PairType(_, _)) => return true
-      case (ArrayType(_), ArrayType(AnyType())) => return true
-      case (ArrayType(AnyType()), ArrayType(_)) => return true
-      case _ => return false
-    }
-  }
 
 }

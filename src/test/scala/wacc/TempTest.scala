@@ -27,7 +27,7 @@
   }
 
   println("Running all tests")
-  // testFile("wacc_example/valid/function/simple_functions/", new File("functionIfReturns.wacc"))
+  // testFile("wacc_example/valid/pairs/", new File("nestedPairRightExtract.wacc"))
   testSkeleton("wacc_example/")
 
   def testSkeleton(path: String) :Unit = {
