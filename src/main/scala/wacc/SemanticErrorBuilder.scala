@@ -27,9 +27,11 @@ object SemanticErrorBuilder {
   }
 
   def buildTypeError(source : Option[String], pos: (Int, Int), 
-                    unexpectedType: String, expectedType: Set[String], 
+                    unexpectedType: SemanticType.Type, expectedType: Set[SemanticType.Type], 
                     msg: Seq[String], lineInfo: String): WACCError = {
-    buildWithUnexpected("Type", source, pos, unexpectedType, expectedType, 
+    buildWithUnexpected("Type", source, pos, 
+                        unexpectedType.toString(), 
+                        expectedType.map(x => x.toString()), 
                         msg, lineInfo)
   }
 

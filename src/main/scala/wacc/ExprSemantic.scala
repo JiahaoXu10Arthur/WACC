@@ -1,10 +1,11 @@
 package wacc
 import Ast._
 import SemanticType._
-import SemanticChecker.semanticErr
+import SymbolObject._
 import SymbolObjectType._
 import scala.collection.mutable.ListBuffer
 import Errors._
+import SemanticErrorBuilder._
 
 object ExprSemantic {
 
@@ -47,7 +48,7 @@ object ExprSemantic {
       case StrLit(_)  => StrType()
       case PairLit()  => PairType(AnyType(), AnyType())
 
-      case Ident(name) => identCheck(name)
+      case expr: Ident => identCheck(expr)
       case ArrayElem(ident, indexes) => arrayElemCheck(ident, indexes)
     }
   }
@@ -58,12 +59,16 @@ object ExprSemantic {
   def arithmeticsCheck(expr1: Expr, expr2: Expr)
                       (implicit st: SymbolTable, 
                                 semErr: ListBuffer[WACCError]): Type = {
-    if (checkExpr(expr1) != IntType()) {
-      semanticErr("ArithBio: Expr1 not int type")
+    val type1 = checkExpr(expr1)
+    if (type1 != IntType()) {
+      semErr += buildTypeError(None, expr1.pos, type1, Set(IntType()), 
+                               Seq("ArithBio: Expr1 not int type"), "")
     }
 
-    if (checkExpr(expr2) != IntType()) {
-      semanticErr("ArithBio: Expr2 not int type")
+    val type2 = checkExpr(expr2)
+    if (type2 != IntType()) {
+      semErr += buildTypeError(None, expr2.pos, type2, Set(IntType()), 
+                               Seq("ArithBio: Expr2 not int type"), "")
     }
 
     IntType()
@@ -75,16 +80,22 @@ object ExprSemantic {
   def compareCheck(expr1: Expr, expr2: Expr)
                   (implicit st: SymbolTable, 
                             semErr: ListBuffer[WACCError]): Type = {
-    if (!equalType(checkExpr(expr1), checkExpr(expr2))) {
-      semanticErr("CompBio: expressions are not of the same type")
+    val type1 = checkExpr(expr1)
+    val type2 = checkExpr(expr2)
+
+    if (!equalType(type1, type2)) {
+      semErr += buildTypeError(None, expr2.pos, type2, Set(type1), 
+                               Seq("ArithBio: expressions not same type"), "")
     }
 
-    if (checkExpr(expr1) != IntType() && checkExpr(expr1) != CharType()) {
-      semanticErr("CompBio: expr1 is not int or char type")
+    if (type1 != IntType() && type1 != CharType()) {
+      semErr += buildTypeError(None, expr1.pos, type1, Set(IntType(), CharType()), 
+                               Seq("ArithBio: Expr1 not int or char type"), "")
     }
 
-    if (checkExpr(expr2) != IntType() && checkExpr(expr1) != CharType()) {
-      semanticErr("CompBio: expr2 is not int or char type")
+    if (type2 != IntType() && type2 != CharType()) {
+      semErr += buildTypeError(None, expr2.pos, type2, Set(IntType(), CharType()), 
+                             Seq("ArithBio: Expr2 not int or char type"), "")
     }
     
     BoolType()
@@ -96,8 +107,12 @@ object ExprSemantic {
   def eqCheck(expr1: Expr, expr2: Expr)
              (implicit st: SymbolTable, 
                        semErr: ListBuffer[WACCError]): Type = {
-     if (!equalType(checkExpr(expr1), checkExpr(expr2))){
-      semanticErr("EqBio: Both expressions are not of the same type")
+    val type1 = checkExpr(expr1)
+    val type2 = checkExpr(expr2)
+    
+     if (!equalType(type1, type2)){
+      semErr += buildTypeError(None, expr2.pos, type2, Set(type1), 
+                             Seq("ArithBio: Expr2 not int or char type"), "")
     }
     BoolType()
   }
@@ -108,24 +123,31 @@ object ExprSemantic {
   def logiCheck(expr1: Expr, expr2: Expr)
                (implicit st: SymbolTable, 
                          semErr: ListBuffer[WACCError]): Type = {
+    val type1 = checkExpr(expr1)
+    val type2 = checkExpr(expr2)
+    
     if (checkExpr(expr1) != BoolType()) {
-      semanticErr("LogiBio: Expr1 not bool type")
+      semErr += buildTypeError(None, expr1.pos, type1, Set(BoolType()), 
+                             Seq("ArithBio: Expr1 not bool type"), "")
     }
     
     if (checkExpr(expr2) != BoolType()) {
-      semanticErr("LogiBio: Expr2 not bool type")
+      semErr += buildTypeError(None, expr2.pos, type2, Set(BoolType()), 
+                             Seq("ArithBio: Expr2 not bool type"), "")
     }
 
     BoolType()
   }
 
-  /* Arg type: Bool
-     Return type: Bool */
+  /* Arg type: given
+     Return type: given */
   def unaryCheck(expr: Expr, argType: Type, retType: Type)
                 (implicit st: SymbolTable, 
                           semErr: ListBuffer[WACCError]): Type = {
+    val type1 = checkExpr(expr)
     if (checkExpr(expr) != argType) {
-          semanticErr(s"Unary: argument not $argType")
+      semErr += buildTypeError(None, expr.pos, type1, Set(retType), 
+                             Seq(s"Unary: argument not $argType"), "")
     }
     retType
   }
@@ -135,21 +157,27 @@ object ExprSemantic {
   def lenCheck(expr: Expr)
               (implicit st: SymbolTable, 
                         semErr: ListBuffer[WACCError]): Type = {
+    val type1 = checkExpr(expr)
     checkExpr(expr) match {
+      case AnyType() =>
       case ArrayType(_) => 
-      case _ => semanticErr("Len: argument not array")
+      case _ => semErr += buildTypeError(None, expr.pos, type1, Set(ArrayType(AnyType())), 
+                             Seq("Len: argument not array"), "")
     }
     IntType()
   }
 
   /* refer to st */
-  def identCheck(name: String)
+  def identCheck(ident: Ident)
                 (implicit st: SymbolTable,
                           semErr: ListBuffer[WACCError]): Type = {
-    st.lookUpAll(name, VariableType()) match {
+    st.lookUpAll(ident.name, VariableType()) match {
       case Some(symObj) => symObj.getType()
       case None => {
-        semanticErr(s"Ident: $name not in symbol table")
+        // semanticErr(s"Ident: $name not in symbol table")
+        semErr += buildScopeError(None, ident.pos, ident.name, st.lookUpAllSimilar(ident.name, VariableType()), 
+                                 Seq(s"Ident: identifier with name ${ident.name} not in scope"), "")
+        st.add(ident.name, VariableType(), new VariableObj(AnyType(), ident.pos))
         AnyType()
       }
     }
@@ -166,26 +194,31 @@ object ExprSemantic {
 
     /* for every layer of index, check validity */
     for (i <- indexes) {
-      thisLayer = oneArrayElemCheck(thisLayer, i)
+      thisLayer = oneArrayElemCheck(thisLayer, i, ident, thisLayer)
     }
 
     thisLayer
   }
 
   /* One layer of array elem check */
-  def oneArrayElemCheck(t: Type, index: Expr)
+  def oneArrayElemCheck(t: Type, index: Expr, 
+                        ident: Ident, idType: Type)
                        (implicit st: SymbolTable, 
                                  semErr: ListBuffer[WACCError]): Type = {
-    if (checkExpr(index) != IntType()) {
-      semanticErr("ArrayElem: index not int type")
+    val indexType = checkExpr(index)
+    if (indexType != IntType()) {
+      semErr += buildTypeError(None, index.pos, indexType, Set(IntType()), 
+                               Seq("ArrayElem: index not int type"), "")
       return AnyType()
     }
 
     /* First argument type should be T[] */
     t match {
+      case AnyType() => return AnyType()
       case ArrayType(t1) => return t1
       case _ => {
-        semanticErr("ArrayElem: fst arg not arrayObj")
+        semErr += buildTypeError(None, ident.pos, idType, Set(ArrayType(AnyType())), 
+                                 Seq("ArrayElem: more extract than array nesting"), "")
         return AnyType()
       }
     }

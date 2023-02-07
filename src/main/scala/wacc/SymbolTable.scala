@@ -48,7 +48,7 @@ class SymbolTable(st: SymbolTable) {
   }
 
   // Find similar SymbolObject with the given name to provide as suggestion
-  def lookUpSimilar(typeIn: String, objType: ObjectType): Seq[(String, (Int, Int))] = {
+  def lookUpSimilar(typeIn: String, objType: ObjectType): Set[(String, (Int, Int))] = {
     // val similar: Seq[(String, (Int, Int))] = Seq()
     val similar = new ListBuffer[(String, (Int, Int))]()
 
@@ -58,21 +58,21 @@ class SymbolTable(st: SymbolTable) {
         similar += ((x._1._1, x._2.getPos()))
     }}
 
-    return similar.toSeq
+    return similar.toSet
   }
 
   // Find similar SymbolObject with the given name to provide as suggestion in all scope
-  def lookUpAllSimilar(typeIn: String, objType: ObjectType): Seq[(String, (Int, Int))] = {
+  def lookUpAllSimilar(typeIn: String, objType: ObjectType): Set[(String, (Int, Int))] = {
     // val similar: Seq[(String, (Int, Int))] = Seq()
     val similar = new ListBuffer[(String, (Int, Int))]()
 
     var s = this
     while (s != null) {
-        val new_similar: Seq[(String, (Int, Int))] = s.lookUpSimilar(typeIn, objType)
+        val new_similar: Set[(String, (Int, Int))] = s.lookUpSimilar(typeIn, objType)
         similar ++= new_similar
         s = s.encSymTable
     }
 
-    return similar.toSeq
+    return similar.toSet
   }
 }

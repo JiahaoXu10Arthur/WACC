@@ -8,7 +8,7 @@ import Errors._
 
 object SemanticChecker {
 
-  def semanticCheck(p: Program): Unit = {
+  def semanticCheck(p: Program): List[WACCError] = {
     implicit val st: SymbolTable = new SymbolTable(null)
     implicit val semErr = new ListBuffer[WACCError]()
 
@@ -21,6 +21,8 @@ object SemanticChecker {
       }
     }
    }
+
+   semErr.toList
   }
 
   def semanticErr(where: String) = {
