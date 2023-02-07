@@ -1,5 +1,7 @@
 package wacc
 
+import scala.io.Source
+
 object Errors {
   case class WACCError(errType: String, source: Option[String], pos: (Int, Int), lines: WACCErrorLines) {
     override def toString(): String = {
@@ -51,5 +53,13 @@ object Errors {
   }
   case object WACCEndOfInput extends WACCErrorItem {
     override def toString: String = ""
-  }  
+  }
+
+  def extractErrorLines(source: String, errorPos: (Int, Int)): Seq[String] = {
+    val file = Source.fromFile(source).getLines().toArray
+    val length = file.length
+    val errorLines =  Seq(file(errorPos._1 - 1), file(errorPos._1), file(errorPos._1 + 1))
+    errorLines.foreach(println)
+    errorLines
+  }
 }
