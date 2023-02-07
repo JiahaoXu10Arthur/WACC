@@ -52,59 +52,59 @@ object ExprSemantic {
      Argument2 type: Int,
      Return type   : Int */
   def arithmeticsCheck(expr1: Expr, expr2: Expr, st: SymbolTable): Type = {
-    if (checkExpr(expr1, st) == IntType()) {
-        if (checkExpr(expr2, st) == IntType()) {
-          /* return type */
-          IntType()
-        } else {
-          semanticErr("ArithBio: Expr2 not int type")
-        }
-      } else {
-        semanticErr("ArithBio: Expr1 not int type")
+    if (checkExpr(expr1, st) != IntType()) {
+      semanticErr("ArithBio: Expr1 not int type")
     }
+
+    if (checkExpr(expr2, st) != IntType()) {
+      semanticErr("ArithBio: Expr2 not int type")
+    }
+
+    IntType()
   }
 
   /* Argument1 type: Int/Char,
      Argument2 type: Same as Arg1,
      Return type   : Bool */
   def compareCheck(expr1: Expr, expr2: Expr, st: SymbolTable): Type = {
-    if (equalType(checkExpr(expr1, st), checkExpr(expr2, st))) {
-      if (checkExpr(expr1, st) == IntType() || checkExpr(expr2, st) == CharType()) {
-        /* return type */
-        BoolType()
-      } else {
-        semanticErr("CompBio: Both expressions are not int or char type")
-      }
-    } else {
-      semanticErr("CompBio: Both expressions are not of the same type")
+    if (!equalType(checkExpr(expr1, st), checkExpr(expr2, st))) {
+      semanticErr("CompBio: expressions are not of the same type")
     }
+
+    if (checkExpr(expr1, st) != IntType() && checkExpr(expr1, st) != CharType()) {
+      semanticErr("CompBio: expr1 is not int or char type")
+    }
+
+    if (checkExpr(expr2, st) != IntType() && checkExpr(expr1, st) != CharType()) {
+      semanticErr("CompBio: expr2 is not int or char type")
+    }
+    
+    BoolType()
   }
 
   /* Argument1 type: T,
      Argument2 type: T,
      Return type   : Bool */
   def eqCheck(expr1: Expr, expr2: Expr, st: SymbolTable): Type = {
-    if (equalType(checkExpr(expr1, st), checkExpr(expr2, st))) {
-      BoolType()
-    } else {
+     if (!equalType(checkExpr(expr1, st), checkExpr(expr2, st))){
       semanticErr("EqBio: Both expressions are not of the same type")
     }
+    BoolType()
   }
 
   /* Argument1 type: Bool,
      Argument2 type: Bool,
      Return type   : Bool */
   def logiCheck(expr1: Expr, expr2: Expr, st: SymbolTable): Type = {
-    if (checkExpr(expr1, st) == BoolType()) {
-        if (checkExpr(expr2, st) == BoolType()) {
-          /* return type */
-          BoolType()
-        } else {
-          semanticErr("LogiBio: Expr2 not bool type")
-        }
-      } else {
-        semanticErr("LogiBio: Expr1 not bool type")
+    if (checkExpr(expr1, st) != BoolType()) {
+      semanticErr("LogiBio: Expr1 not bool type")
     }
+    
+    if (checkExpr(expr2, st) != BoolType()) {
+      semanticErr("LogiBio: Expr2 not bool type")
+    }
+
+    BoolType()
   }
 
   /* Arg type: Bool
@@ -112,7 +112,7 @@ object ExprSemantic {
   def unaryCheck(expr: Expr, st: SymbolTable, argType: Type, retType: Type): Type = {
     if (checkExpr(expr, st) != argType) {
           semanticErr(s"Unary: argument not $argType")
-      }
+    }
     retType
   }
 
@@ -130,8 +130,12 @@ object ExprSemantic {
   def identCheck(name: String, st: SymbolTable): Type = {
     st.lookUpAll(name, VariableType()) match {
       case Some(symObj) => symObj.getType()
-      case None => semanticErr(s"Ident: $name not in symbol table")
+      case None => {
+        semanticErr(s"Ident: $name not in symbol table")
+        AnyType()
+      }
     }
+    
   }
 
   /* Arg1: Ident -> Refer to ArrayObj in st -> T[]
@@ -140,6 +144,7 @@ object ExprSemantic {
   def arrayElemCheck(ident: Ident, indexes: List[Expr], st: SymbolTable): Type = {
     var thisLayer = checkExpr(ident, st)
 
+    /* for every layer of index, check validity */
     for (i <- indexes) {
       thisLayer = oneArrayElemCheck(thisLayer, i, st)
     }
@@ -151,12 +156,16 @@ object ExprSemantic {
   def oneArrayElemCheck(t: Type, index: Expr, st: SymbolTable): Type = {
     if (checkExpr(index, st) != IntType()) {
       semanticErr("ArrayElem: index not int type")
+      return AnyType()
     }
 
     /* First argument type should be T[] */
     t match {
       case ArrayType(t1) => return t1
-      case _ => semanticErr("ArrayElem: fst arg not arrayObj")
+      case _ => {
+        semanticErr("ArrayElem: fst arg not arrayObj")
+        return AnyType()
+      }
     }
   }
 

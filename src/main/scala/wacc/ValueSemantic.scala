@@ -44,10 +44,16 @@ object ValueSemantic {
       case Some(symObj) =>  { 
           symObj match {
           case symObj: FuncObj => funcObj = symObj
-          case _ => semanticErr("Call: fst arg not funcObj")
+          case _ => {
+            semanticErr("Call: fst arg not funcObj")
+            AnyType()
+          }
         }
       }
-      case None => semanticErr(s"Call: function name ${ident.name} not in symbol table")
+      case None => {
+        semanticErr(s"Call: function name ${ident.name} not in symbol table")
+        AnyType()
+      }
     }
 
     /* check number of parameters */
@@ -79,7 +85,10 @@ object ValueSemantic {
         case "fst" => returnType = t1
         case "snd" => returnType = t2
       }
-      case _ => semanticErr("Pair elem: not Pair Type")
+      case _ => {
+        semanticErr("Pair elem: not Pair Type")
+        AnyType()
+      }
     }
 
     returnType
@@ -101,6 +110,7 @@ object ValueSemantic {
       // checkValueRef(args(i), st)
       if (checkExpr(values(i), st) != checkExpr(values(i + 1), st)) {
         semanticErr("ArrayLit: Array literals are not of the same type")
+        return ArrayType(AnyType())
       }
     }
     ArrayType(checkExpr(values(0), st))
