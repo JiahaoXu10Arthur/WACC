@@ -50,7 +50,7 @@
           "A successful compilation return the exit status 0 " ++ filename in {
            (Parser.parse(string) match {
                case Success(x) => {
-                SemanticChecker.semanticCheck(x)
+                SemanticChecker.semanticCheck(x) shouldBe empty
                 true
                }
                case Failure(msg) => {
@@ -72,11 +72,10 @@
            }) shouldBe true
         }
       } else if (path.contains("semanticErr")) {
-        // "A compilation that fails due to semantic errors return the exit status 200" ++ filename in pending
         "A compilation that fails due to semantic errors return the exit status 200" ++ filename in {
            (Parser.parse(string) match {
                case Success(x) => {
-                an [SemanticChecker.SemanticErr] should be thrownBy SemanticChecker.semanticCheck(x)
+                SemanticChecker.semanticCheck(x) should not be empty
                 true
                }
                case Failure(msg) => {

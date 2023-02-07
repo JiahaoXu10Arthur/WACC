@@ -9,7 +9,9 @@ object Ast {
   object Program extends ParserBridgePos2[List[Func], List[Stat], Program]
 
   /* Binary Expressions */
-  sealed trait Expr extends Rvalue
+  sealed trait Expr extends Rvalue {
+    def pos: (Int, Int)
+  }
     /* Arithmetic binary operators */
     case class Mul(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Expr
     object Mul extends ParserBridgePos2[Expr, Expr, Mul]
@@ -103,8 +105,12 @@ object Ast {
     object ArrayElem extends ParserBridgePos2[Ident, List[Expr], ArrayElem]
 
   /* Values */
-  sealed trait Lvalue
-  sealed trait Rvalue
+  sealed trait Lvalue {
+    def pos: (Int, Int)
+  }
+  sealed trait Rvalue {
+    def pos: (Int, Int)
+  }
 
   case class NewPair(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Rvalue
   object NewPair extends ParserBridgePos2[Expr, Expr, NewPair]
