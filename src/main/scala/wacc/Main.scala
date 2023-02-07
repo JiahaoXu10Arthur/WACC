@@ -3,7 +3,6 @@ package wacc
 import parsley.{Success, Failure}
 import java.nio.file.Files
 import java.nio.file.Paths
-import SemanticErrorBuilder._
 
 object Main {
 	def main(args: Array[String]): Unit = {
@@ -25,6 +24,7 @@ object Main {
 			//	System.exit(100)
 			}
 		}
+
 	}
 }
 

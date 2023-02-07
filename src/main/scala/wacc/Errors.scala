@@ -4,8 +4,32 @@ import scala.io.Source
 import scala.collection.mutable.ListBuffer
 
 object Errors {
-  case class WACCError(errType: String, source: Option[String], 
-                       pos: (Int, Int), lines: WACCErrorLines) {
+  def errorsMkString(erros: Seq[WACCError], source: Option[String]): String = {
+    val errorString = new StringBuilder()
+    /* Loads source file */
+    val file: Option[Array[String]] = source match {
+      case Some(x) => Some(Source.fromFile(x).getLines().toArray)
+      case None    => None
+    }
+    /* transform the error lines to the correct format*/
+    for (error <- erros) {
+      val line = error.lines.lineInfo
+      line match {
+        case StandardLineInfo(_, _, _, _, _) =>
+          errorString.append(line.printLine(None))
+        case LazyLineInfo(_, _, _) => errorString.append(line.printLine(file))
+      }
+    }
+    errorString.toString()
+  }
+
+  /* Error definition */
+  case class WACCError(
+      errType: String,
+      source: Option[String],
+      pos: (Int, Int),
+      lines: WACCErrorLines
+  ) {
     override def toString(): String = {
       val errTypeMsg = s"$errType error "
       val sourceMsg = source match {
@@ -17,15 +41,20 @@ object Errors {
       errorMsg
     }
   }
-  
-  sealed trait WACCErrorLines
-  case class VanillaError(unexpected: Option[WACCErrorItem], 
-                          expecteds: Set[WACCErrorItem], 
-                          reasons: Seq[String], 
-                          lineInfo: ErrorLineInfo) extends WACCErrorLines {
+
+  /* Error line definition */
+  sealed trait WACCErrorLines {
+    def lineInfo: ErrorLineInfo
+  }
+  case class VanillaError(
+      unexpected: Option[WACCErrorItem],
+      expecteds: Set[WACCErrorItem],
+      reasons: Seq[String],
+      lineInfo: ErrorLineInfo
+  ) extends WACCErrorLines {
     override def toString(): String = {
       val unexpected_ = unexpected match {
-        case None => ""
+        case None        => ""
         case Some(value) => "mismatched input \'" ++ value.toString ++ "\'"
       }
       val expecteds_ = {
@@ -38,8 +67,8 @@ object Errors {
     }
   }
 
-  case class SpecialisedError(msgs: Seq[String], 
-                              lineInfo: ErrorLineInfo) extends WACCErrorLines {
+  case class SpecialisedError(msgs: Seq[String], lineInfo: ErrorLineInfo)
+      extends WACCErrorLines {
     override def toString(): String = {
       val msgs_ = msgs.mkString("\n")
       val lineInfo_ = lineInfo.toString()
@@ -47,20 +76,59 @@ object Errors {
     }
   }
 
-  case class ErrorLineInfo(line: String, linesBefore: Seq[String], 
-                            linesAfter: Seq[String], errorPointsAt: Int, 
-                            errorWidth: Int) {
-    override def toString(): String = {
-        val seqLines = linesBefore.map(line => s"$errorLineStart$line") ++:
-        Seq(s"$errorLineStart$line", s"${" " * errorLineStart.length}${errorPointer(errorPointsAt, errorWidth)}") ++:
+  /* Error line info types */
+  sealed trait ErrorLineInfo {
+    def printLine(context: Option[Array[String]]): String
+  }
+  case class StandardLineInfo(
+      line: String,
+      linesBefore: Seq[String],
+      linesAfter: Seq[String],
+      errorPointsAt: Int,
+      errorWidth: Int
+  ) extends ErrorLineInfo {
+    override def printLine(context: Option[Array[String]] = None): String = {
+      val seqLines = linesBefore.map(line => s"$errorLineStart$line") ++:
+        Seq(
+          s"$errorLineStart$line",
+          s"${" " * errorLineStart.length}",
+          s"${errorPointer(errorPointsAt, errorWidth)}"
+        ) ++:
         linesAfter.map(line => s"$errorLineStart$line")
-        seqLines.mkString("\n")
+      seqLines.mkString("\n")
     }
   }
 
+  case class LazyLineInfo(
+      linePos: (Int, Int),
+      numLinesBefore: Int,
+      numLinesAfter: Int
+  ) extends ErrorLineInfo {
+    override def printLine(context: Option[Array[String]]): String =
+      extractErrorLines(context.get, linePos, numLinesBefore, numLinesAfter)
+        .mkString("\n")
+  }
+
   private val errorLineStart = ">"
-  private def errorPointer(caretAt: Int, caretWidth: Int) = s"${" " * caretAt}${"^" * caretWidth}"
-  
+  private def errorPointer(caretAt: Int, caretWidth: Int) =
+    s"${" " * caretAt}${"^" * caretWidth}"
+  private def extractErrorLines(
+      file: Array[String],
+      errorPos: (Int, Int),
+      numLinesBefore: Int,
+      numLinesAfter: Int
+  ): Seq[String] = {
+    val length = file.length
+    val errorLines = ListBuffer(file(errorPos._1))
+    if (errorPos._1 > 0)
+      errorLines.prepend((file(errorPos._1 - 1)))
+    if (errorPos._1 < length)
+      errorLines.append(file(errorPos._1 + 1))
+
+    errorLines.toSeq
+  }
+
+  /* Error item definition */
   sealed trait WACCErrorItem
   case class WACCRaw(item: String) extends WACCErrorItem {
     override def toString() = s"\"item\""
@@ -70,17 +138,5 @@ object Errors {
   }
   case object WACCEndOfInput extends WACCErrorItem {
     override def toString: String = ""
-  }
-
-  def extractErrorLines(source: String, errorPos: (Int, Int)): Seq[String] = {
-    val file = Source.fromFile(source).getLines().toArray
-    val length = file.length
-    val errorLines = ListBuffer(file(errorPos._1))
-    if (errorPos._1 > 0)
-      errorLines.prepend((file(errorPos._1 - 1)))
-    if (errorPos._1 < length)
-      errorLines.append(file(errorPos._1 + 1))  
-
-    errorLines.toSeq
   }
 }
