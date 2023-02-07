@@ -40,7 +40,7 @@ class SemanticExprTest extends AnyFlatSpec {
 		an [SemanticErr] should be thrownBy checkExpr(testIdent, st)
 
 		/* int ident */
-		st.add("ident", VariableType(), new VariableObj(IntType()))
+		st.add("ident", VariableType(), new VariableObj(IntType(), (0, 0)))
 		/* After add symbol table, should get type */
 		checkExpr(testIdent, st) shouldBe IntType()
 	}
@@ -58,10 +58,10 @@ class SemanticExprTest extends AnyFlatSpec {
 		an [SemanticErr] should be thrownBy checkExpr(testArray1, st)
 
 		/* TypeObj in symbol table is wrong, semantic error */
-		st.add("array", VariableType(), new VariableObj(IntType()))
+		st.add("array", VariableType(), new VariableObj(IntType(), (0, 0)))
 		an [SemanticErr] should be thrownBy checkExpr(testArray1, st)
 		
-		st.add("array", VariableType(), new VariableObj(ArrayType(ArrayType(IntType()))))
+		st.add("array", VariableType(), new VariableObj(ArrayType(ArrayType(IntType())), (0, 0)))
 		/* After add symbol table, should get type */
 		checkExpr(testArray1, st) shouldBe IntType()
 
@@ -82,7 +82,7 @@ class SemanticExprTest extends AnyFlatSpec {
 		/* bool boolValue = true
 			 !boolValue */
 		val testNot3 = Not(Ident("boolValue")(0,0))(0,0)
-		st.add("boolValue", VariableType(), new VariableObj(BoolType()))
+		st.add("boolValue", VariableType(), new VariableObj(BoolType(), (0, 0)))
 		checkExpr(testNot3, st) shouldBe BoolType()
 	}
 
@@ -106,11 +106,11 @@ class SemanticExprTest extends AnyFlatSpec {
 		an [SemanticErr] should be thrownBy checkExpr(testLen1, st)
 
 		/* int array1 */
-		st.add("array1", VariableType(), VariableObj(IntType()))
+		st.add("array1", VariableType(), VariableObj(IntType(), (0, 0)))
 		an [SemanticErr] should be thrownBy checkExpr(testLen1, st)
 
 		/* int[] array2 */
-		st.add("array2", VariableType(), VariableObj(ArrayType(IntType())))
+		st.add("array2", VariableType(), VariableObj(ArrayType(IntType()), (0, 0)))
 		checkExpr(testLen2, st) shouldBe IntType()
 	}
 
@@ -180,7 +180,7 @@ class SemanticExprTest extends AnyFlatSpec {
 		an [SemanticErr] should be thrownBy checkExpr(testeq4, st)
 
 		/* string stringIdent */
-		st.add("stringIdent", VariableType(), VariableObj(StrType()))
+		st.add("stringIdent", VariableType(), VariableObj(StrType(), (0, 0)))
 		checkExpr(testeq4, st) shouldBe BoolType()
 	}
 

@@ -80,13 +80,13 @@ class ParserExprTest extends AnyFlatSpec {
     ExprParser.exprParse(s"-$testString").get should matchPattern {
 			case Neg(StrLit("String")) =>
 		} 
-    ExprParser.exprParse(s"len$testString").get should matchPattern {
+    ExprParser.exprParse(s"len $testString").get should matchPattern {
 			case Len(StrLit("String")) =>
 		} 
-    ExprParser.exprParse("ord'a'").get should matchPattern {
+    ExprParser.exprParse("ord 'a'").get should matchPattern {
 			case Ord(CharLit('a')) =>
 		} 
-    ExprParser.exprParse("chr97").get should matchPattern {
+    ExprParser.exprParse("chr 97").get should matchPattern {
 			case Chr(IntLit(97)) =>
 		} 
   }

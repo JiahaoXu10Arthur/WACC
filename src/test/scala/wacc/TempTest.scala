@@ -27,6 +27,7 @@
   }
 
   println("Running all tests")
+  // testFile("wacc_example/valid/pairs/", new File("nestedPairRightExtract.wacc"))
   testSkeleton("wacc_example/")
 
   def testSkeleton(path: String) :Unit = {
@@ -49,7 +50,7 @@
           "A successful compilation return the exit status 0 " ++ filename in {
            (Parser.parse(string) match {
                case Success(x) => {
-                // SemanticChecker.semanticCheck(x)
+                SemanticChecker.semanticCheck(x)
                 true
                }
                case Failure(msg) => {
@@ -71,24 +72,20 @@
            }) shouldBe true
         }
       } else if (path.contains("semanticErr")) {
-        "A compilation that fails due to semantic errors return the exit status 200" ++ filename in pending
-        // "A compilation that fails due to semantic errors return the exit status 200" ++ filename in {
-        //    (Parser.parse(string) match {
-        //        case Success(x) => {
-        //         an [SemanticChecker.SemanticErr] should be thrownBy SemanticChecker.semanticCheck(x)
-        //         true
-        //        }
-        //        case Failure(msg) => {
-        //         println(msg)
-        //         false
-        //        }
-        //    }) shouldBe true
-        
-        
+        // "A compilation that fails due to semantic errors return the exit status 200" ++ filename in pending
+        "A compilation that fails due to semantic errors return the exit status 200" ++ filename in {
+           (Parser.parse(string) match {
+               case Success(x) => {
+                an [SemanticChecker.SemanticErr] should be thrownBy SemanticChecker.semanticCheck(x)
+                true
+               }
+               case Failure(msg) => {
+                println(msg)
+                false
+               }
+           }) shouldBe true
+        }
       }
-    }
-
-
-
+  }
    
  }
