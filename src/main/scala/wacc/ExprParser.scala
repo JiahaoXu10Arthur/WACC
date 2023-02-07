@@ -7,6 +7,7 @@ import parsley.combinator.{some}
 import Ast.{Expr}
 import parsley.expr.{GOps, InfixL, Prefix}
 import Lexer.implicitVals._
+import parsley.errors.combinator._
 
 object ExprParser {
 	lazy val expr: Parsley[Expr] = precedence[Expr](
@@ -52,7 +53,7 @@ object ExprParser {
 
 		// binary precedence 6
 		GOps(InfixL) ((Ast.Or <# "||"))
-	)
+	).label("expression")
 		
 	def exprParse (input: String): Option[Expr] = {
 		expr.parse(input) match {
@@ -62,7 +63,7 @@ object ExprParser {
       case Failure(msg) => {
 				None
 			}
-    }
+    	}
 	}
 
 }

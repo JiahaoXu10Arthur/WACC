@@ -1,15 +1,23 @@
 package wacc
 
-import parsley.token.{Lexer, descriptions}
-import parsley.character.{char, digit}
+import parsley.Parsley
+import parsley.character.char
+import parsley.character.digit
+import parsley.errors.combinator._
+import parsley.token.Lexer
+import parsley.token.descriptions
+import parsley.token.errors.ErrorConfig
+import parsley.token.errors.FilterConfig
+import parsley.token.errors.Hidden
+import parsley.token.errors.Label
+import parsley.token.errors.LabelConfig
+import parsley.token.errors.SpecialisedMessage
+import parsley.token.predicate
+
 import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc, numeric}
 import descriptions.text.{TextDesc, EscapeDesc}
 import numeric.PlusSignPresence.Optional
-import parsley.token.predicate
-import parsley.Parsley
 import Parsley.{notFollowedBy, attempt}
-
-
 
 object Lexer {
   private val keywords = Set("true", "false", "begin", "end", "is", "skip", 
@@ -17,9 +25,12 @@ object Lexer {
                              "println", "if", "then", "else", "fi", "while", 
                              "do", "done", "fst", "snd", "newpair", "call", 
                              "int", "bool", "char", "string", "pair", "null")
-  private val operators = Set("(", ")", ",", "=", ";", "[", "]", "!", "-", 
-                              "len", "ord", "chr", "*", "/", "%", "+", ">", 
-                              ">=", "<", "<=", "==", "!=", "&&", "||")
+  private val arithmeticOps = Set("-", "*", "/", "%", "+")
+  private val boolOps = Set("!", "&&", "||")
+  private val compareOps = Set(">", ">=", "<", "<=", "==", "!=")
+  private val parensOps = Set("(", ")", "[", "]")
+                             
+  private val operators = Set(",", "=", ";", "len", "ord", "chr") ++ arithmeticOps ++ boolOps ++ compareOps ++ parensOps
   private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
 
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
@@ -28,7 +39,6 @@ object Lexer {
   private val desc = LexicalDesc.plain.copy(
     numericDesc = numeric.NumericDesc.plain.copy(
       positiveSign = Optional,
-
     ),
     spaceDesc = SpaceDesc.plain.copy(
       commentLine = "#",
@@ -58,13 +68,40 @@ object Lexer {
     )
     
   )
-  val lexer = new Lexer(desc)
+  private val errorConfig = new ErrorConfig {
+    override def filterIntegerOutOfBounds(min: BigInt, max: BigInt, nativeRadix: Int): FilterConfig[BigInt] = new SpecialisedMessage[BigInt] {
+        def message(n: BigInt) = Seq(s"number is not within the range ${min.toString(nativeRadix)} to ${max.toString(nativeRadix)}")
+    }
+
+    // TODO: ask if can explain
+
+    override def labelSymbolOperator(symbol: String): LabelConfig = 
+      if (arithmeticOps.contains(symbol))
+        Label("arithmetic operators")
+      else if (boolOps.contains(symbol))
+        Label("boolean operators")
+      else if (parensOps.contains(symbol))
+        Label("parentheses")
+      else if (compareOps.contains(symbol))
+        Label("compare operators")
+      else {
+        symbol match {
+          case "=" => Label("assign operator")
+          case "," => Label("comma")
+          case ";" => Label("semicolon")
+          case "len" => Label("length operator")
+          case "ord" => Label("ordinal operator")
+          case "chr" => Label("character operator")
+        }
+      }
+  }
+  val lexer = new Lexer(desc, errorConfig)
 
   def fully [A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
   
 
   /* Definition for literal tokens */
-  val num = lexer.lexeme.numeric.signed.number32[Int]
+  val num = lexer.lexeme.numeric.signed.number32[Int].label("number")
   val bool = lexer.lexeme.symbol("true") #> true | 
              lexer.lexeme.symbol("false") #> false
   val character = lexer.lexeme.text.character.ascii

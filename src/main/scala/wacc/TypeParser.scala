@@ -7,6 +7,7 @@ import parsley.lift.{lift2}
 import parsley.debug._
 import Parsley.{attempt}
 import Lexer.implicitVals._
+import parsley.errors.combinator._
 
 object TypeParser {
 
@@ -26,7 +27,7 @@ object TypeParser {
                 ))
 
   val arrayType: Parsley[ArrayType] 
-    = attempt(chain.postfix1(basicType | pairType, "[]" #> (ArrayType)))
+    = attempt(chain.postfix1(basicType | pairType, "[]".hide #> (ArrayType)))
 
   val type_ = arrayType | basicType | pairType 
 
