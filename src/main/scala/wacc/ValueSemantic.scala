@@ -1,7 +1,6 @@
 package wacc
 import Ast._
 import SemanticType._
-import SemanticChecker.semanticErr
 import ExprSemantic._
 import SymbolObject._
 import SymbolObjectType._

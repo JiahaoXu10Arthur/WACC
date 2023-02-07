@@ -18,13 +18,4 @@ object SemanticChecker {
 
    semErr.toList
   }
-
-  def semanticErr(where: String) = {
-    throw new SemanticErr("Semantic Error in " + where)
-  }
-
-  case class SemanticErr(private val message: String = "Semantic Error", 
-                         private val cause: Throwable = None.orNull)
-                         extends Exception(message, cause) 
-
 }

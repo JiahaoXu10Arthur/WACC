@@ -72,7 +72,6 @@
            }) shouldBe true
         }
       } else if (path.contains("semanticErr")) {
-        // "A compilation that fails due to semantic errors return the exit status 200" ++ filename in pending
         "A compilation that fails due to semantic errors return the exit status 200" ++ filename in {
            (Parser.parse(string) match {
                case Success(x) => {
