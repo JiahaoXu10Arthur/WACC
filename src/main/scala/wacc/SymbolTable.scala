@@ -33,20 +33,6 @@ class SymbolTable(st: SymbolTable) {
     None
   }
 
-  // Lookup name in current and enclosing
-  def lookUpAllWithObjType(name: String, objType: ObjectType, objNeed: SymbolObj): Option[SymbolObj] = {
-    var s = this
-    while (s != null) {
-        val obj = s.lookUp(name, objType)
-        if (obj == Some(objNeed)) {
-          return obj
-        }
-        s = s.encSymTable
-    }
-
-    None
-  }
-
   // Find similar SymbolObject with the given name to provide as suggestion
   def lookUpSimilar(typeIn: String, objType: ObjectType): Set[(String, (Int, Int))] = {
     // val similar: Seq[(String, (Int, Int))] = Seq()

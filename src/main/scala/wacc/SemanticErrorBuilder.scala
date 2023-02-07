@@ -43,6 +43,22 @@ object SemanticErrorBuilder {
     buildWithMsg("Scope", source, pos, errorMsg, lineInfo)
   }
 
+  def buildArgNumError(source: Option[String], pos: (Int, Int),
+                       unexpectedNum: Int, expectedNum: Int, 
+                       msg: Seq[String], lineInfo: String): WACCError = {
+    val errorMsg = msg :+ s"Unexpected $unexpectedNum arguments\n" +
+                          s"Expected $expectedNum arguments"
+    buildWithMsg("Wrong Arugment Number", source, pos, errorMsg, lineInfo)
+  }
+
+  def buildPairExchangeError(source: Option[String], pos: (Int, Int),
+                             lineInfo: String): WACCError = {
+    val errorMsg = Seq("Attempting to exchange values between pairs of unknown types\n" +
+                       "Pair exchange is only legal when the types of at least one of" +
+                       "the sides is known or specified")
+    buildWithMsg("Invalid Pair Exchange", source, pos, errorMsg, lineInfo)
+  }
+
   def buildReturnPlacementError(source: Option[String], pos: (Int, Int), 
                                 msg: Seq[String], 
                                 lineInfo: String): WACCError = {

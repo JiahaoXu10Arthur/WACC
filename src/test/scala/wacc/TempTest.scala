@@ -76,7 +76,7 @@
         "A compilation that fails due to semantic errors return the exit status 200" ++ filename in {
            (Parser.parse(string) match {
                case Success(x) => {
-                // SemanticChecker.semanticCheck(x) should not be empty
+                SemanticChecker.semanticCheck(x) should not be empty
                 true
                }
                case Failure(msg) => {

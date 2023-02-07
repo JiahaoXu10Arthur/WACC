@@ -14,13 +14,7 @@ object SemanticChecker {
 
     p.funcs.foreach{f => readInFunctionHeader(f)}
     p.funcs.foreach{f => checkFuncDeclare(f)}
-    p.stats.foreach{s => {
-      s match {
-        case Return(_) => semanticErr("Main cannot return")
-        case _ => checkStat(s)
-      }
-    }
-   }
+    p.stats.foreach{s => checkStat(s)}
 
    semErr.toList
   }

@@ -174,7 +174,6 @@ object ExprSemantic {
     st.lookUpAll(ident.name, VariableType()) match {
       case Some(symObj) => symObj.getType()
       case None => {
-        // semanticErr(s"Ident: $name not in symbol table")
         semErr += buildScopeError(None, ident.pos, ident.name, st.lookUpAllSimilar(ident.name, VariableType()), 
                                  Seq(s"Ident: identifier with name ${ident.name} not in scope"), "")
         st.add(ident.name, VariableType(), new VariableObj(AnyType(), ident.pos))

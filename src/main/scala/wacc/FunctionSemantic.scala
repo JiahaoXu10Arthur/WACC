@@ -7,6 +7,7 @@ import StatSemantic._
 import StatSemantic.{convertType}
 import SemanticChecker.semanticErr
 import Errors._
+import SemanticErrorBuilder._
 import scala.collection.mutable.ListBuffer
 
 
@@ -20,11 +21,19 @@ object FunctionSemantic {
 				args += new ParamObj(convertType(p.paramType), p.pos)
 			}
 
-			if (st.lookUp(func.ident.name, FunctionType()) != None) {
-				semanticErr("Function header read: function already defined")
+			st.lookUp(func.ident.name, FunctionType()) match {
+			case Some(obj) => {
+				semErr += buildFuncRedefError(None, func.ident.pos, func.ident.name, 
+																			obj.getPos(), Seq("Function: parameter already defined"), "")
 			}
+			case None => {
+				/* add func to main scope */
+				st.add(func.ident.name, FunctionType(), 
+							 new FuncObj(convertType(func.type1), 
+							 						 args.toList, func.params.length, st, func.pos))
+			}
+		}
 
-			/* add func to main scope */
 			st.add(func.ident.name, FunctionType(), new FuncObj(convertType(func.type1), 
 						 args.toList, func.params.length, st, func.pos))
 		}
@@ -40,11 +49,16 @@ object FunctionSemantic {
 			val args = new ListBuffer[ParamObj]()
 
 			func.params.foreach {p => 
-				if (new_st.lookUp(p.ident.name, VariableType()) != None) {
-					semanticErr("Function: parameter already defined")
+				new_st.lookUp(p.ident.name, VariableType()) match {
+					case Some(obj) => {
+						semErr += buildParamRedefError(None, p.ident.pos, p.ident.name, 
+																					 obj.getPos(), Seq("Function: parameter already defined"), "")
+						}
+					case None => {
+						new_st.add(p.ident.name, VariableType(), new ParamObj(convertType(p.paramType), p.pos))
+						args += new ParamObj(convertType(p.paramType), p.pos)
+					}
 				}
-				new_st.add(p.ident.name, VariableType(), new ParamObj(convertType(p.paramType), p.pos))
-				args += new ParamObj(convertType(p.paramType), p.pos)
 			}
 
 			/* add func to its self scope */

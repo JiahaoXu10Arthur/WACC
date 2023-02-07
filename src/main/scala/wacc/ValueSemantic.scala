@@ -6,6 +6,7 @@ import ExprSemantic._
 import SymbolObject._
 import SymbolObjectType._
 import Errors._
+import SemanticErrorBuilder._
 import scala.collection.mutable.ListBuffer
 
 object ValueSemantic {
@@ -51,30 +52,30 @@ object ValueSemantic {
     var funcObj: FuncObj = null
     /* Find funcObj */
     st.lookUpAll(ident.name, FunctionType()) match {
-      case Some(symObj) =>  { 
-          symObj match {
-          case symObj: FuncObj => funcObj = symObj
-          case _ => {
-            semanticErr("Call: fst arg not funcObj")
-            AnyType()
-          }
-        }
-      }
-      case None => {
-        semanticErr(s"Call: function name ${ident.name} not in symbol table")
-        AnyType()
+      case Some(symObj: FuncObj) => funcObj = symObj
+      case _ => {
+        semErr += buildScopeError(None, ident.pos, ident.name, st.lookUpAllSimilar(ident.name, FunctionType()), 
+                                  Seq(s"Call: function with name ${ident.name} not in scope"), "")
+        st.add(ident.name, FunctionType(), new FuncObj(AnyType(), List(), 0, st, ident.pos))
+        return AnyType()
       }
     }
 
+    val lengthArgs = args.length
     /* check number of parameters */
-    if (args.length != funcObj.argc) {
-      semanticErr("Call: wrong argument number")
+    if (lengthArgs != funcObj.argc) {
+      semErr += buildArgNumError(None, args(lengthArgs - 1).pos,
+                       lengthArgs, funcObj.argc, 
+                       Seq("Call: wrong argument number"), "")
     }
 
     /* check every parameter's type */
-    for (i <- 0 until args.length) {
-      if (!equalType(checkExpr(args(i)), funcObj.args(i).getType())) {
-        semanticErr("Call: argument type does not match")
+    for (i <- 0 until lengthArgs.min(funcObj.argc)) {
+      val type1 = funcObj.args(i).getType()
+      val type2 = checkExpr(args(i))
+      if (!equalType(type1, type2)) {
+        semErr += buildTypeError(None, args(i).pos, type2, Set(type1), 
+                               Seq("Call: argument type does not match"), "")
       }
     }
 
@@ -98,7 +99,8 @@ object ValueSemantic {
         case "snd" => returnType = t2
       }
       case _ => {
-        semanticErr("Pair elem: not Pair Type")
+        semErr += buildTypeError(None, lvalue.pos, lType, Set(PairType(AnyType(), AnyType())), 
+                               Seq("Pair elem: not Pair Type"), "")
         AnyType()
       }
     }
@@ -122,8 +124,12 @@ object ValueSemantic {
     /* check every parameter's type */
     for (i <- 0 until values.length - 1) {
       // checkValueRef(args(i), st)
-      if (checkExpr(values(i)) != checkExpr(values(i + 1))) {
-        semanticErr("ArrayLit: Array literals are not of the same type")
+      val type1 = checkExpr(values(i))
+      val type2 = checkExpr(values(i + 1))
+
+      if (type1 != type2) {
+        semErr += buildTypeError(None, values(i + 1).pos, type2, Set(type1), 
+                               Seq("ArrayLit: Array literals are not of the same type"), "")
         return ArrayType(AnyType())
       }
     }
