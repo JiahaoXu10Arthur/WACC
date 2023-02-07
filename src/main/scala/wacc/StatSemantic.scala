@@ -30,23 +30,23 @@ object StatSemantic {
   /* Name must not clash keywords and other variables in scope 
      Initial value type should match type of variable*/
   def declareCheck(type1: Types.Type, ident: Ident, initValue: Rvalue, st: SymbolTable): Unit = {
-    val semType: Type = convertType(type1)
+    val targetType: Type = convertType(type1)
     /* Check existence, Create new VariableObj */
     st.lookUp(ident.name, VariableType()) match {
-      case Some(VariableObj(_)) => semanticErr("Declare: Variable name already exists")
-      case Some(ParamObj(_)) => {
+      case Some(VariableObj(_, _)) => semanticErr("Declare: Variable name already exists")
+      case Some(ParamObj(_, _)) => {
         st.remove(ident.name, VariableType())
-        st.add(ident.name, VariableType(), VariableObj(semType))
+        st.add(ident.name, VariableType(), VariableObj(targetType, ident.pos))
       }
-      case _ => st.add(ident.name, VariableType(), VariableObj(semType))
+      case _ => st.add(ident.name, VariableType(), VariableObj(targetType, ident.pos))
     }
 
     /* if intial value is nested pair, pass */
     initValue match {
       case PairElem(_, PairElem(_, _)) => 
       case _ => /* Initial value should match the type */
-        if (!equalType(semType, checkRvalue(initValue, st))) {
-          semanticErr(s"Declare: Initial value wrong type. \n Expect: $semType, actual ${checkRvalue(initValue, st)}")
+        if (!equalType(targetType, checkRvalue(initValue, st))) {
+          semanticErr(s"Declare: Initial value wrong type. \n Expect: $targetType, actual ${checkRvalue(initValue, st)}")
         }
     }
 
