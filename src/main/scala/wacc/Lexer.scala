@@ -16,17 +16,18 @@ object Lexer {
                              "read", "free", "return", "exit", "print", 
                              "println", "if", "then", "else", "fi", "while", 
                              "do", "done", "fst", "snd", "newpair", "call", 
-                             "int", "bool", "char", "string", "pair", "null")
+                             "int", "bool", "char", "string", "pair", "null",
+                             "len", "ord", "chr")
   private val operators = Set("(", ")", ",", "=", ";", "[", "]", "!", "-", 
-                              "len", "ord", "chr", "*", "/", "%", "+", ">", 
-                              ">=", "<", "<=", "==", "!=", "&&", "||")
+                              "*", "/", "%", "+", ">", ">=", "<", "<=", "==",
+                              "!=", "&&", "||")
   private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
 
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
   def isALphaNumericOrUnderscore = predicate.Basic(c => c.isLetterOrDigit || c == '_')
 
   private val desc = LexicalDesc.plain.copy(
-    numericDesc = numeric.NumericDesc.plain.copy(
+      numericDesc = numeric.NumericDesc.plain.copy(
       positiveSign = Optional,
 
     ),

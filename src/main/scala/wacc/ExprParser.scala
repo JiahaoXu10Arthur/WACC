@@ -24,7 +24,7 @@ object ExprParser {
 		// unary precedence 0)
 		GOps(Prefix)((Ast.Not <# "!"),
 								(Ast.Neg <# Lexer.negate),
-								(Ast.Len <# "len "),
+								(Ast.Len <# "len"),
 								(Ast.Ord <# "ord"),
 								(Ast.Chr <# "chr")),
 									

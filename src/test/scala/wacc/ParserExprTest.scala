@@ -86,7 +86,7 @@ class ParserExprTest extends AnyFlatSpec {
     ExprParser.exprParse("ord 'a'").get should matchPattern {
 			case Ord(CharLit('a')) =>
 		} 
-    ExprParser.exprParse("chr97").get should matchPattern {
+    ExprParser.exprParse("chr 97").get should matchPattern {
 			case Chr(IntLit(97)) =>
 		} 
   }
