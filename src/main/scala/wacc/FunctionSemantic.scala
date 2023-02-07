@@ -6,12 +6,15 @@ import SymbolObjectType._
 import StatSemantic._
 import StatSemantic.{convertType}
 import SemanticChecker.semanticErr
+import Errors._
 import scala.collection.mutable.ListBuffer
 
 
 object FunctionSemantic {
 		/* Load only header into main scope */
-		def readInFunctionHeader(func: Func)(implicit st: SymbolTable): Unit = {
+		def readInFunctionHeader(func: Func)
+														(implicit st: SymbolTable, 
+																			semErr: ListBuffer[WACCError]): Unit = {
 			val args = new ListBuffer[ParamObj]()
 			func.params.foreach {p => 
 				args += new ParamObj(convertType(p.paramType), p.pos)
@@ -29,7 +32,9 @@ object FunctionSemantic {
 		/* Create self symbol table
 			 Add obj into self scope
 			 Check statements */
-		def checkFuncDeclare(func: Func)(implicit st: SymbolTable): Unit = {
+		def checkFuncDeclare(func: Func)
+												(implicit st: SymbolTable, 
+																	semErr: ListBuffer[WACCError]): Unit = {
 			/* Create new symbol table */
     	val new_st = new SymbolTable(st)
 			val args = new ListBuffer[ParamObj]()
@@ -46,6 +51,6 @@ object FunctionSemantic {
 			new_st.add(func.ident.name, FunctionType(), new FuncObj(convertType(func.type1), 
 						 		 args.toList, args.length, new_st, func.pos))
 
-			func.stats.foreach(s => checkStat(s)(new_st))
+			func.stats.foreach(s => checkStat(s)(new_st, semErr))
 		}
 }

@@ -8,9 +8,12 @@ import SymbolObject._
 import SymbolObjectType._
 import ExprSemantic._
 import SemanticChecker._
+import scala.collection.mutable.ListBuffer
+import Errors._
 
 class SemanticExprTest extends AnyFlatSpec {
 	implicit val st = new SymbolTable(null)
+	implicit val semErr = new ListBuffer[WACCError]()
 
 	"Expr: int liter" should "be IntType" in {
 		val expr = IntLit(1)(0, 0)

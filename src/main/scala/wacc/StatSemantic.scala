@@ -6,9 +6,13 @@ import ExprSemantic._
 import ValueSemantic._
 import SymbolObject._
 import SymbolObjectType._
+import Errors._
+import scala.collection.mutable.ListBuffer
 
 object StatSemantic {
-  def checkStat(stat: Stat)(implicit st: SymbolTable): Boolean = {
+  def checkStat(stat: Stat)
+               (implicit st: SymbolTable, 
+                         semErr: ListBuffer[WACCError]): Boolean = {
     stat match {
       case Skip() =>
       /* check for declaration: what object is created? */
@@ -29,7 +33,8 @@ object StatSemantic {
 
   /* Name must not clash keywords and other variables in scope 
      Initial value type should match type of variable*/
-  def declareCheck(type1: Types.Type, ident: Ident, initValue: Rvalue)(implicit st: SymbolTable): Unit = {
+  def declareCheck(type1: Types.Type, ident: Ident, initValue: Rvalue)
+                  (implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val targetType: Type = convertType(type1)
     /* Check existence, Create new VariableObj */
     st.lookUp(ident.name, VariableType()) match {
@@ -50,7 +55,6 @@ object StatSemantic {
         }
     }
 
-    
   }
 
   /* Convert syntax type to semantics type */
@@ -77,7 +81,9 @@ object StatSemantic {
     }
   }
 
-  def assignCheck(target: Lvalue, newValue: Rvalue)(implicit st: SymbolTable): Unit = {
+  def assignCheck(target: Lvalue, newValue: Rvalue)
+                 (implicit st: SymbolTable, 
+                           semErr: ListBuffer[WACCError]): Unit = {
     newValue match {
       case newValue: Expr => retCheck(target, newValue)
       case newValue: ArrayLit => retCheck(target, newValue)
@@ -89,13 +95,17 @@ object StatSemantic {
   }
 
   /* Target type match newValue type */
-  def retCheck(target: Lvalue, newValue: Rvalue)(implicit st: SymbolTable) = {
+  def retCheck(target: Lvalue, newValue: Rvalue)
+              (implicit st: SymbolTable, 
+                        semErr: ListBuffer[WACCError]) = {
     if (!equalType(checkLvalue(target), checkRvalue(newValue))) {
       semanticErr("Assign: assign value mismatch target ")
     }
   }
 
-  def pairCheck(target: Lvalue, newValue: Rvalue)(implicit st: SymbolTable): Unit = {
+  def pairCheck(target: Lvalue, newValue: Rvalue)
+               (implicit st: SymbolTable, 
+                         semErr: ListBuffer[WACCError]): Unit = {
     var firstNested = false
     var secondNested = false
 
@@ -127,7 +137,9 @@ object StatSemantic {
   /* Special assignment:
      Input from standard input: String
      Target type: Int / Char */
-  def readCheck(target: Lvalue)(implicit st: SymbolTable): Unit = {
+  def readCheck(target: Lvalue)
+               (implicit st: SymbolTable, 
+                         semErr: ListBuffer[WACCError]): Unit = {
     checkLvalue(target) match {
       case IntType() => 
       case CharType() => 
@@ -137,7 +149,9 @@ object StatSemantic {
 
   /* Target type: pair / array
      free is not recursive */
-  def freeCheck(expr: Expr)(implicit st: SymbolTable): Unit = {
+  def freeCheck(expr: Expr)
+               (implicit st: SymbolTable, 
+                         semErr: ListBuffer[WACCError]): Unit = {
     checkExpr(expr) match {
       case PairType(_, _) => 
       case ArrayType(_) => 
@@ -147,7 +161,9 @@ object StatSemantic {
 
   /* Need be in a non-main function
      Expr type should match return type of function */
-  def returnCheck(expr: Expr)(implicit st: SymbolTable): Unit = {
+  def returnCheck(expr: Expr)
+                 (implicit st: SymbolTable, 
+                           semErr: ListBuffer[WACCError]): Unit = {
     if (!equalType(findFuncRetType(st), checkExpr(expr))) {
       semanticErr("Return: not matching return type")
     }
@@ -188,7 +204,9 @@ object StatSemantic {
 
   /* Can be in body of any function
      Arg type: Int */
-  def exitCheck(expr: Expr)(implicit st: SymbolTable): Unit = {
+  def exitCheck(expr: Expr)
+               (implicit st: SymbolTable, 
+                         semErr: ListBuffer[WACCError]): Unit = {
     if (checkExpr(expr) != IntType()) {
       semanticErr("Exit: arg not int")
     }
@@ -197,34 +215,36 @@ object StatSemantic {
   /* Expr type: Bool
      Check validity of stat1, stat2 */
   def ifCheck(expr: Expr, stat1: List[Stat], 
-              stat2: List[Stat])(implicit st: SymbolTable): Unit = {
+              stat2: List[Stat])
+             (implicit st: SymbolTable, 
+                       semErr: ListBuffer[WACCError]): Unit = {
     if (checkExpr(expr) != BoolType()) {
       semanticErr("If: condition not bool")
     }
 
     val new_st1 = new SymbolTable(st)
-    stat1.foreach{s => checkStat(s)(new_st1)}
+    stat1.foreach{s => checkStat(s)(new_st1, semErr)}
 
     val new_st2 = new SymbolTable(st)
-    stat2.foreach{s => checkStat(s)(new_st2)}
+    stat2.foreach{s => checkStat(s)(new_st2, semErr)}
   }
 
   /* Expr type: Bool
      Check validity of stat */
-  def whileCheck(expr: Expr, stat: List[Stat])(implicit st: SymbolTable): Unit = {
+  def whileCheck(expr: Expr, stat: List[Stat])(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     if (checkExpr(expr) != BoolType()) {
       semanticErr("If: condition not bool")
     }
 
     val new_st = new SymbolTable(st)
-    stat.foreach{s => checkStat(s)(new_st)}
+    stat.foreach{s => checkStat(s)(new_st, semErr)}
   }
 
   /* Check validity of stat 
      Start new scope */
-  def beginCheck(stat: List[Stat])(implicit st: SymbolTable): Unit = {
+  def beginCheck(stat: List[Stat])(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val new_st = new SymbolTable(st)
-    stat.foreach{s => checkStat(s)(new_st)}
+    stat.foreach{s => checkStat(s)(new_st, semErr)}
   }
 
 

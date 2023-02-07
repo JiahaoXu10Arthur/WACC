@@ -3,10 +3,14 @@ import Ast._
 import SemanticType._
 import SemanticChecker.semanticErr
 import SymbolObjectType._
+import scala.collection.mutable.ListBuffer
+import Errors._
 
 object ExprSemantic {
 
-	def checkExpr(expr: Expr)(implicit st: SymbolTable): Type = {
+	def checkExpr(expr: Expr)
+               (implicit st: SymbolTable, 
+                         semErr: ListBuffer[WACCError]): Type = {
     expr match {
       /* Arithmetic binary operators */
       case Mul(e1, e2) => arithmeticsCheck(e1, e2)
@@ -51,7 +55,9 @@ object ExprSemantic {
   /* Argument1 type: Int,
      Argument2 type: Int,
      Return type   : Int */
-  def arithmeticsCheck(expr1: Expr, expr2: Expr)(implicit st: SymbolTable): Type = {
+  def arithmeticsCheck(expr1: Expr, expr2: Expr)
+                      (implicit st: SymbolTable, 
+                                semErr: ListBuffer[WACCError]): Type = {
     if (checkExpr(expr1) != IntType()) {
       semanticErr("ArithBio: Expr1 not int type")
     }
@@ -66,7 +72,9 @@ object ExprSemantic {
   /* Argument1 type: Int/Char,
      Argument2 type: Same as Arg1,
      Return type   : Bool */
-  def compareCheck(expr1: Expr, expr2: Expr)(implicit st: SymbolTable): Type = {
+  def compareCheck(expr1: Expr, expr2: Expr)
+                  (implicit st: SymbolTable, 
+                            semErr: ListBuffer[WACCError]): Type = {
     if (!equalType(checkExpr(expr1), checkExpr(expr2))) {
       semanticErr("CompBio: expressions are not of the same type")
     }
@@ -85,7 +93,9 @@ object ExprSemantic {
   /* Argument1 type: T,
      Argument2 type: T,
      Return type   : Bool */
-  def eqCheck(expr1: Expr, expr2: Expr)(implicit st: SymbolTable): Type = {
+  def eqCheck(expr1: Expr, expr2: Expr)
+             (implicit st: SymbolTable, 
+                       semErr: ListBuffer[WACCError]): Type = {
      if (!equalType(checkExpr(expr1), checkExpr(expr2))){
       semanticErr("EqBio: Both expressions are not of the same type")
     }
@@ -95,7 +105,9 @@ object ExprSemantic {
   /* Argument1 type: Bool,
      Argument2 type: Bool,
      Return type   : Bool */
-  def logiCheck(expr1: Expr, expr2: Expr)(implicit st: SymbolTable): Type = {
+  def logiCheck(expr1: Expr, expr2: Expr)
+               (implicit st: SymbolTable, 
+                         semErr: ListBuffer[WACCError]): Type = {
     if (checkExpr(expr1) != BoolType()) {
       semanticErr("LogiBio: Expr1 not bool type")
     }
@@ -109,7 +121,9 @@ object ExprSemantic {
 
   /* Arg type: Bool
      Return type: Bool */
-  def unaryCheck(expr: Expr, argType: Type, retType: Type)(implicit st: SymbolTable): Type = {
+  def unaryCheck(expr: Expr, argType: Type, retType: Type)
+                (implicit st: SymbolTable, 
+                          semErr: ListBuffer[WACCError]): Type = {
     if (checkExpr(expr) != argType) {
           semanticErr(s"Unary: argument not $argType")
     }
@@ -118,7 +132,9 @@ object ExprSemantic {
 
   /* Arg type: T[]
      Return type: Int */
-  def lenCheck(expr: Expr)(implicit st: SymbolTable): Type = {
+  def lenCheck(expr: Expr)
+              (implicit st: SymbolTable, 
+                        semErr: ListBuffer[WACCError]): Type = {
     checkExpr(expr) match {
       case ArrayType(_) => 
       case _ => semanticErr("Len: argument not array")
@@ -127,7 +143,9 @@ object ExprSemantic {
   }
 
   /* refer to st */
-  def identCheck(name: String)(implicit st: SymbolTable): Type = {
+  def identCheck(name: String)
+                (implicit st: SymbolTable,
+                          semErr: ListBuffer[WACCError]): Type = {
     st.lookUpAll(name, VariableType()) match {
       case Some(symObj) => symObj.getType()
       case None => {
@@ -141,7 +159,9 @@ object ExprSemantic {
   /* Arg1: Ident -> Refer to ArrayObj in st -> T[]
      Arg2: Int[] -> every element Int
      Return: T */
-  def arrayElemCheck(ident: Ident, indexes: List[Expr])(implicit st: SymbolTable): Type = {
+  def arrayElemCheck(ident: Ident, indexes: List[Expr])
+                    (implicit st: SymbolTable, 
+                              semErr: ListBuffer[WACCError]): Type = {
     var thisLayer = checkExpr(ident)
 
     /* for every layer of index, check validity */
@@ -153,7 +173,9 @@ object ExprSemantic {
   }
 
   /* One layer of array elem check */
-  def oneArrayElemCheck(t: Type, index: Expr)(implicit st: SymbolTable): Type = {
+  def oneArrayElemCheck(t: Type, index: Expr)
+                       (implicit st: SymbolTable, 
+                                 semErr: ListBuffer[WACCError]): Type = {
     if (checkExpr(index) != IntType()) {
       semanticErr("ArrayElem: index not int type")
       return AnyType()
