@@ -8,7 +8,6 @@ import parsley.token.Lexer
 import parsley.token.descriptions
 import parsley.token.errors.ErrorConfig
 import parsley.token.errors.FilterConfig
-import parsley.token.errors.Hidden
 import parsley.token.errors.Label
 import parsley.token.errors.LabelConfig
 import parsley.token.errors.SpecialisedMessage
@@ -29,9 +28,10 @@ object Lexer {
   private val arithmeticOps = Set("-", "*", "/", "%", "+")
   private val boolOps = Set("!", "&&", "||")
   private val compareOps = Set(">", ">=", "<", "<=", "==", "!=")
-  private val parensOps = Set("(", ")", "[", "]")
+  private val parensOps = Set("(", ")")
+  private val indexOps = Set("[", "]")
                              
-  private val operators = Set(",", "=", ";") ++ arithmeticOps ++ boolOps ++ compareOps ++ parensOps
+  private val operators = Set(",", "=", ";") ++ arithmeticOps ++ boolOps ++ compareOps ++ parensOps ++ indexOps
   private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
 
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
@@ -80,17 +80,19 @@ object Lexer {
     // TODO: ask if can explain
 
     override def labelSymbolOperator(symbol: String): LabelConfig = 
-      if (arithmeticOps.contains(symbol))
+      if (arithmeticOps(symbol))
         Label("arithmetic operators")
-      else if (boolOps.contains(symbol))
+      else if (boolOps(symbol))
         Label("boolean operators")
-      else if (parensOps.contains(symbol))
+      else if (parensOps(symbol))
         Label("parentheses")
-      else if (compareOps.contains(symbol))
+      else if (compareOps(symbol))
         Label("compare operators")
+      else if (indexOps(symbol))
+        Label("index `[]`")
       else {
         symbol match {
-          case "=" => Label("assign operator")
+          case "=" => Label("assignment")
           case "," => Label("comma")
           case ";" => Label("semicolon")
           case "len" => Label("length operator")
