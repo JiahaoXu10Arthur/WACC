@@ -51,12 +51,12 @@ object ExprParser {
     // binary precedence 5
     GOps(InfixL)((Ast.And <# "&&")),
 
-    // binary precedence 6
-    GOps(InfixL)((Ast.Or <# "||"))
-  ).label("expression")
-
-  def exprParse(input: String): Option[Expr] = {
-    expr.parse(input) match {
+		// binary precedence 6
+		GOps(InfixL) ((Ast.Or <# "||"))
+	)//.label("expression")
+		
+	def exprParse (input: String): Option[Expr] = {
+		expr.parse(input) match {
       case Success(x) => {
         Some(x)
       }
