@@ -26,13 +26,8 @@
         .map(_.getName).toList
   }
 
-  var testNum = 0
-  var testRun = 0
-  var testPass = 0
-  var testFail = 0
-  var testSkip = 0
-
   println("Running all tests")
+  // testFile("wacc_example/valid/pairs/", new File("nestedPairRightExtract.wacc"))
   testSkeleton("wacc_example/")
 
   def testSkeleton(path: String) :Unit = {
@@ -48,8 +43,6 @@
   }
 
    def testFile(path: String, f: File)= {
-      testNum += 1
-      testRun += 1
       val filename = path ++ f.getName()
       val string = new String(Files.readAllBytes(Paths.get(filename)))
 
@@ -57,27 +50,41 @@
           "A successful compilation return the exit status 0 " ++ filename in {
            (Parser.parse(string) match {
                case Success(x) => {
-                // println(x)
-                testPass += 1
+                SemanticChecker.semanticCheck(x) shouldBe empty
                 true
                }
                case Failure(msg) => {
                 println(msg)
-                testFail += 1
                 false
                }
            }) shouldBe true
         }
       } else if (path.contains("syntaxErr")) {
-        testSkip += 1
-        "A compilation that fails due to syntax errors return the exit status 100" ++ filename in pending
+        "A compilation that fails due to syntax errors return the exit status 100" ++ filename in {
+           (Parser.parse(string) match {
+               case Success(x) => {
+                false
+               }
+               case Failure(msg) => {
+                println(msg)
+                true
+               }
+           }) shouldBe true
+        }
       } else if (path.contains("semanticErr")) {
-        testSkip += 1
-        "A compilation that fails due to semantic errors return the exit status 200" ++ filename in pending
+        "A compilation that fails due to semantic errors return the exit status 200" ++ filename in {
+           (Parser.parse(string) match {
+               case Success(x) => {
+                SemanticChecker.semanticCheck(x) should not be empty
+                true
+               }
+               case Failure(msg) => {
+                println(msg)
+                false
+               }
+           }) shouldBe true
+        }
       }
-    }
-
-
-
+  }
    
  }
