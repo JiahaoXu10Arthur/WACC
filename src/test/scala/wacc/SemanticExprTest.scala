@@ -7,7 +7,6 @@ import SemanticType._
 import SymbolObject._
 import SymbolObjectType._
 import ExprSemantic._
-import SemanticChecker._
 import scala.collection.mutable.ListBuffer
 import Errors._
 

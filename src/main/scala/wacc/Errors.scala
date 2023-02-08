@@ -4,21 +4,17 @@ import scala.io.Source
 import scala.collection.mutable.ListBuffer
 
 object Errors {
-  def errorsMkString(erros: Seq[WACCError], source: Option[String]): String = {
+  def errorsMkString(erros: Seq[WACCError], source: String): String = {
     val errorString = new StringBuilder()
-    /* Loads source file */
-    val file: Option[Array[String]] = source match {
-      case Some(x) => Some(Source.fromFile(x).getLines().toArray)
-      case None    => None
-    }
-    /* transform the error lines to the correct format*/
+    errorString.append(s"Errors detected when compiling file ${source}:\n")
+    val file = Source.fromFile(source).getLines().toArray
+
+    /* transform the errors to the correct format*/
     for (error <- erros) {
-      val line = error.lines.lineInfo
-      line match {
-        case StandardLineInfo(_, _, _, _, _) =>
-          errorString.append(line.printLine(None))
-        case LazyLineInfo(_, _, _) => errorString.append(line.printLine(file))
-      }
+      val errTypeMsg = s"${error.errType} error "
+      val lineMsg = s"at line ${error.pos._1} : column ${error.pos._2}\n"
+      errorString.append(errTypeMsg ++ lineMsg)
+      errorString.append(error.lines.printErrorLines(Some(file)))
     }
     errorString.toString()
   }
@@ -26,25 +22,20 @@ object Errors {
   /* Error definition */
   case class WACCError(
       errType: String,
-      source: Option[String],
       pos: (Int, Int),
       lines: WACCErrorLines
   ) {
     override def toString(): String = {
       val errTypeMsg = s"$errType error "
-      val sourceMsg = source match {
-        case Some(x) => s"in $x:"
-        case None    => ""
-      }
       val lineMsg = s"at line ${pos._1} : column ${pos._2}\n"
-      val errorMsg = errTypeMsg ++ sourceMsg ++ lineMsg ++ lines.toString()
+      val errorMsg = errTypeMsg ++ lineMsg ++ lines.toString()
       errorMsg
     }
   }
 
   /* Error line definition */
   sealed trait WACCErrorLines {
-    def lineInfo: ErrorLineInfo
+    def printErrorLines(file: Option[Array[String]]): String
   }
   case class VanillaError(
       unexpected: Option[WACCErrorItem],
@@ -52,26 +43,26 @@ object Errors {
       reasons: Seq[String],
       lineInfo: ErrorLineInfo
   ) extends WACCErrorLines {
-    override def toString(): String = {
+    override def printErrorLines(file: Option[Array[String]]): String = {
       val unexpected_ = unexpected match {
         case None        => ""
-        case Some(value) => "mismatched input \'" ++ value.toString ++ "\'"
+        case Some(value) => "Unexpeccted " ++ value.toString
       }
       val expecteds_ = {
         if (expecteds.isEmpty) ""
         else "Expected " ++ expecteds.map(_.toString()).mkString(", ")
       }
       val reasons_ = reasons.mkString("\n")
-      val lineInfo_ = lineInfo.toString()
+      val lineInfo_ = lineInfo.printLine(file)
       unexpected_ ++ "\n" ++ expecteds_ ++ "\n" ++ reasons_ ++ "\n" ++ lineInfo_
     }
   }
 
   case class SpecialisedError(msgs: Seq[String], lineInfo: ErrorLineInfo)
       extends WACCErrorLines {
-    override def toString(): String = {
+    override def printErrorLines(file: Option[Array[String]]): String = {
       val msgs_ = msgs.mkString("\n")
-      val lineInfo_ = lineInfo.toString()
+      val lineInfo_ = lineInfo.printLine(file)
       msgs_ ++ "\n" ++ lineInfo_
     }
   }
@@ -106,6 +97,7 @@ object Errors {
   ) extends ErrorLineInfo {
     override def printLine(context: Option[Array[String]]): String =
       extractErrorLines(context.get, linePos, numLinesBefore, numLinesAfter)
+        .map(line => s"$errorLineStart$line")
         .mkString("\n")
   }
 
@@ -120,10 +112,12 @@ object Errors {
   ): Seq[String] = {
     val length = file.length
     val errorLines = ListBuffer(file(errorPos._1))
-    if (errorPos._1 > 0)
-      errorLines.prepend((file(errorPos._1 - 1)))
-    if (errorPos._1 < length)
-      errorLines.append(file(errorPos._1 + 1))
+    for (i <- 1 to numLinesBefore)
+      if (errorPos._1 - i >= 0)
+        errorLines.prepend(file(errorPos._1 - i))
+    for (i <- 1 to numLinesAfter)
+      if (errorPos._1 + i < length)
+        errorLines.append(file(errorPos._1 + i))
 
     errorLines.toSeq
   }

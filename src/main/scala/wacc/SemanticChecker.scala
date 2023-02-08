@@ -8,14 +8,14 @@ import Errors._
 
 object SemanticChecker {
 
-  def semanticCheck(p: Program): List[WACCError] = {
+  def semanticCheck(p: Program): Seq[WACCError] = {
     implicit val st: SymbolTable = new SymbolTable(null)
     implicit val semErr = new ListBuffer[WACCError]()
 
-    p.funcs.foreach{f => readInFunctionHeader(f)}
-    p.funcs.foreach{f => checkFuncDeclare(f)}
-    p.stats.foreach{s => checkStat(s)}
+    p.funcs.foreach { f => readInFunctionHeader(f) }
+    p.funcs.foreach { f => checkFuncDeclare(f) }
+    p.stats.foreach { s => checkStat(s) }
 
-   semErr.toList
+    semErr.toList
   }
 }

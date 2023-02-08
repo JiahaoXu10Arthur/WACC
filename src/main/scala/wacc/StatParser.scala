@@ -16,22 +16,32 @@ object StatParser {
   val ret_ = "return" ~> Ast.Return(expr).label("return statement")
   val skip_ = Ast.Skip <# "skip".label("skip statement")
 
-  lazy val begin_ = "begin" ~> Ast.Begin(stmts) <~ "end".label("begin statement")
-  lazy val if_ = Ast.If("if" ~> expr, "then" ~> stmts, "else" ~> stmts <~ "fi").label("if statement")
-  lazy val while_ = Ast.While("while" ~> expr, "do" ~> stmts <~ "done").label("while statement")
-  val assign_ = Ast.Assign(ValueParser.lvalue, "=" ~> ValueParser.rvalue).label("assign statement")
-  val declare_ = Ast.Declare(TypeParser.type_, Ast.Ident(Lexer.ident), 
-                             "=" ~> ValueParser.rvalue).label("declare statement")
+  lazy val begin_ =
+    "begin" ~> Ast.Begin(stmts) <~ "end".label("begin statement")
+  lazy val if_ = Ast
+    .If("if" ~> expr, "then" ~> stmts, "else" ~> stmts <~ "fi")
+    .label("if statement")
+  lazy val while_ =
+    Ast.While("while" ~> expr, "do" ~> stmts <~ "done").label("while statement")
+  val assign_ = Ast
+    .Assign(ValueParser.lvalue, "=" ~> ValueParser.rvalue)
+    .label("assign statement")
+  val declare_ = Ast
+    .Declare(
+      TypeParser.type_,
+      Ast.Ident(Lexer.ident),
+      "=" ~> ValueParser.rvalue
+    )
+    .label("declare statement")
 
-
-  lazy val stmt: Parsley[Stat] = skip_ | exit_ | print_ | println_ | free_ | 
-                                 ret_ | if_ | while_ | begin_ | declare_ | 
-                                 assign_ | read_ 
+  lazy val stmt: Parsley[Stat] = skip_ | exit_ | print_ | println_ | free_ |
+    ret_ | if_ | while_ | begin_ | declare_ |
+    assign_ | read_
   lazy val stmts: Parsley[List[Stat]] = sepBy1(stmt, ";")
 
   def statParse(input: String): Option[List[Stat]] = {
     stmts.parse(input) match {
-      case Success(x) => Some(x)
+      case Success(x)   => Some(x)
       case Failure(msg) => None
     }
   }

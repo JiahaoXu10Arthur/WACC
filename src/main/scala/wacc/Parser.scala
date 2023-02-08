@@ -8,13 +8,13 @@ import StatParser.{stmts}
 import FuncParser.{funcs}
 import Lexer.implicitVals._
 
-
 object Parser {
   // For showing Syntax Error message
   implicit val eb = new SyntaxErrorBuilder
 
-  val program: Parsley[Program] 
-    = fully("begin" ~> Program(funcs, stmts) <~ "end")
+  val program: Parsley[Program] = fully(
+    "begin" ~> Program(funcs, stmts) <~ "end" <~ eof
+  )
 
   val parse = (input: String) => program.parse(input)
 }

@@ -10,50 +10,66 @@ import scala.collection.mutable.ListBuffer
 import SemanticErrorBuilder._
 
 object StatSemantic {
-  def checkStat(stat: Stat)
-               (implicit st: SymbolTable, 
-                         semErr: ListBuffer[WACCError]): Boolean = {
+  def checkStat(
+      stat: Stat
+  )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Boolean = {
     stat match {
       case Skip() =>
       /* check for declaration: what object is created? */
-      case Declare(type1, ident, initValue) => declareCheck(type1, ident, initValue)
+      case Declare(type1, ident, initValue) =>
+        declareCheck(type1, ident, initValue)
       case Assign(target, newValue) => assignCheck(target, newValue)
-      case Read(lvalue) => readCheck(lvalue)
-      case Free(expr) => freeCheck(expr)
-      case Return(expr) => returnCheck(expr)
-      case Exit(expr) => exitCheck(expr)
-      case Print(expr) => checkExpr(expr)
-      case Println(expr) => checkExpr(expr)
-      case If(expr, stat1, stat2) => ifCheck(expr, stat1, stat2)
-      case While(expr, stat) => whileCheck(expr, stat)
-      case Begin(stat) => beginCheck(stat)
+      case Read(lvalue)             => readCheck(lvalue)
+      case Free(expr)               => freeCheck(expr)
+      case Return(expr)             => returnCheck(expr)
+      case Exit(expr)               => exitCheck(expr)
+      case Print(expr)              => checkExpr(expr)
+      case Println(expr)            => checkExpr(expr)
+      case If(expr, stat1, stat2)   => ifCheck(expr, stat1, stat2)
+      case While(expr, stat)        => whileCheck(expr, stat)
+      case Begin(stat)              => beginCheck(stat)
     }
     true
   }
 
-  /* Name must not clash keywords and other variables in scope 
+  /* Name must not clash keywords and other variables in scope
      Initial value type should match type of variable*/
-  def declareCheck(type1: Types.Type, ident: Ident, initValue: Rvalue)
-                  (implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
+  def declareCheck(type1: Types.Type, ident: Ident, initValue: Rvalue)(implicit
+      st: SymbolTable,
+      semErr: ListBuffer[WACCError]
+  ): Unit = {
     val targetType: Type = convertType(type1)
     /* Check existence, Create new VariableObj */
     st.lookUp(ident.name, VariableType()) match {
-      case Some(VariableObj(_, pos)) => semErr += buildVarRedefError(None, ident.pos, ident.name, pos, 
-                                                  Seq("Declare: Variable name already exists"), "")
+      case Some(VariableObj(_, pos)) =>
+        semErr += buildVarRedefError(
+          ident.pos,
+          ident.name,
+          pos,
+          Seq("Declare: Variable name already exists")
+        )
       case Some(ParamObj(_, _)) => {
         st.remove(ident.name, VariableType())
         st.add(ident.name, VariableType(), VariableObj(targetType, ident.pos))
       }
-      case _ => st.add(ident.name, VariableType(), VariableObj(targetType, ident.pos))
+      case _ =>
+        st.add(ident.name, VariableType(), VariableObj(targetType, ident.pos))
     }
 
     /* if intial value is nested pair, pass */
     initValue match {
-      case PairElem(_, PairElem(_, _)) => 
+      case PairElem(_, PairElem(_, _)) =>
       case _ => /* Initial value should match the type */
         if (!equalType(targetType, checkRvalue(initValue))) {
-          semErr += buildTypeError(None, ident.pos, checkRvalue(initValue), Set(targetType), 
-                          Seq(s"Declare: Initial value wrong type. \n Expect: $targetType, actual ${checkRvalue(initValue)}"), "")
+          semErr += buildTypeError(
+            ident.pos,
+            checkRvalue(initValue),
+            Set(targetType),
+            Seq(
+              "Declare: Initial value wrong type.",
+              s"Expect: $targetType, actual ${checkRvalue(initValue)}"
+            )
+          )
         }
     }
 
@@ -66,7 +82,8 @@ object StatSemantic {
       case Types.BoolType() => BoolType()
       case Types.CharType() => CharType()
       case Types.StrType()  => StrType()
-      case Types.PairType(t1, t2) => PairType(convertPairElemType(t1), convertPairElemType(t2))
+      case Types.PairType(t1, t2) =>
+        PairType(convertPairElemType(t1), convertPairElemType(t2))
       case Types.ArrayType(t) => ArrayType(convertType(t))
     }
   }
@@ -74,42 +91,49 @@ object StatSemantic {
   /* Convert special syntax type - pair elem type - to semantics type */
   def convertPairElemType(syntaxType: Types.PairElemType): Type = {
     syntaxType match {
-      case Types.IntType()  => IntType()
-      case Types.BoolType() => BoolType()
-      case Types.CharType() => CharType()
-      case Types.StrType()  => StrType()
-      case Types.PairTypeIdent()  => PairType(AnyType(), AnyType())
-      case Types.ArrayType(t) => ArrayType(convertType(t))
+      case Types.IntType()       => IntType()
+      case Types.BoolType()      => BoolType()
+      case Types.CharType()      => CharType()
+      case Types.StrType()       => StrType()
+      case Types.PairTypeIdent() => PairType(AnyType(), AnyType())
+      case Types.ArrayType(t)    => ArrayType(convertType(t))
     }
   }
 
-  def assignCheck(target: Lvalue, newValue: Rvalue)
-                 (implicit st: SymbolTable, 
-                           semErr: ListBuffer[WACCError]): Unit = {
+  def assignCheck(target: Lvalue, newValue: Rvalue)(implicit
+      st: SymbolTable,
+      semErr: ListBuffer[WACCError]
+  ): Unit = {
     newValue match {
-      case newValue: Expr => retCheck(target, newValue)
+      case newValue: Expr     => retCheck(target, newValue)
       case newValue: ArrayLit => retCheck(target, newValue)
-      case newValue: Call => retCheck(target, newValue)
-      case newValue: NewPair => retCheck(target, newValue)
+      case newValue: Call     => retCheck(target, newValue)
+      case newValue: NewPair  => retCheck(target, newValue)
       case newValue: PairElem => pairCheck(target, newValue)
     }
   }
 
   /* Target type match newValue type */
-  def retCheck(target: Lvalue, newValue: Rvalue)
-              (implicit st: SymbolTable, 
-                        semErr: ListBuffer[WACCError]): Unit = {
+  def retCheck(target: Lvalue, newValue: Rvalue)(implicit
+      st: SymbolTable,
+      semErr: ListBuffer[WACCError]
+  ): Unit = {
     val targetType = checkLvalue(target)
     val assignType = checkRvalue(newValue)
     if (!equalType(targetType, assignType)) {
-      semErr += buildTypeError(None, newValue.pos, assignType, Set(targetType), 
-                               Seq("Assign: assign value mismatches target value"), "")
+      semErr += buildTypeError(
+        newValue.pos,
+        assignType,
+        Set(targetType),
+        Seq("Assign: assign value mismatches target value")
+      )
     }
   }
 
-  def pairCheck(target: Lvalue, newValue: Rvalue)
-               (implicit st: SymbolTable, 
-                         semErr: ListBuffer[WACCError]): Unit = {
+  def pairCheck(target: Lvalue, newValue: Rvalue)(implicit
+      st: SymbolTable,
+      semErr: ListBuffer[WACCError]
+  ): Unit = {
     var firstNested = false
     var secondNested = false
 
@@ -133,63 +157,78 @@ object StatSemantic {
 
     // cannot be both nested
     if (firstNested && secondNested) {
-      semErr += buildPairExchangeError(None, newValue.pos, "")
+      semErr += buildPairExchangeError(newValue.pos)
     }
 
   }
-  
+
   /* Special assignment:
      Input from standard input: String
      Target type: Int / Char */
-  def readCheck(target: Lvalue)
-               (implicit st: SymbolTable, 
-                         semErr: ListBuffer[WACCError]): Unit = {
+  def readCheck(
+      target: Lvalue
+  )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val targetType = checkLvalue(target)
     targetType match {
-      case IntType() => 
-      case CharType() => 
-      case _ => semErr += buildTypeError(None, target.pos, targetType, Set(IntType(), CharType()), 
-                                         Seq("Read: Target type not int or char"), "")
+      case IntType()  =>
+      case CharType() =>
+      case _ =>
+        semErr += buildTypeError(
+          target.pos,
+          targetType,
+          Set(IntType(), CharType()),
+          Seq("Read: Target type not int or char")
+        )
     }
   }
 
   /* Target type: pair / array
      free is not recursive */
-  def freeCheck(expr: Expr)
-               (implicit st: SymbolTable, 
-                         semErr: ListBuffer[WACCError]): Unit = {
+  def freeCheck(
+      expr: Expr
+  )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val targetType = checkExpr(expr)
     targetType match {
-      case PairType(_, _) => 
-      case ArrayType(_) => 
-      case _ => semErr += buildTypeError(None, expr.pos, targetType, 
-                                         Set(PairType(AnyType(), AnyType()), ArrayType(AnyType())), 
-                                         Seq("Free: Target type not pair or array"), "")
+      case PairType(_, _) =>
+      case ArrayType(_)   =>
+      case _ =>
+        semErr += buildTypeError(
+          expr.pos,
+          targetType,
+          Set(PairType(AnyType(), AnyType()), ArrayType(AnyType())),
+          Seq("Free: Target type not pair or array")
+        )
     }
   }
 
   /* Need be in a non-main function
      Expr type should match return type of function */
-  def returnCheck(expr: Expr)
-                 (implicit st: SymbolTable, 
-                           semErr: ListBuffer[WACCError]): Unit = {
+  def returnCheck(
+      expr: Expr
+  )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val returnType = findFuncRetType(expr.pos, st, semErr)
     val targetType = checkExpr(expr)
 
     if (!equalType(returnType, targetType)) {
-      semErr += buildTypeError(None, expr.pos, targetType, 
-                               Set(returnType), 
-                               Seq("Return: Target type mismatch function return type"), "")
+      semErr += buildTypeError(
+        expr.pos,
+        targetType,
+        Set(returnType),
+        Seq("Return: Target type mismatch function return type")
+      )
     }
   }
 
   /* Find the return type of the function in scope of st */
-  def findFuncRetType(pos: (Int, Int), 
-                      st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
+  def findFuncRetType(
+      pos: (Int, Int),
+      st: SymbolTable,
+      semErr: ListBuffer[WACCError]
+  ): Type = {
     var retType: Type = null
     var recurse_st: SymbolTable = st
 
-    while(recurse_st.encSymTable != null) {
+    while (recurse_st.encSymTable != null) {
       retType = findOneRet(recurse_st)
 
       if (retType != null) {
@@ -198,9 +237,10 @@ object StatSemantic {
         recurse_st = recurse_st.encSymTable
       }
     }
-
-    semErr += buildReturnPlacementError(None, pos, 
-                                        Seq("Return: Cannot return from main function"), "")
+    semErr += buildReturnPlacementError(
+      pos,
+      Seq("Return: Cannot return from main function")
+    )
     return AnyType()
   }
 
@@ -212,65 +252,79 @@ object StatSemantic {
       /* find function in this scope */
       obj match {
         case obj: FuncObj => retType = obj.returnType
-        case _ =>
+        case _            =>
       }
     }
-    
+
     retType
   }
 
   /* Can be in body of any function
      Arg type: Int */
-  def exitCheck(expr: Expr)
-               (implicit st: SymbolTable, 
-                         semErr: ListBuffer[WACCError]): Unit = {
+  def exitCheck(
+      expr: Expr
+  )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val argType = checkExpr(expr)
     if (argType != IntType()) {
-      semErr += buildTypeError(None, expr.pos, argType, 
-                               Set(IntType()), 
-                               Seq("Exit: Argument is not int"), "")
+      semErr += buildTypeError(
+        expr.pos,
+        argType,
+        Set(IntType()),
+        Seq("Exit: Argument is not int")
+      )
     }
   }
 
   /* Expr type: Bool
      Check validity of stat1, stat2 */
-  def ifCheck(expr: Expr, stat1: List[Stat], 
-              stat2: List[Stat])
-             (implicit st: SymbolTable, 
-                       semErr: ListBuffer[WACCError]): Unit = {
+  def ifCheck(expr: Expr, stat1: List[Stat], stat2: List[Stat])(implicit
+      st: SymbolTable,
+      semErr: ListBuffer[WACCError]
+  ): Unit = {
     val condType = checkExpr(expr)
     if (condType != BoolType()) {
-      semErr += buildTypeError(None, expr.pos, condType, Set(BoolType()), 
-                               Seq("If: condition not bool"), "")
+      semErr += buildTypeError(
+        expr.pos,
+        condType,
+        Set(BoolType()),
+        Seq("If: condition not bool")
+      )
     }
 
     val new_st1 = new SymbolTable(st)
-    stat1.foreach{s => checkStat(s)(new_st1, semErr)}
+    stat1.foreach { s => checkStat(s)(new_st1, semErr) }
 
     val new_st2 = new SymbolTable(st)
-    stat2.foreach{s => checkStat(s)(new_st2, semErr)}
+    stat2.foreach { s => checkStat(s)(new_st2, semErr) }
   }
 
   /* Expr type: Bool
      Check validity of stat */
-  def whileCheck(expr: Expr, stat: List[Stat])(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
+  def whileCheck(expr: Expr, stat: List[Stat])(implicit
+      st: SymbolTable,
+      semErr: ListBuffer[WACCError]
+  ): Unit = {
     val condType = checkExpr(expr)
     if (condType != BoolType()) {
-      semErr += buildTypeError(None, expr.pos, condType, Set(BoolType()), 
-                               Seq("While: condition not bool"), "")
+      semErr += buildTypeError(
+        expr.pos,
+        condType,
+        Set(BoolType()),
+        Seq("While: condition not bool")
+      )
     }
 
     val new_st = new SymbolTable(st)
-    stat.foreach{s => checkStat(s)(new_st, semErr)}
+    stat.foreach { s => checkStat(s)(new_st, semErr) }
   }
 
-  /* Check validity of stat 
+  /* Check validity of stat
      Start new scope */
-  def beginCheck(stat: List[Stat])(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
+  def beginCheck(
+      stat: List[Stat]
+  )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val new_st = new SymbolTable(st)
-    stat.foreach{s => checkStat(s)(new_st, semErr)}
+    stat.foreach { s => checkStat(s)(new_st, semErr) }
   }
-
-
 
 }

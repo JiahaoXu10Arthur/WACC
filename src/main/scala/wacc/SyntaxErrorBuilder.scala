@@ -21,7 +21,7 @@ class SyntaxErrorBuilder
       pos: Position,
       source: Source,
       lines: ErrorInfoLines
-  ): WACCError = WACCError("Syntax", source, pos, lines)
+  ): WACCError = WACCError("Syntax", pos, lines)
 
   type Position = (Int, Int)
   override def pos(line: Int, col: Int): Position = (line, col)
