@@ -16,17 +16,17 @@ object Main {
         val errors = SemanticChecker.semanticCheck(x)
         if (errors.isEmpty) {
           println(s"${args.head} parse success")
-          //	System.exit(0)
+          System.exit(0)
         } else {
           println(s"${args.head} parse fail: ")
           println(errorsMkString(errors, filename))
-          //	System.exit(200)
+          System.exit(200)
         }
       }
       case Failure(err) => {
         println(s"${args.head} parse fail: ")
         println(errorsMkString(Seq(err), filename))
-        //	System.exit(100)
+        System.exit(100)
       }
     }
 
