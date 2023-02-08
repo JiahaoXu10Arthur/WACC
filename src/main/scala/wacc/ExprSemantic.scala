@@ -224,7 +224,7 @@ object ExprSemantic {
           ident.pos,
           ident.name,
           st.lookUpAllSimilar(ident.name, VariableType()),
-          Seq(s"Ident: identifier with name ${ident.name} not in scope")
+          Seq(s" Variable ${ident.name} has not been declared in this scope ")
         )
         st.add(
           ident.name,
@@ -244,47 +244,52 @@ object ExprSemantic {
       st: SymbolTable,
       semErr: ListBuffer[WACCError]
   ): Type = {
-    var thisLayer = checkExpr(ident)
+    val exprType = checkExpr(ident)
+    // var thisLayer = checkExpr(ident)
 
-    /* for every layer of index, check validity */
-    for (i <- indexes) {
-      thisLayer = oneArrayElemCheck(thisLayer, i, ident, thisLayer)
-    }
+    val shouldType = createNestArrayType(exprType, indexes.length)
 
-    thisLayer
-  }
-
-  /* One layer of array elem check */
-  def oneArrayElemCheck(t: Type, index: Expr, ident: Ident, idType: Type)(
-      implicit
-      st: SymbolTable,
-      semErr: ListBuffer[WACCError]
-  ): Type = {
-    val indexType = checkExpr(index)
-    if (indexType != IntType()) {
-      semErr += buildTypeError(
-        index.pos,
-        indexType,
-        Set(IntType()),
-        Seq("ArrayElem: index not int type")
-      )
-      return AnyType()
-    }
-
-    /* First argument type should be T[] */
-    t match {
-      case AnyType()     => return AnyType()
-      case ArrayType(t1) => return t1
-      case _ => {
+    /* Check index is int */
+    for (index <- indexes) {
+      val indexType = checkExpr(index)
+      if (indexType != IntType()) {
         semErr += buildTypeError(
-          ident.pos,
-          idType,
-          Set(ArrayType(AnyType())),
-          Seq("ArrayElem: more extract than array nesting")
+          index.pos,
+          indexType,
+          Set(IntType()),
+          Seq(" The index of an array needs to be int type ")
         )
-        return AnyType()
+        AnyType()
       }
     }
+
+    var returnType = exprType 
+    for (i <- 0 until indexes.length) {
+      returnType match {
+        case AnyType() => shouldType
+        case ArrayType(elemType) => returnType = elemType
+        case _ => {
+          semErr += buildTypeError(
+            ident.pos,
+            exprType,
+            Set(shouldType),
+            Seq(" Incorrect array dimension ")
+          )
+
+          shouldType
+        }
+      }
+    }
+
+    returnType
+  }
+
+  def createNestArrayType(innerType: Type, indexNum: Int): Type = {
+    var returnType = innerType
+    for (i <- 0 until indexNum - 1) {
+      returnType = ArrayType(returnType)
+    }
+    returnType
   }
 
 }

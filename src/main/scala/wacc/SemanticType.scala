@@ -24,7 +24,7 @@ object SemanticType {
   }
 
   case class ArrayType(elemType: Type) extends Type {
-    override def toString() = s"Array(${elemType.toString()})"
+    override def toString() = s"${elemType.toString()}[]"
   }
 
   /* Type equality involve AnyType */
