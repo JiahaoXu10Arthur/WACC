@@ -58,8 +58,12 @@ object Lexer {
   private val compareOps = Set(">", ">=", "<", "<=", "==", "!=")
   private val parensOps = Set("(", ")")
   private val indexOps = Set("[", "]")
-                             
-  private val operators = Set(",", "=", ";") ++ arithmeticOps ++ boolOps ++ compareOps ++ parensOps ++ indexOps
+
+  private val operators = Set(
+    ",",
+    "=",
+    ";"
+  ) ++ arithmeticOps ++ boolOps ++ compareOps ++ parensOps ++ indexOps
   private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
 
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
@@ -108,7 +112,7 @@ object Lexer {
 
     // TODO: ask if can explain
 
-    override def labelSymbolOperator(symbol: String): LabelConfig = 
+    override def labelSymbolOperator(symbol: String): LabelConfig =
       if (arithmeticOps(symbol))
         Label("arithmetic operators")
       else if (boolOps(symbol))
@@ -121,9 +125,9 @@ object Lexer {
         Label("index `[]`")
       else {
         symbol match {
-          case "=" => Label("assignment")
-          case "," => Label("comma")
-          case ";" => Label("semicolon")
+          case "="   => Label("assignment")
+          case ","   => Label("comma")
+          case ";"   => Label("semicolon")
           case "len" => Label("length operator")
           case "ord" => Label("ordinal operator")
           case "chr" => Label("character operator")

@@ -125,7 +125,7 @@ object Errors {
   /* Error item definition */
   sealed trait WACCErrorItem
   case class WACCRaw(item: String) extends WACCErrorItem {
-    override def toString() = s"\"item\""
+    override def toString() = s"\"${item}\""
   }
   case class WACCNamed(item: String) extends WACCErrorItem {
     override def toString() = item
