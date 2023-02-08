@@ -3,9 +3,10 @@ package wacc
 import Errors._
 import parsley.errors.{ErrorBuilder, tokenextractors}
 
-class SyntaxErrorBuilder
-    extends ErrorBuilder[WACCError]
-    with tokenextractors.MatchParserDemand {
+class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.TillNextWhitespace{
+
+    override def trimToParserDemand: Boolean = false
+
 
   override def lineInfo(
       line: String,
