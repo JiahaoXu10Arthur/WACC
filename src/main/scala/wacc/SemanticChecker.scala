@@ -8,7 +8,7 @@ import Errors._
 
 object SemanticChecker {
 
-  def semanticCheck(p: Program): Seq[WACCError] = {
+  def semanticCheck(p: Program): (Seq[WACCError], ImmutableSymbolTable) = {
     implicit val st: SymbolTable = new SymbolTable(null)
     implicit val semErr = new ListBuffer[WACCError]()
 
@@ -16,6 +16,6 @@ object SemanticChecker {
     p.funcs.foreach { f => checkFuncDeclare(f) }
     p.stats.foreach { s => checkStat(s) }
 
-    semErr.toList
+    (semErr.toList, st.getImmutableTable())
   }
 }

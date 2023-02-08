@@ -263,11 +263,16 @@ object StatSemantic {
       )
     }
 
+    /* Create new scope for each if body */
     val new_st1 = new SymbolTable(st)
     stat1.foreach { s => checkStat(s)(new_st1, semErr) }
 
     val new_st2 = new SymbolTable(st)
     stat2.foreach { s => checkStat(s)(new_st2, semErr) }
+
+    /* Add new symbol table to st's subSt */
+    st.addSubSt(new_st1)
+		st.addSubSt(new_st2)
   }
 
   /* Expr type: Bool
@@ -288,6 +293,9 @@ object StatSemantic {
 
     val new_st = new SymbolTable(st)
     stat.foreach { s => checkStat(s)(new_st, semErr) }
+
+    /* Add new symbol table to st's subSt */
+    st.addSubSt(new_st)
   }
 
   /* Check validity of stat
@@ -297,6 +305,9 @@ object StatSemantic {
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val new_st = new SymbolTable(st)
     stat.foreach { s => checkStat(s)(new_st, semErr) }
+    
+    /* Add new symbol table to st's subSt */
+    st.addSubSt(new_st)
   }
 
 }

@@ -9,6 +9,11 @@ class SymbolTable(st: SymbolTable) {
 
   val dictionary = Map[(String, ObjectType), SymbolObj]()
   val encSymTable = st
+  val subSts = ListBuffer[SymbolTable]()
+
+  def addSubSt(subSt: SymbolTable) = {
+    subSts += subSt
+  }
 
   def add(name: String, objType: ObjectType, obj: SymbolObj) =
     dictionary += ((name, objType) -> obj)
@@ -69,5 +74,10 @@ class SymbolTable(st: SymbolTable) {
     }
 
     return similar.toSet
+  }
+
+  /* Get an immutable symbol table based on the current one */
+  def getImmutableTable(): ImmutableSymbolTable = {
+    return new ImmutableSymbolTable(dictionary.toMap, subSts.toList)
   }
 }
