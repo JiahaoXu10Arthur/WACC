@@ -59,39 +59,12 @@ object StatSemantic {
 
   }
 
-  /* Convert syntax type to semantics type */
-  def convertType(syntaxType: Types.Type): Type = {
-    syntaxType match {
-      case Types.IntType()  => IntType()
-      case Types.BoolType() => BoolType()
-      case Types.CharType() => CharType()
-      case Types.StrType()  => StrType()
-      case Types.PairType(t1, t2) => PairType(convertPairElemType(t1), convertPairElemType(t2))
-      case Types.ArrayType(t) => ArrayType(convertType(t))
-    }
-  }
-
-  /* Convert special syntax type - pair elem type - to semantics type */
-  def convertPairElemType(syntaxType: Types.PairElemType): Type = {
-    syntaxType match {
-      case Types.IntType()  => IntType()
-      case Types.BoolType() => BoolType()
-      case Types.CharType() => CharType()
-      case Types.StrType()  => StrType()
-      case Types.PairTypeIdent()  => PairType(AnyType(), AnyType())
-      case Types.ArrayType(t) => ArrayType(convertType(t))
-    }
-  }
-
   def assignCheck(target: Lvalue, newValue: Rvalue)
                  (implicit st: SymbolTable, 
                            semErr: ListBuffer[WACCError]): Unit = {
     newValue match {
-      case newValue: Expr => retCheck(target, newValue)
-      case newValue: ArrayLit => retCheck(target, newValue)
-      case newValue: Call => retCheck(target, newValue)
-      case newValue: NewPair => retCheck(target, newValue)
       case newValue: PairElem => pairCheck(target, newValue)
+      case _ => retCheck(target, newValue)
     }
   }
 

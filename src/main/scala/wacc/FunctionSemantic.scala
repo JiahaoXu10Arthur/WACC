@@ -4,7 +4,7 @@ import Ast._
 import SymbolObject._
 import SymbolObjectType._
 import StatSemantic._
-import StatSemantic.{convertType}
+import SemanticType.{convertType}
 import Errors._
 import SemanticErrorBuilder._
 import scala.collection.mutable.ListBuffer
