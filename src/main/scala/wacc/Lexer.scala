@@ -19,40 +19,22 @@ import numeric.PlusSignPresence.Optional
 import Parsley.{notFollowedBy, attempt}
 
 object Lexer {
-  private val keywords = Set(
-    "true",
-    "false",
-    "begin",
-    "end",
-    "is",
-    "skip",
-    "read",
-    "free",
-    "return",
-    "exit",
-    "print",
-    "println",
-    "if",
-    "then",
-    "else",
-    "fi",
-    "while",
-    "do",
-    "done",
-    "fst",
-    "snd",
-    "newpair",
-    "call",
-    "int",
-    "bool",
-    "char",
-    "string",
-    "pair",
-    "null",
-    "len",
-    "ord",
-    "chr"
-  )
+
+
+  private val boolKeywords = Set("true", "false")
+
+  private val pairKeywords = Set("newpair", "pair")
+
+  private val unaryKeywords = Set("len", "ord", "chr")
+  
+  private val otherKeywords = Set("begin", "end", "is", "skip", 
+                             "read", "free", "return", "exit", "print", 
+                             "println", "if", "then", "else", "fi", "while", 
+                             "do", "done", "fst", "snd", "call", 
+                             "int", "bool", "char", "string", "null")
+
+  private val keywords = boolKeywords ++ pairKeywords ++ unaryKeywords++ otherKeywords
+
   private val arithmeticOps = Set("-", "*", "/", "%", "+")
   private val boolOps = Set("!", "&&", "||")
   private val compareOps = Set(">", ">=", "<", "<=", "==", "!=")
@@ -65,6 +47,8 @@ object Lexer {
     ";"
   ) ++ arithmeticOps ++ boolOps ++ compareOps ++ parensOps ++ indexOps
   private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
+
+  private val unaryOperators = unaryKeywords ++ Set("!", "-")
 
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
   def isALphaNumericOrUnderscore =
@@ -99,6 +83,8 @@ object Lexer {
       identifierLetter = isALphaNumericOrUnderscore
     )
   )
+
+  // TODO: End of file
   private val errorConfig = new ErrorConfig {
     override def filterIntegerOutOfBounds(
         min: BigInt,
@@ -110,27 +96,46 @@ object Lexer {
       )
     }
 
-    // TODO: ask if can explain
+    override def labelSymbolKeyword(symbol: String): LabelConfig = {
+      if (boolKeywords(symbol))
+        Label("boolean literal")
+      else if (pairKeywords(symbol))
+        Label("pair literal")
+      else if (unaryKeywords(symbol))
+        Label("unary operator")
+      else {  
+        symbol match {
+          case "char" => Label("character literal")
+          case "call" => Label("function call")
+          case "int" => Label("integer literal")
+          case "string" => Label("string literal")
+          case "pair" => Label("pair literal")
+
+          case x => Label(x)
+        }
+      }  
+    }
+
 
     override def labelSymbolOperator(symbol: String): LabelConfig =
       if (arithmeticOps(symbol))
-        Label("arithmetic operators")
+        Label("arithmetic operator")
       else if (boolOps(symbol))
-        Label("boolean operators")
+        Label("boolean operator")
       else if (parensOps(symbol))
-        Label("parentheses")
+        Label("parenthese")
       else if (compareOps(symbol))
         Label("compare operators")
       else if (indexOps(symbol))
         Label("index `[]`")
       else {
         symbol match {
-          case "="   => Label("assignment")
-          case ","   => Label("comma")
-          case ";"   => Label("semicolon")
-          case "len" => Label("length operator")
-          case "ord" => Label("ordinal operator")
-          case "chr" => Label("character operator")
+          case "=" => Label("assignment `=`")
+          case "," => Label("comma `,`")
+          case ";" => Label("semicolon `;`")
+          case "len" => Label("length operator `len`")
+          case "ord" => Label("ordinal operator `ord`")
+          case "chr" => Label("character operator `chr`")
         }
       }
   }
@@ -140,8 +145,8 @@ object Lexer {
 
   /* Definition for literal tokens */
   val num = lexer.lexeme.numeric.signed.number32[Int].label("number")
-  val bool = lexer.lexeme.symbol("true") #> true |
-    lexer.lexeme.symbol("false") #> false
+  val bool = lexer.lexeme.symbol("true") #> true | 
+             lexer.lexeme.symbol("false") #> false
   val character = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
   val pair = lexer.lexeme.symbol("null")
