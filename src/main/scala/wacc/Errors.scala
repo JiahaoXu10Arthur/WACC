@@ -46,7 +46,7 @@ object Errors {
     override def printErrorLines(file: Option[Array[String]]): String = {
       val unexpected_ = unexpected match {
         case None        => ""
-        case Some(value) => "Unexpeccted " ++ value.toString
+        case Some(value) => "Unexpected " ++ value.toString
       }
       val expecteds_ = {
         if (expecteds.isEmpty) ""
