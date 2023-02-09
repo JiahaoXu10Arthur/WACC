@@ -19,7 +19,7 @@ object ExprParser {
     attempt(Ast.ArrayElem(Ast.Ident(Lexer.ident), some("[" ~> expr <~ "]"))),
     Ast.Ident(Lexer.ident),
     attempt(Ast.IntLit("+" ~> Lexer.num)),
-    ("(" ~> expr <~ ")")
+    ("(" ~> expr <~ ")").hide
   )(
     // unary precedence 0)
     GOps(Prefix)(

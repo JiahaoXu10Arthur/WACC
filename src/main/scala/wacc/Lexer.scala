@@ -70,8 +70,6 @@ object Lexer {
   ) ++ arithmeticOps ++ boolOps ++ compareOps ++ parensOps ++ indexOps
   private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
 
-  private val unaryOperators = unaryKeywords ++ Set("!", "-")
-
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
   def isALphaNumericOrUnderscore =
     predicate.Basic(c => c.isLetterOrDigit || c == '_')
@@ -133,7 +131,7 @@ object Lexer {
           case "string" => Label("string literal")
           case "pair"   => Label("pair literal")
 
-          case x => Label(x)
+          case x => Label(s"keyword $x")
         }
       }
     }

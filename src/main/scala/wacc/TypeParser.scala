@@ -29,7 +29,7 @@ object TypeParser {
   )
 
   val arrayType: Parsley[ArrayType] = attempt(
-    chain.postfix1(basicType | pairType, "[]".hide #> (ArrayType))
+    chain.postfix1(basicType | pairType, "[]".label("`[]` (array type)") #> (ArrayType))
   )
 
   val type_ = arrayType | basicType | pairType

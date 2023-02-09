@@ -4,6 +4,8 @@ import scala.io.Source
 import scala.collection.mutable.ListBuffer
 
 object Errors {
+
+  // error line position incorrect
   def errorsMkString(erros: Seq[WACCError], source: String): String = {
     val errorString = new StringBuilder()
     errorString.append(s"Errors detected when compiling file ${source}:\n")
