@@ -7,6 +7,7 @@ import parsley.combinator.{some}
 import Ast.{Expr}
 import parsley.expr.{GOps, InfixL, Prefix}
 import Lexer.implicitVals._
+import parsley.errors.combinator._
 
 object ExprParser {
   lazy val expr: Parsley[Expr] = precedence[Expr](
