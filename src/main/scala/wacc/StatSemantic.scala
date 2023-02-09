@@ -39,6 +39,7 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     val targetType: Type = convertType(type1)
+    val valueType: Type = checkRvalue(initValue)
     /* Check existence, Create new VariableObj */
     st.lookUp(ident.name, VariableType()) match {
       case Some(VariableObj(_, pos)) =>
@@ -46,7 +47,7 @@ object StatSemantic {
           ident.pos,
           ident.name,
           pos,
-          Seq("Declare: Variable name already exists")
+          Seq(s" Illegal redeclaration of parameter ${ident.name} ")
         )
       case Some(ParamObj(_, _)) => {
         st.remove(ident.name, VariableType())
@@ -60,15 +61,12 @@ object StatSemantic {
     initValue match {
       case PairElem(_, PairElem(_, _)) =>
       case _ => /* Initial value should match the type */
-        if (!equalType(targetType, checkRvalue(initValue))) {
+        if (!equalType(targetType, valueType)) {
           semErr += buildTypeError(
             ident.pos,
-            checkRvalue(initValue),
+            valueType,
             Set(targetType),
-            Seq(
-              "Declare: Initial value wrong type.",
-              s"Expect: $targetType, actual ${checkRvalue(initValue)}"
-            )
+            Seq(" Value type should match variable type ")
           )
         }
     }
@@ -97,7 +95,7 @@ object StatSemantic {
         newValue.pos,
         assignType,
         Set(targetType),
-        Seq("Assign: assign value mismatches target value")
+        Seq(" Value type should match variable type ")
       )
     }
   }
@@ -149,7 +147,7 @@ object StatSemantic {
           target.pos,
           targetType,
           Set(IntType(), CharType()),
-          Seq("Read: Target type not int or char")
+          Seq(" Only char or int can be read ")
         )
     }
   }
@@ -168,7 +166,7 @@ object StatSemantic {
           expr.pos,
           targetType,
           Set(PairType(AnyType(), AnyType()), ArrayType(AnyType())),
-          Seq("Free: Target type not pair or array")
+          Seq(" Only pair or array can be freed ")
         )
     }
   }
@@ -186,7 +184,7 @@ object StatSemantic {
         expr.pos,
         targetType,
         Set(returnType),
-        Seq("Return: Target type mismatch function return type")
+        Seq(" Return type should match target type ")
       )
     }
   }
@@ -211,7 +209,7 @@ object StatSemantic {
     }
     semErr += buildReturnPlacementError(
       pos,
-      Seq("Return: Cannot return from main function")
+      Seq(" Return outside of function is not allowed ")
     )
     return AnyType()
   }
@@ -237,12 +235,12 @@ object StatSemantic {
       expr: Expr
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val argType = checkExpr(expr)
-    if (argType != IntType()) {
+    if (!equalType(argType, IntType())) {
       semErr += buildTypeError(
         expr.pos,
         argType,
         Set(IntType()),
-        Seq("Exit: Argument is not int")
+        Seq(" Exit code should be int ")
       )
     }
   }
@@ -254,12 +252,12 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     val condType = checkExpr(expr)
-    if (condType != BoolType()) {
+    if (!equalType(condType, BoolType())) {
       semErr += buildTypeError(
         expr.pos,
         condType,
         Set(BoolType()),
-        Seq("If: condition not bool")
+        Seq(" Condition should be bool ")
       )
     }
 
@@ -282,12 +280,12 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     val condType = checkExpr(expr)
-    if (condType != BoolType()) {
+    if (!equalType(condType, BoolType())) {
       semErr += buildTypeError(
         expr.pos,
         condType,
         Set(BoolType()),
-        Seq("While: condition not bool")
+        Seq(" Condition should be bool ")
       )
     }
 
@@ -305,7 +303,7 @@ object StatSemantic {
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val new_st = new SymbolTable(st)
     stat.foreach { s => checkStat(s)(new_st, semErr) }
-    
+
     /* Add new symbol table to st's subSt */
     st.addSubSt(new_st)
   }

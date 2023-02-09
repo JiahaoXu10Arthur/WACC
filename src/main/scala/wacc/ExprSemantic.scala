@@ -61,22 +61,22 @@ object ExprSemantic {
       semErr: ListBuffer[WACCError]
   ): Type = {
     val type1 = checkExpr(expr1)
-    if (type1 != IntType()) {
+    if (!equalType(type1, IntType())) {
       semErr += buildTypeError(
         expr1.pos,
         type1,
         Set(IntType()),
-        Seq("ArithBio: Expr1 not int type")
+        Seq(" First expression is not int ")
       )
     }
 
     val type2 = checkExpr(expr2)
-    if (type2 != IntType()) {
+    if (!equalType(type2, IntType())) {
       semErr += buildTypeError(
         expr2.pos,
         type2,
         Set(IntType()),
-        Seq("ArithBio: Expr2 not int type")
+        Seq(" Second expression is not int ")
       )
     }
 
@@ -98,25 +98,25 @@ object ExprSemantic {
         expr2.pos,
         type2,
         Set(type1),
-        Seq("ArithBio: expressions not same type")
+        Seq(" Expressions are not the same type ")
       )
     }
 
-    if (type1 != IntType() && type1 != CharType()) {
+    if (!equalType(type1, IntType()) && !equalType(type1, CharType())) {
       semErr += buildTypeError(
         expr1.pos,
         type1,
         Set(IntType(), CharType()),
-        Seq("ArithBio: Expr1 not int or char type")
+        Seq(" First expression is not int nor char")
       )
     }
 
-    if (type2 != IntType() && type2 != CharType()) {
+    if (!equalType(type2, IntType()) && !equalType(type2, CharType())) {
       semErr += buildTypeError(
         expr2.pos,
         type2,
         Set(IntType(), CharType()),
-        Seq("ArithBio: Expr2 not int or char type")
+        Seq(" Second expression is not int nor char")
       )
     }
 
@@ -138,7 +138,7 @@ object ExprSemantic {
         expr2.pos,
         type2,
         Set(type1),
-        Seq("ArithBio: Expr2 not int or char type")
+        Seq(" Expressions are not the same type ")
       )
     }
     BoolType()
@@ -154,21 +154,21 @@ object ExprSemantic {
     val type1 = checkExpr(expr1)
     val type2 = checkExpr(expr2)
 
-    if (checkExpr(expr1) != BoolType()) {
+    if (!equalType(type1, BoolType())) {
       semErr += buildTypeError(
         expr1.pos,
         type1,
         Set(BoolType()),
-        Seq("ArithBio: Expr1 not bool type")
+        Seq(" First expression is not bool ")
       )
     }
 
-    if (checkExpr(expr2) != BoolType()) {
+    if (!equalType(type2, BoolType())) {
       semErr += buildTypeError(
         expr2.pos,
         type2,
         Set(BoolType()),
-        Seq("ArithBio: Expr2 not bool type")
+        Seq(" Second expression is not bool ")
       )
     }
 
@@ -182,12 +182,12 @@ object ExprSemantic {
       semErr: ListBuffer[WACCError]
   ): Type = {
     val type1 = checkExpr(expr)
-    if (checkExpr(expr) != argType) {
+    if (!equalType(type1, argType)) {
       semErr += buildTypeError(
         expr.pos,
         type1,
         Set(retType),
-        Seq(s"Unary: argument not $argType")
+        Seq(s" Expression is not $argType ")
       )
     }
     retType
@@ -207,7 +207,7 @@ object ExprSemantic {
           expr.pos,
           type1,
           Set(ArrayType(AnyType())),
-          Seq("Len: argument not array")
+          Seq(" Expression is not array ")
         )
     }
     IntType()
@@ -220,6 +220,7 @@ object ExprSemantic {
     st.lookUpAll(ident.name, VariableType()) match {
       case Some(symObj) => symObj.getType()
       case None => {
+
         semErr += buildScopeError(
           ident.pos,
           ident.name,
@@ -245,48 +246,58 @@ object ExprSemantic {
       semErr: ListBuffer[WACCError]
   ): Type = {
     val exprType = checkExpr(ident)
-    // var thisLayer = checkExpr(ident)
-
-    val shouldType = createNestArrayType(exprType, indexes.length)
 
     /* Check index is int */
-    for (index <- indexes) {
-      val indexType = checkExpr(index)
-      if (indexType != IntType()) {
-        semErr += buildTypeError(
-          index.pos,
-          indexType,
-          Set(IntType()),
-          Seq(" The index of an array needs to be int type ")
-        )
-        AnyType()
+    var index = 0
+    var error = false
+    while (index < indexes.length && !error) {
+      val indexType = checkExpr(indexes(index))
+      indexType match {
+        case IntType() =>
+        case _ => {
+          semErr += buildTypeError(
+                      indexes(index).pos,
+                      indexType,
+                      Set(IntType()),
+                      Seq(" The index of an array needs to be int type ")
+                      )
+          error = true
+          return AnyType()
+        }
       }
+      index += 1
     }
 
-    var returnType = exprType 
-    for (i <- 0 until indexes.length) {
+    /* Check correct dimension */
+    var returnType = exprType
+    index = 0
+    while (index < indexes.length && !error) {
       returnType match {
-        case AnyType() => shouldType
+        case AnyType() =>
         case ArrayType(elemType) => returnType = elemType
-        case _ => {
+        case other => {
+          val shouldType = createNestArrayType(other, indexes.length)
           semErr += buildTypeError(
             ident.pos,
             exprType,
             Set(shouldType),
             Seq(" Incorrect array dimension ")
           )
-
+          error = true
           shouldType
         }
       }
+
+      index += 1
     }
 
     returnType
   }
 
+  
   def createNestArrayType(innerType: Type, indexNum: Int): Type = {
     var returnType = innerType
-    for (i <- 0 until indexNum - 1) {
+    for (i <- 0 until indexNum) {
       returnType = ArrayType(returnType)
     }
     returnType

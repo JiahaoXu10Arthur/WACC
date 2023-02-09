@@ -15,6 +15,7 @@ object Errors {
       val lineMsg = s"at line ${error.pos._1} : column ${error.pos._2}\n"
       errorString.append(errTypeMsg ++ lineMsg)
       errorString.append(error.lines.printErrorLines(Some(file)))
+      errorString.append("\n\n")
     }
     errorString.toString()
   }

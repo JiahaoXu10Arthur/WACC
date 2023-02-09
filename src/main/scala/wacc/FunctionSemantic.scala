@@ -28,7 +28,7 @@ object FunctionSemantic {
           func.ident.pos,
           func.ident.name,
           obj.getPos(),
-          Seq("Function: parameter already defined")
+          Seq(s" Illegal redeclaration of parameter ${func.ident.name} ")
         )
       }
       case None => {
@@ -67,7 +67,7 @@ object FunctionSemantic {
             p.ident.pos,
             p.ident.name,
             obj.getPos(),
-            Seq("Function: parameter already defined")
+            Seq(s" Illegal redeclaration of parameter ${p.ident.name} ")
           )
         }
         case None => {

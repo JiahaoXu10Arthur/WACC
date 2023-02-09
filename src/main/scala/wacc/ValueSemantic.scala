@@ -59,7 +59,7 @@ object ValueSemantic {
           ident.pos,
           ident.name,
           st.lookUpAllSimilar(ident.name, FunctionType()),
-          Seq(s"Call: function with name ${ident.name} not in scope")
+          Seq(s" Function ${ident.name} has not been defined ")
         )
         st.add(
           ident.name,
@@ -77,7 +77,7 @@ object ValueSemantic {
         args(lengthArgs - 1).pos,
         lengthArgs,
         funcObj.argc,
-        Seq("Call: wrong argument number")
+        Seq(s" Wrong number of arguments provided to function ${ident.name} ")
       )
     }
 
@@ -90,7 +90,7 @@ object ValueSemantic {
           args(i).pos,
           type2,
           Set(type1),
-          Seq("Call: argument type does not match")
+          Seq(" Arguments passed in need to match the type in funciton declaration ")
         )
       }
     }
@@ -149,12 +149,12 @@ object ValueSemantic {
       val type1 = checkExpr(values(i))
       val type2 = checkExpr(values(i + 1))
 
-      if (type1 != type2) {
+      if (!equalType(type1, type2)) {
         semErr += buildTypeError(
           values(i + 1).pos,
           type2,
           Set(type1),
-          Seq("ArrayLit: Array literals are not of the same type")
+          Seq(" All array elements should have the same type ")
         )
         ArrayType(AnyType())
       }

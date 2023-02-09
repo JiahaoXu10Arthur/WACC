@@ -24,9 +24,13 @@ object SemanticErrorBuilder {
       related: Set[(String, (Int, Int))],
       msg: Seq[String]
   ): WACCError = {
-    val errorMsg = msg :+ "Related: " :++ related.map(x =>
-      s"${x._1} defined at line ${x._2._1}: column ${x._2._2}"
-    )
+    var relatedString: String = ""
+    if (related.nonEmpty) {
+      relatedString ++= "Related: \n"
+      related.foreach(x => relatedString ++=
+      s"  ${x._1} defined at line ${x._2._1}: column ${x._2._2}\n")
+    }
+    val errorMsg = msg :+ relatedString
     buildWithMsg("Scope", pos, errorMsg)
   }
 
@@ -97,8 +101,8 @@ object SemanticErrorBuilder {
       pos: (Int, Int)
   ): WACCError = {
     val errorMsg = Seq(
-      "Attempting to exchange values between pairs of unknown types",
-      "Pair exchange is only legal when the types of at least one of the sides is known or specified"
+      " Attempting to exchange values between pairs of unknown types",
+      " Pair exchange is only legal when the types of at least one of the sides is known or specified"
     )
     buildWithMsg("Invalid Pair Exchange", pos, errorMsg)
   }
@@ -146,7 +150,7 @@ object SemanticErrorBuilder {
       otherPos: (Int, Int),
       msg: Seq[String]
   ): WACCError = {
-    val errorMsg = msg :+ "Previously defined at" ++
+    val errorMsg = msg :+ "Previously defined at " ++
       s"line ${otherPos._1}: column ${otherPos._2}"
     buildWithMsg(redefType, pos, errorMsg)
   }
