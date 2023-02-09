@@ -29,8 +29,8 @@ object FuncParser {
       "is" ~> StatParser.stmts <~ "end"
     )
   ).guardAgainst {
-    case Func(_, _, _, body) if !bodyEndsWithRet(body) =>
-      Seq("Function body does not end with a return statement")
+    case Func(_, id, _, body) if !bodyEndsWithRet(body) =>
+      Seq(s"Function `${id.name}` is missing a return on all exit paths!")
   }.label("function")
 
   val funcs: Parsley[List[Func]] = many(func)

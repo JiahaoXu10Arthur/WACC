@@ -13,7 +13,7 @@ object Main {
     Parser.parse(string) match {
       case Success(x) => {
         // println(x)
-        val errors = SemanticChecker.semanticCheck(x)._1
+        val (errors, st) = SemanticChecker.semanticCheck(x)
         if (errors.isEmpty) {
           println(s"${args.head} parse success")
           //	System.exit(0)

@@ -59,7 +59,7 @@ object ValueSemantic {
           ident.pos,
           ident.name,
           st.lookUpAllSimilar(ident.name, FunctionType()),
-          Seq(s" Function ${ident.name} has not been defined ")
+          Seq(s"Function ${ident.name} has not been defined")
         )
         st.add(
           ident.name,
@@ -77,7 +77,7 @@ object ValueSemantic {
         args(lengthArgs - 1).pos,
         lengthArgs,
         funcObj.argc,
-        Seq(s" Wrong number of arguments provided to function ${ident.name} ")
+        Seq(s"Wrong number of arguments provided to function ${ident.name}")
       )
     }
 
@@ -90,7 +90,7 @@ object ValueSemantic {
           args(i).pos,
           type2,
           Set(type1),
-          Seq(" Arguments passed in need to match the type in funciton declaration ")
+          Seq("Arguments passed in need to match the type in funciton declaration")
         )
       }
     }
@@ -154,7 +154,7 @@ object ValueSemantic {
           values(i + 1).pos,
           type2,
           Set(type1),
-          Seq(" All array elements should have the same type ")
+          Seq("All array elements should have the same type")
         )
         ArrayType(AnyType())
       }

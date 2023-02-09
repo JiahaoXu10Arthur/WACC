@@ -25,14 +25,7 @@ object Errors {
       errType: String,
       pos: (Int, Int),
       lines: WACCErrorLines
-  ) {
-    override def toString(): String = {
-      val errTypeMsg = s"$errType error "
-      val lineMsg = s"at line ${pos._1} : column ${pos._2}\n"
-      val errorMsg = errTypeMsg ++ lineMsg ++ lines.toString()
-      errorMsg
-    }
-  }
+  )
 
   /* Error line definition */
   sealed trait WACCErrorLines {
@@ -58,7 +51,7 @@ object Errors {
         else "\n" ++ reasons.mkString("\n")
       }
       val lineInfo_ = "\n" ++ lineInfo.printLine(file)
-      unexpected_ ++ expecteds_ ++  reasons_ ++ lineInfo_
+      unexpected_ ++ expecteds_ ++ reasons_ ++ lineInfo_
     }
   }
 
@@ -107,6 +100,7 @@ object Errors {
   private val errorLineStart = "| "
   private def errorPointer(caretAt: Int, caretWidth: Int) =
     s"${" " * caretAt}${"^" * caretWidth}"
+
   private def extractErrorLines(
       file: Array[String],
       errorPos: (Int, Int),
@@ -114,8 +108,11 @@ object Errors {
       numLinesAfter: Int
   ): Seq[String] = {
     val length = file.length
-    val errorLines = ListBuffer(file(errorPos._1 - 1))
-    errorLines.append(s"${errorPointer(0, errorPos._2 + 1)}")
+    val errorLine = file(errorPos._1 - 1)
+    val errorLines = ListBuffer(errorLine)
+    val pointerStart = errorLine.takeWhile(_.isWhitespace).length
+    val pointerWidth = errorLine.trim().length
+    errorLines.append(s"${errorPointer(pointerStart, pointerWidth)}")
     for (i <- 1 to numLinesBefore)
       if (errorPos._1 - 1 - i >= 0)
         errorLines.prepend(file(errorPos._1 - 1 - i))
@@ -135,6 +132,6 @@ object Errors {
     override def toString() = item
   }
   case object WACCEndOfInput extends WACCErrorItem {
-    override def toString: String = ""
+    override def toString: String = "end of input"
   }
 }
