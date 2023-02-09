@@ -8,23 +8,30 @@ import ExprParser.{expr}
 import parsley.errors.combinator._
 
 object StatParser {
-  val exit_ = "exit" ~> Exit(expr).label("exit statement")
-  val print_ = "print" ~> Print(expr).label("print statement")
-  val println_ = "println" ~> Println(expr)//.label("println statement")
-  val free_ = "free" ~> Free(expr).label("free statement")
-  val read_ = "read" ~> Read(ValueParser.lvalue).label("read statement")
-  val ret_ = "return" ~> Return(expr).label("return statement")
-  val skip_ = Skip <# "skip".label("skip statement")
+  val exit_ = "exit" ~> Exit(expr)
+  val print_ = "print" ~> Print(expr)
+  val println_ = "println" ~> Println(expr)
+  val free_ = "free" ~> Free(expr)
+  val read_ = "read" ~> Read(ValueParser.lvalue)
+  val ret_ = "return" ~> Return(expr)
+  val skip_ = Skip <# "skip"
 
   lazy val begin_ =
-    "begin" ~> Ast.Begin(stmts) <~ "end".label("begin statement")
+    "begin" ~> Ast.Begin(stmts) <~ "end"
+
+  // Explain for the structure of if and while statements  
   lazy val if_ = Ast
     .If("if" ~> expr, "then" ~> stmts, "else".explain("all if statements must have an else clause") ~> stmts <~ "fi".explain("unclosed if statement"))
     .label("if statement")
   lazy val while_ =
     Ast.While("while" ~> expr, "do".explain("all while statements must have an do clause") ~> stmts <~ "done".explain("unclosed while loop")).label("while statement")
+  
+  // hide assignment "="
   val assign_ = Ast
     .Assign(ValueParser.lvalue, "=" ~> ValueParser.rvalue).hide
+
+  // lable declartion "=" as type
+  // distinguish from assignment "="
   val declare_ = Ast
     .Declare(
       TypeParser.type_.label("type"),

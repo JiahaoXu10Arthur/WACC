@@ -12,10 +12,10 @@ import parsley.errors.combinator._
 object ExprParser {
   lazy val expr: Parsley[Expr] = precedence[Expr](
     // tightest
-    Ast.IntLit(Lexer.num),
-    Ast.BoolLit(Lexer.bool),
-    Ast.CharLit(Lexer.character),
-    Ast.StrLit(Lexer.str),
+    Ast.IntLit(Lexer.num.label("integer literal")),
+    Ast.BoolLit(Lexer.bool.label("boolean literal")),
+    Ast.CharLit(Lexer.character.label("character literal")),
+    Ast.StrLit(Lexer.str.label("string literal")),
     (Ast.PairLit <# Lexer.pair),
     attempt(Ast.ArrayElem(Ast.Ident(Lexer.ident), some("[" ~> expr <~ "]"))),
     Ast.Ident(Lexer.ident),
@@ -24,8 +24,8 @@ object ExprParser {
   )(
     // unary precedence 0)
     GOps(Prefix)(
-      (Ast.Not <# "!"),
-      (Ast.Neg <# Lexer.negate),
+      (Ast.Not <# "!".label("unary operator")),
+      (Ast.Neg <# Lexer.negate.label("unary operator")),
       (Ast.Len <# "len"),
       (Ast.Ord <# "ord"),
       (Ast.Chr <# "chr")

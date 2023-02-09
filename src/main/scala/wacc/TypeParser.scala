@@ -28,6 +28,7 @@ object TypeParser {
     )
   )
 
+  // label array as `[]` (array type)
   val arrayType: Parsley[ArrayType] = attempt(
     chain.postfix1(basicType | pairType, "[]".label("`[]` (array type)") #> (ArrayType))
   )

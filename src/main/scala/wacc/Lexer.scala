@@ -20,12 +20,10 @@ import Parsley.{notFollowedBy, attempt}
 
 object Lexer {
 
+  // class of keywords
   private val boolKeywords = Set("true", "false")
-
   private val pairKeywords = Set("newpair", "pair")
-
   private val unaryKeywords = Set("len", "ord", "chr")
-
   private val otherKeywords = Set(
     "begin",
     "end",
@@ -57,6 +55,7 @@ object Lexer {
   private val keywords =
     boolKeywords ++ pairKeywords ++ unaryKeywords ++ otherKeywords
 
+  // class of operators
   private val arithmeticOps = Set("-", "*", "/", "%", "+")
   private val boolOps = Set("!", "&&", "||")
   private val compareOps = Set(">", ">=", "<", "<=", "==", "!=")
@@ -68,6 +67,7 @@ object Lexer {
     "=",
     ";"
   ) ++ arithmeticOps ++ boolOps ++ compareOps ++ parensOps ++ indexOps
+
   private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
 
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
@@ -106,6 +106,8 @@ object Lexer {
 
   // TODO: End of file
   private val errorConfig = new ErrorConfig {
+
+    // error message for interger bounds
     override def filterIntegerOutOfBounds(
         min: BigInt,
         max: BigInt,
@@ -116,6 +118,7 @@ object Lexer {
       )
     }
 
+    // provide labels for a set of keywords
     override def labelSymbolKeyword(symbol: String): LabelConfig = {
       if (boolKeywords(symbol))
         Label("boolean literal")
@@ -136,6 +139,7 @@ object Lexer {
       }
     }
 
+    // labels for a set of operators
     override def labelSymbolOperator(symbol: String): LabelConfig =
       if (arithmeticOps(symbol))
         Label("arithmetic operator")
@@ -172,7 +176,7 @@ object Lexer {
   val ident = lexer.lexeme.names.identifier
   val pairElem = lexer.lexeme.symbol("fst") #> "fst" |
     lexer.lexeme.symbol("snd") #> "snd"
-  val negate = attempt(lexer.lexeme(char('-') ~> notFollowedBy(digit)))
+  val negate = attempt(lexer.lexeme(char('-') ~> notFollowedBy(digit))).hide
 
   val implicitVals = lexer.lexeme.symbol.implicits
 }

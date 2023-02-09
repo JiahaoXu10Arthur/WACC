@@ -16,8 +16,7 @@ class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.Ti
   // emptySeq.wacc
   // function declaration, identifier
 
-  
-    override def trimToParserDemand: Boolean = true
+  override def trimToParserDemand: Boolean = true
 
   override def lineInfo(
       line: String,
@@ -73,6 +72,7 @@ class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.Ti
 
   type LineInfo = StandardLineInfo
 
+  // Catch 1 line before and after
   override val numLinesBefore: Int = 1
 
   override val numLinesAfter: Int = 1
