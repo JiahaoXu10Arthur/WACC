@@ -33,12 +33,10 @@ object SemanticType {
       return true
     }
 
-    if (type1 == AnyType() || type2 == AnyType()) {
-      return true
-    }
-
     var sameType = true
     (type1, type2) match {
+      case (AnyType(), _) => 
+      case (_, AnyType()) => 
       case (PairType(t1, t2), PairType(t3, t4)) => {
         sameType &&= equalType(t1, t3)
         sameType &&= equalType(t2, t4)
@@ -48,7 +46,7 @@ object SemanticType {
       }
       case _ => sameType = false
     }
-    return sameType
+    sameType
   }
 
     /* Convert syntax type to semantics type */
