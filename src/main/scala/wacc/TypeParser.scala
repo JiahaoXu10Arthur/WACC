@@ -12,7 +12,7 @@ import parsley.errors.combinator._
 object TypeParser {
 
   val basicType: Parsley[BasicType] = attempt(
-    "int" #> IntType() |
+      "int" #> IntType() |
       "bool" #> BoolType() |
       "char" #> CharType() |
       "string" #> StrType()

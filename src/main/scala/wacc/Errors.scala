@@ -51,11 +51,14 @@ object Errors {
       }
       val expecteds_ = {
         if (expecteds.isEmpty) ""
-        else "Expected " ++ expecteds.map(_.toString()).mkString(", ")
+        else "\nExpected " ++ expecteds.map(_.toString()).mkString(", ")
       }
-      val reasons_ = reasons.mkString("\n")
-      val lineInfo_ = lineInfo.printLine(file)
-      unexpected_ ++ "\n" ++ expecteds_ ++ "\n" ++ reasons_ ++ "\n" ++ lineInfo_
+      val reasons_ = {
+        if (reasons.isEmpty) ""
+        else "\n" ++ reasons.mkString("\n")
+      }
+      val lineInfo_ = "\n" ++ lineInfo.printLine(file)
+      unexpected_ ++ expecteds_ ++  reasons_ ++ lineInfo_
     }
   }
 
@@ -83,8 +86,7 @@ object Errors {
       val seqLines = linesBefore.map(line => s"$errorLineStart$line") ++:
         Seq(
           s"$errorLineStart$line",
-          s"${" " * errorLineStart.length}",
-          s"${errorPointer(errorPointsAt, errorWidth)}"
+          s"$errorLineStart${errorPointer(errorPointsAt, errorWidth)}"
         ) ++:
         linesAfter.map(line => s"$errorLineStart$line")
       seqLines.mkString("\n")
@@ -102,7 +104,7 @@ object Errors {
         .mkString("\n")
   }
 
-  private val errorLineStart = ">"
+  private val errorLineStart = "| "
   private def errorPointer(caretAt: Int, caretWidth: Int) =
     s"${" " * caretAt}${"^" * caretWidth}"
   private def extractErrorLines(
@@ -112,13 +114,14 @@ object Errors {
       numLinesAfter: Int
   ): Seq[String] = {
     val length = file.length
-    val errorLines = ListBuffer(file(errorPos._1))
+    val errorLines = ListBuffer(file(errorPos._1 - 1))
+    errorLines.append(s"${errorPointer(0, errorPos._2 + 1)}")
     for (i <- 1 to numLinesBefore)
-      if (errorPos._1 - i >= 0)
-        errorLines.prepend(file(errorPos._1 - i))
+      if (errorPos._1 - 1 - i >= 0)
+        errorLines.prepend(file(errorPos._1 - 1 - i))
     for (i <- 1 to numLinesAfter)
-      if (errorPos._1 + i < length)
-        errorLines.append(file(errorPos._1 + i))
+      if (errorPos._1 - 1 + i < length)
+        errorLines.append(file(errorPos._1 - 1 + i))
 
     errorLines.toSeq
   }
