@@ -19,7 +19,6 @@ object ExprParser {
     (Ast.PairLit <# Lexer.pair),
     attempt(Ast.ArrayElem(Ast.Ident(Lexer.ident), some("[" ~> expr <~ "]"))),
     Ast.Ident(Lexer.ident),
-    attempt(Ast.IntLit("+" ~> Lexer.num)),
     ("(" ~> expr <~ ")").hide
   )(
     // unary precedence 0)

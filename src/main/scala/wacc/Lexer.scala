@@ -78,21 +78,26 @@ object Lexer {
     numericDesc = numeric.NumericDesc.plain.copy(
       positiveSign = Optional
     ),
+
+    // define whitespace and comment
     spaceDesc = SpaceDesc.plain.copy(
       commentLine = "#",
       commentLineAllowsEOF = true,
       space = predicate.Basic(Character.isWhitespace)
     ),
+
     symbolDesc = SymbolDesc.plain.copy(
       hardKeywords = keywords,
       hardOperators = operators
     ),
+    
     textDesc = TextDesc.plain.copy(
       escapeSequences = EscapeDesc.plain.copy(
         escBegin = '\\',
         literals = escLiterals,
         gapsSupported = false
       ),
+
       characterLiteralEnd = '\'',
       stringEnds = Set("\""),
       graphicCharacter =
@@ -104,7 +109,6 @@ object Lexer {
     )
   )
 
-  // TODO: End of file
   private val errorConfig = new ErrorConfig {
 
     // error message for interger bounds
@@ -134,7 +138,7 @@ object Lexer {
           case "string" => Label("string literal")
           case "pair"   => Label("pair literal")
 
-          case x => Label(s"keyword $x")
+          case x => Label(s"$x")
         }
       }
     }

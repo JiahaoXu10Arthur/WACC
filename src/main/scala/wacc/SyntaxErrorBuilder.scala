@@ -5,17 +5,6 @@ import parsley.errors.{ErrorBuilder, tokenextractors}
 
 class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.TillNextWhitespace{
 
-  // end of file
-
-  // wacc_example/invalid/syntaxErr/basic/unescapedChar.wacc
-  // mismatched input '"''
-
-  // missingOperand1.wacc
-  // extra expected
-
-  // emptySeq.wacc
-  // function declaration, identifier
-
   override def trimToParserDemand: Boolean = true
 
   override def lineInfo(
