@@ -47,7 +47,7 @@ object StatSemantic {
           ident.pos,
           ident.name,
           pos,
-          Seq(s" Illegal redeclaration of parameter ${ident.name} ")
+          Seq(s"Illegal redeclaration of parameter ${ident.name}")
         )
       case Some(ParamObj(_, _)) => {
         st.remove(ident.name, VariableType())
@@ -66,7 +66,7 @@ object StatSemantic {
             ident.pos,
             valueType,
             Set(targetType),
-            Seq(" Value type should match variable type ")
+            Seq("Value type should match variable type")
           )
         }
     }
@@ -95,7 +95,7 @@ object StatSemantic {
         newValue.pos,
         assignType,
         Set(targetType),
-        Seq(" Value type should match variable type ")
+        Seq("Value type should match variable type")
       )
     }
   }
@@ -147,7 +147,7 @@ object StatSemantic {
           target.pos,
           targetType,
           Set(IntType(), CharType()),
-          Seq(" Only char or int can be read ")
+          Seq("Only char or int can be read")
         )
     }
   }
@@ -166,7 +166,7 @@ object StatSemantic {
           expr.pos,
           targetType,
           Set(PairType(AnyType(), AnyType()), ArrayType(AnyType())),
-          Seq(" Only pair or array can be freed ")
+          Seq("Only pair or array can be freed")
         )
     }
   }
@@ -184,7 +184,7 @@ object StatSemantic {
         expr.pos,
         targetType,
         Set(returnType),
-        Seq(" Return type should match target type ")
+        Seq("Return type should match target type")
       )
     }
   }
@@ -209,7 +209,7 @@ object StatSemantic {
     }
     semErr += buildReturnPlacementError(
       pos,
-      Seq(" Return outside of function is not allowed ")
+      Seq("Return outside of function is not allowed")
     )
     return AnyType()
   }
@@ -240,7 +240,7 @@ object StatSemantic {
         expr.pos,
         argType,
         Set(IntType()),
-        Seq(" Exit code should be int ")
+        Seq("Exit code should be int")
       )
     }
   }
@@ -257,7 +257,7 @@ object StatSemantic {
         expr.pos,
         condType,
         Set(BoolType()),
-        Seq(" Condition should be bool ")
+        Seq("Condition should be bool")
       )
     }
 
@@ -285,7 +285,7 @@ object StatSemantic {
         expr.pos,
         condType,
         Set(BoolType()),
-        Seq(" Condition should be bool ")
+        Seq("Condition should be bool")
       )
     }
 

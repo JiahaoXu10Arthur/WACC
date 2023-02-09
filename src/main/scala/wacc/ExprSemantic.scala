@@ -66,7 +66,7 @@ object ExprSemantic {
         expr1.pos,
         type1,
         Set(IntType()),
-        Seq(" First expression is not int ")
+        Seq("First expression is not int")
       )
     }
 
@@ -76,7 +76,7 @@ object ExprSemantic {
         expr2.pos,
         type2,
         Set(IntType()),
-        Seq(" Second expression is not int ")
+        Seq("Second expression is not int")
       )
     }
 
@@ -98,7 +98,7 @@ object ExprSemantic {
         expr2.pos,
         type2,
         Set(type1),
-        Seq(" Expressions are not the same type ")
+        Seq("Expressions are not the same type")
       )
     }
 
@@ -107,7 +107,7 @@ object ExprSemantic {
         expr1.pos,
         type1,
         Set(IntType(), CharType()),
-        Seq(" First expression is not int nor char")
+        Seq("First expression is not int nor char")
       )
     }
 
@@ -116,7 +116,7 @@ object ExprSemantic {
         expr2.pos,
         type2,
         Set(IntType(), CharType()),
-        Seq(" Second expression is not int nor char")
+        Seq("Second expression is not int nor char")
       )
     }
 
@@ -138,7 +138,7 @@ object ExprSemantic {
         expr2.pos,
         type2,
         Set(type1),
-        Seq(" Expressions are not the same type ")
+        Seq("Expressions are not the same type ")
       )
     }
     BoolType()
@@ -159,7 +159,7 @@ object ExprSemantic {
         expr1.pos,
         type1,
         Set(BoolType()),
-        Seq(" First expression is not bool ")
+        Seq("First expression is not bool ")
       )
     }
 
@@ -168,7 +168,7 @@ object ExprSemantic {
         expr2.pos,
         type2,
         Set(BoolType()),
-        Seq(" Second expression is not bool ")
+        Seq("Second expression is not bool ")
       )
     }
 
@@ -187,7 +187,7 @@ object ExprSemantic {
         expr.pos,
         type1,
         Set(retType),
-        Seq(s" Expression is not $argType ")
+        Seq(s"Expression is not $argType")
       )
     }
     retType
@@ -207,7 +207,7 @@ object ExprSemantic {
           expr.pos,
           type1,
           Set(ArrayType(AnyType())),
-          Seq(" Expression is not array ")
+          Seq("Expression is not array")
         )
     }
     IntType()
@@ -225,7 +225,7 @@ object ExprSemantic {
           ident.pos,
           ident.name,
           st.lookUpAllSimilar(ident.name, VariableType()),
-          Seq(s" Variable ${ident.name} has not been declared in this scope ")
+          Seq(s"Variable ${ident.name} has not been declared in this scope")
         )
         st.add(
           ident.name,
@@ -248,47 +248,45 @@ object ExprSemantic {
     val exprType = checkExpr(ident)
 
     /* Check index is int */
-    var index = 0
-    var error = false
-    while (index < indexes.length && !error) {
-      val indexType = checkExpr(indexes(index))
+    var returnType = exprType
+    for (index <- indexes) {
+      val indexType = checkExpr(index)
       indexType match {
         case IntType() =>
         case _ => {
           semErr += buildTypeError(
-                      indexes(index).pos,
+                      index.pos,
                       indexType,
                       Set(IntType()),
-                      Seq(" The index of an array needs to be int type ")
+                      Seq("The index of an array needs to be int type")
                       )
-          error = true
-          return AnyType()
+          returnType = AnyType()
         }
       }
-      index += 1
     }
 
+    var true_dimension = 0;
     /* Check correct dimension */
-    var returnType = exprType
-    index = 0
-    while (index < indexes.length && !error) {
+    for (index <- 0 until indexes.length) {
       returnType match {
         case AnyType() =>
-        case ArrayType(elemType) => returnType = elemType
+        case ArrayType(elemType) => {
+          true_dimension += 1
+          returnType = elemType
+        }
         case other => {
           val shouldType = createNestArrayType(other, indexes.length)
           semErr += buildTypeError(
             ident.pos,
             exprType,
             Set(shouldType),
-            Seq(" Incorrect array dimension ")
+            Seq(s"Incorrect array dimension \n" +
+                s"Trying to access dimension ${indexes.length} \n" +
+                s"Actual dimension: $true_dimension")
           )
-          error = true
-          shouldType
+          returnType = AnyType()
         }
       }
-
-      index += 1
     }
 
     returnType
