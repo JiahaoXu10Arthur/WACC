@@ -42,6 +42,7 @@ object StatSemantic {
     val valueType: Type = checkRvalue(initValue)
     /* Check existence, Create new VariableObj */
     st.lookUp(ident.name, VariableType()) match {
+      /* If varaible already declared, error */
       case Some(VariableObj(_, pos)) =>
         semErr += buildVarRedefError(
           ident.pos,
@@ -49,15 +50,19 @@ object StatSemantic {
           pos,
           Seq(s"Illegal redeclaration of parameter ${ident.name}")
         )
+      /* For parameter shadowing:
+          If local variable and function parameter have the same name,
+          local variable takes advantage over parameter */
       case Some(ParamObj(_, _)) => {
         st.remove(ident.name, VariableType())
         st.add(ident.name, VariableType(), VariableObj(targetType, ident.pos))
       }
+      /* Declare new varaible in scope */
       case _ =>
         st.add(ident.name, VariableType(), VariableObj(targetType, ident.pos))
     }
 
-    /* if intial value is nested pair, pass */
+    /* if intial value is nested pair, does not need to match type */
     initValue match {
       case PairElem(_, PairElem(_, _)) =>
       case _ => /* Initial value should match the type */
@@ -90,6 +95,8 @@ object StatSemantic {
   ): Unit = {
     val targetType = checkLvalue(target)
     val assignType = checkRvalue(newValue)
+
+    /* Check target type matches assign type */
     if (!equalType(targetType, assignType)) {
       semErr += buildTypeError(
         newValue.pos,
@@ -107,7 +114,7 @@ object StatSemantic {
     var firstNested = false
     var secondNested = false
 
-    // left side nested pair
+    // Check left side nested pair
     target match {
       case PairElem(_, PairElem(_, _)) => {
         checkRvalue(newValue)
@@ -116,7 +123,7 @@ object StatSemantic {
       case _ =>
     }
 
-    // right side nested pair
+    // Check right side nested pair
     newValue match {
       case PairElem(_, PairElem(_, _)) => {
         checkLvalue(target)
@@ -139,6 +146,8 @@ object StatSemantic {
       target: Lvalue
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val targetType = checkLvalue(target)
+
+    /* Check argument is Int or Char */
     targetType match {
       case IntType()  =>
       case CharType() =>
@@ -158,6 +167,8 @@ object StatSemantic {
       expr: Expr
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val targetType = checkExpr(expr)
+
+    /* Check argument is Pair or Array */
     targetType match {
       case PairType(_, _) =>
       case ArrayType(_)   =>
@@ -179,6 +190,7 @@ object StatSemantic {
     val returnType = findFuncRetType(expr.pos, st, semErr)
     val targetType = checkExpr(expr)
 
+    /* Check function return type matches target type */
     if (!equalType(returnType, targetType)) {
       semErr += buildTypeError(
         expr.pos,
@@ -198,15 +210,20 @@ object StatSemantic {
     var retType: Type = null
     var recurse_st: SymbolTable = st
 
+    /* Recursively find the larger scope until main (exclude main) */
     while (recurse_st.encSymTable != null) {
       retType = findOneRet(recurse_st)
 
+      /* If return type found, end search */
       if (retType != null) {
         return retType
       } else {
         recurse_st = recurse_st.encSymTable
       }
     }
+
+    /* If cannot find function to return until main,
+       means the return statement is outside function, error */
     semErr += buildReturnPlacementError(
       pos,
       Seq("Return outside of function is not allowed")
@@ -218,6 +235,7 @@ object StatSemantic {
   def findOneRet(st: SymbolTable): Type = {
     var retType: Type = null
 
+    /* Find functionObj declared in scope */
     for ((name, obj) <- st.dictionary) {
       /* find function in this scope */
       obj match {
@@ -226,6 +244,7 @@ object StatSemantic {
       }
     }
 
+    /* If no functionObj found, retType = null */
     retType
   }
 
@@ -235,6 +254,8 @@ object StatSemantic {
       expr: Expr
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     val argType = checkExpr(expr)
+
+    /* Check argument is Int */
     if (!equalType(argType, IntType())) {
       semErr += buildTypeError(
         expr.pos,
@@ -252,6 +273,8 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     val condType = checkExpr(expr)
+
+    /* Check condition is Bool */
     if (!equalType(condType, BoolType())) {
       semErr += buildTypeError(
         expr.pos,
@@ -263,12 +286,13 @@ object StatSemantic {
 
     /* Create new scope for each if body */
     val new_st1 = new SymbolTable(st)
+    /* Check statement in body */
     stat1.foreach { s => checkStat(s)(new_st1, semErr) }
 
     val new_st2 = new SymbolTable(st)
     stat2.foreach { s => checkStat(s)(new_st2, semErr) }
 
-    /* Add new symbol table to st's subSt */
+    /* Add new symbol table to st's subSymbolTable */
     st.addSubSt(new_st1)
 		st.addSubSt(new_st2)
   }
@@ -280,6 +304,8 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     val condType = checkExpr(expr)
+
+    /* Check condition is Bool */
     if (!equalType(condType, BoolType())) {
       semErr += buildTypeError(
         expr.pos,
@@ -289,10 +315,12 @@ object StatSemantic {
       )
     }
 
+    /* Create new scope for each if body */
     val new_st = new SymbolTable(st)
+    /* Check statement in body */
     stat.foreach { s => checkStat(s)(new_st, semErr) }
 
-    /* Add new symbol table to st's subSt */
+    /* Add new symbol table to st's subSymbolTable */
     st.addSubSt(new_st)
   }
 
@@ -301,10 +329,13 @@ object StatSemantic {
   def beginCheck(
       stat: List[Stat]
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
+
+    /* Create new scope for each if body */
     val new_st = new SymbolTable(st)
+    /* Check statement in body */
     stat.foreach { s => checkStat(s)(new_st, semErr) }
 
-    /* Add new symbol table to st's subSt */
+    /* Add new symbol table to st's subSymbolTable */
     st.addSubSt(new_st)
   }
 
