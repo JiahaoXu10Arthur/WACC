@@ -26,9 +26,8 @@ object StatParser {
   lazy val while_ =
     Ast.While("while" ~> expr, "do".explain("all while statements must have an do clause") ~> stmts <~ "done".explain("unclosed while loop")).label("while statement")
   
-  // hide assignment "="
   val assign_ = Ast
-    .Assign(ValueParser.lvalue, "=" ~> ValueParser.rvalue).hide
+    .Assign(ValueParser.lvalue, "=" ~> ValueParser.rvalue)
 
   // lable declartion "=" as type
   // distinguish from assignment "="

@@ -134,6 +134,6 @@ object Errors {
     override def toString() = item
   }
   case object WACCEndOfInput extends WACCErrorItem {
-    override def toString: String = "end of input"
+    override def toString: String = "end of file"
   }
 }
