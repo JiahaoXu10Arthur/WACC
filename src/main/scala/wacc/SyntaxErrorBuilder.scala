@@ -2,15 +2,15 @@ package wacc
 
 import Errors._
 import parsley.errors.{ErrorBuilder, tokenextractors}
+import parsley.Parsley
+import Lexer._
 
-class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.TillNextWhitespace{
+class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.LexToken{
 
-  // wacc_example/invalid/syntaxErr/basic/unescapedChar.wacc 
-  // mismatched input '"''
+  override def tokens: Seq[Parsley[String]] = 
+    identCheck ++ keywordsCheck ++ operatorsCheck ++ 
+    concatCheck ++ numCheck ++ parenthesesCheck ++ squareBracketsCheck
 
-  // missingOperand1.wacc
-  // extra expected
-    override def trimToParserDemand: Boolean = false
 
   override def lineInfo(
       line: String,
@@ -66,6 +66,7 @@ class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.Ti
 
   type LineInfo = StandardLineInfo
 
+  // Catch 1 line before and after
   override val numLinesBefore: Int = 1
 
   override val numLinesAfter: Int = 1

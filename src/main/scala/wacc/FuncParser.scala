@@ -1,9 +1,10 @@
 package wacc
 
 import parsley.{Parsley, Success, Failure}
-import Parsley.attempt
+import Parsley.{attempt, lookAhead}
 import parsley.combinator.{sepBy, many}
-import parsley.errors.combinator.ErrorMethods
+import parsley.errors.combinator.{ErrorMethods}
+import parsley.errors.patterns.{VerifiedErrors}
 import Lexer.implicitVals._
 import Ast._
 import TypeParser.type_
@@ -21,19 +22,34 @@ object FuncParser {
   }
   val param = Param(type_, Ast.Ident(Lexer.ident)).label("function parameter")
 
-  val func: Parsley[Func] = attempt(
+  val func: Parsley[Func] = (
     Func(
       type_,
       Ast.Ident(Lexer.ident),
-      "(" ~> sepBy(param, ",") <~ ")",
+      ("(" ~> sepBy(param, ",") <~ ")"),
       "is" ~> StatParser.stmts <~ "end"
     )
   ).guardAgainst {
-    case Func(_, _, _, body) if !bodyEndsWithRet(body) =>
-      Seq("Function body does not end with a return statement")
+    case Func(_, id, _, body) if !bodyEndsWithRet(body) =>
+      Seq(
+        s"Function `${id.name}` is missing a return on all exit paths!",
+        "All functions must end with a return or exit statement."
+      )
   }.label("function")
 
-  val funcs: Parsley[List[Func]] = many(func)
+  /* Error widget definitions */
+  private val _funcMissingTypeCheck: Parsley[Nothing] = {
+    attempt(Ident(Lexer.ident) <~ "(").verifiedFail(n =>
+      Seq(s"Function definition for `${n.name}` is missing a return type!")
+    )
+  }
+  private val _funcStartCheck = {
+    attempt(lookAhead(type_ ~> Lexer.ident ~> "("))
+  }
+
+  val funcs: Parsley[List[Func]] = many(
+    _funcMissingTypeCheck | _funcStartCheck ~> func
+  )
 
   def funcParse(input: String): Option[Func] = {
     func.parse(input) match {

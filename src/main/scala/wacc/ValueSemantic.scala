@@ -13,8 +13,9 @@ object ValueSemantic {
       lvalue: Lvalue
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
     lvalue match {
-      case lvalue: Expr   => checkExpr(lvalue)
-      case lvalue: Rvalue => checkRvalue(lvalue)
+      case lvalue: Ident     => identCheck(lvalue)
+      case lvalue: ArrayElem => arrayElemCheck(lvalue.ident, lvalue.index)
+      case lvalue: PairElem  => pairElemCheck(lvalue.index, lvalue.lvalue)
     }
   }
 
@@ -51,16 +52,18 @@ object ValueSemantic {
       semErr: ListBuffer[WACCError]
   ): Type = {
     var funcObj: FuncObj = null
-    /* Find funcObj */
+    /* Search funcObj in all scope*/
     st.lookUpAll(ident.name, FunctionType()) match {
       case Some(symObj: FuncObj) => funcObj = symObj
+      /* If no function found, error */
       case _ => {
         semErr += buildScopeError(
           ident.pos,
           ident.name,
           st.lookUpAllSimilar(ident.name, FunctionType()),
-          Seq(s"Call: function with name ${ident.name} not in scope")
+          Seq(s"Function ${ident.name} has not been defined")
         )
+        /* Add fake function to the scope to avoid further error */
         st.add(
           ident.name,
           FunctionType(),
@@ -71,17 +74,17 @@ object ValueSemantic {
     }
 
     val lengthArgs = args.length
-    /* check number of parameters */
+    /* check number of parameters macthes function declaration  */
     if (lengthArgs != funcObj.argc) {
       semErr += buildArgNumError(
         args(lengthArgs - 1).pos,
         lengthArgs,
         funcObj.argc,
-        Seq("Call: wrong argument number")
+        Seq(s"Wrong number of arguments provided to function ${ident.name}")
       )
     }
 
-    /* check every parameter's type */
+    /* check every parameter's type matches function declaration */
     for (i <- 0 until lengthArgs.min(funcObj.argc)) {
       val type1 = funcObj.args(i).getType()
       val type2 = checkExpr(args(i))
@@ -90,7 +93,7 @@ object ValueSemantic {
           args(i).pos,
           type2,
           Set(type1),
-          Seq("Call: argument type does not match")
+          Seq("Arguments passed in need to match the type in funciton declaration")
         )
       }
     }
@@ -143,22 +146,22 @@ object ValueSemantic {
       return ArrayType(AnyType())
     }
 
-    /* check every parameter's type */
+    /* check every element's type is the same */
     for (i <- 0 until values.length - 1) {
-      // checkValueRef(args(i), st)
       val type1 = checkExpr(values(i))
       val type2 = checkExpr(values(i + 1))
 
-      if (type1 != type2) {
+      if (!equalType(type1, type2)) {
         semErr += buildTypeError(
           values(i + 1).pos,
           type2,
           Set(type1),
-          Seq("ArrayLit: Array literals are not of the same type")
+          Seq("All array elements should have the same type")
         )
         ArrayType(AnyType())
       }
     }
+
     ArrayType(checkExpr(values(0)))
   }
 

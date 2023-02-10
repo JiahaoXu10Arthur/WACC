@@ -1,16 +1,10 @@
 package wacc
 
 import parsley.Parsley
-import parsley.character.char
-import parsley.character.digit
+import parsley.character.{char, digit}
 import parsley.errors.combinator._
-import parsley.token.Lexer
-import parsley.token.descriptions
-import parsley.token.errors.ErrorConfig
-import parsley.token.errors.FilterConfig
-import parsley.token.errors.Label
-import parsley.token.errors.LabelConfig
-import parsley.token.errors.SpecialisedMessage
+import parsley.token.{Lexer,descriptions}
+import parsley.token.errors.{ErrorConfig, FilterConfig, Label, LabelConfig, SpecialisedMessage}
 import parsley.token.predicate
 
 import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc, numeric}
@@ -20,35 +14,55 @@ import Parsley.{notFollowedBy, attempt}
 
 object Lexer {
 
-
+  // class of keywords
   private val boolKeywords = Set("true", "false")
-
   private val pairKeywords = Set("newpair", "pair")
-
   private val unaryKeywords = Set("len", "ord", "chr")
-  
-  private val otherKeywords = Set("begin", "end", "is", "skip", 
-                             "read", "free", "return", "exit", "print", 
-                             "println", "if", "then", "else", "fi", "while", 
-                             "do", "done", "fst", "snd", "call", 
-                             "int", "bool", "char", "string", "null")
+  private val typeKeywords = Set("int", "char", "bool", "string")
+  private val otherKeywords = Set(
+    "begin",
+    "end",
+    "is",
+    "skip",
+    "read",
+    "free",
+    "return",
+    "exit",
+    "print",
+    "println",
+    "if",
+    "then",
+    "else",
+    "fi",
+    "while",
+    "do",
+    "done",
+    "fst",
+    "snd",
+    "call",
+    "int",
+    "bool",
+    "char",
+    "string",
+    "null"
+  )
 
-  private val keywords = boolKeywords ++ pairKeywords ++ unaryKeywords++ otherKeywords
+  private val keywords =
+    boolKeywords ++ pairKeywords ++ unaryKeywords ++ otherKeywords ++ typeKeywords
 
-  private val arithmeticOps = Set("-", "*", "/", "%", "+")
-  private val boolOps = Set("!", "&&", "||")
-  private val compareOps = Set(">", ">=", "<", "<=", "==", "!=")
-  private val parensOps = Set("(", ")")
-  private val indexOps = Set("[", "]")
+  // class of operators
+  private val binaryOps = Set("-", "*", "/", "%", "+", "&&", "||", ">", ">=", "<", "<=", "==", "!=")
+  private val parentheses = Set("(", ")")
+  private val squareBrackets = Set("[", "]")
 
   private val operators = Set(
     ",",
     "=",
-    ";"
-  ) ++ arithmeticOps ++ boolOps ++ compareOps ++ parensOps ++ indexOps
-  private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
+    ";",
+    "!"
+  ) ++ binaryOps ++ parentheses ++ squareBrackets
 
-  private val unaryOperators = unaryKeywords ++ Set("!", "-")
+  private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
 
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
   def isALphaNumericOrUnderscore =
@@ -58,21 +72,26 @@ object Lexer {
     numericDesc = numeric.NumericDesc.plain.copy(
       positiveSign = Optional
     ),
+
+    // define whitespace and comment
     spaceDesc = SpaceDesc.plain.copy(
       commentLine = "#",
       commentLineAllowsEOF = true,
       space = predicate.Basic(Character.isWhitespace)
     ),
+
     symbolDesc = SymbolDesc.plain.copy(
       hardKeywords = keywords,
       hardOperators = operators
     ),
+    
     textDesc = TextDesc.plain.copy(
       escapeSequences = EscapeDesc.plain.copy(
         escBegin = '\\',
         literals = escLiterals,
         gapsSupported = false
       ),
+
       characterLiteralEnd = '\'',
       stringEnds = Set("\""),
       graphicCharacter =
@@ -84,8 +103,9 @@ object Lexer {
     )
   )
 
-  // TODO: End of file
   private val errorConfig = new ErrorConfig {
+
+    // error message for interger bounds
     override def filterIntegerOutOfBounds(
         min: BigInt,
         max: BigInt,
@@ -96,6 +116,7 @@ object Lexer {
       )
     }
 
+    // provide labels for a set of keywords
     override def labelSymbolKeyword(symbol: String): LabelConfig = {
       if (boolKeywords(symbol))
         Label("boolean literal")
@@ -103,57 +124,70 @@ object Lexer {
         Label("pair literal")
       else if (unaryKeywords(symbol))
         Label("unary operator")
-      else {  
+      else {
         symbol match {
-          case "char" => Label("character literal")
-          case "call" => Label("function call")
-          case "int" => Label("integer literal")
-          case "string" => Label("string literal")
-          case "pair" => Label("pair literal")
-
-          case x => Label(x)
+          case "call"   => Label("function call")
+          case "pair"   => Label("pair literal")
+          case "int"    => Label("integer type")
+          case "bool"   => Label("boolean type")
+          case "char"   => Label("character type")
+          case "string" => Label("string type")
+          case x => Label(s"$x")
         }
-      }  
+      }
     }
 
-
+    // labels for a set of operators
     override def labelSymbolOperator(symbol: String): LabelConfig =
-      if (arithmeticOps(symbol))
-        Label("arithmetic operator")
-      else if (boolOps(symbol))
-        Label("boolean operator")
-      else if (parensOps(symbol))
-        Label("parenthese")
-      else if (compareOps(symbol))
-        Label("compare operators")
-      else if (indexOps(symbol))
+      if (binaryOps(symbol))
+        Label("binary operators")
+      else if (parentheses(symbol))
+        Label("parentheses")
+      else if (squareBrackets(symbol))
         Label("index `[]`")
       else {
         symbol match {
-          case "=" => Label("assignment `=`")
-          case "," => Label("comma `,`")
-          case ";" => Label("semicolon `;`")
-          case "len" => Label("length operator `len`")
-          case "ord" => Label("ordinal operator `ord`")
-          case "chr" => Label("character operator `chr`")
+          case "="   => Label("assignment `=`")
+          case ","   => Label("comma `,`")
+          case ";"   => Label("semicolon `;`")
+          case "!"   => Label("unary operator")
         }
       }
   }
   val lexer = new Lexer(desc, errorConfig)
 
+  val identCheck = Seq(lexer.nonlexeme.names.identifier.map(x => s"identifier $x"))
+
+  val keywordsCheck =
+    keywords.map(x => lexer.nonlexeme.symbol.softKeyword(x).map(_ => s"keyword $x")).toSeq
+
+  val operatorsCheck =
+    (binaryOps ++ Set("!")).map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"operator $x")).toSeq
+  
+  val concatCheck = Seq(lexer.nonlexeme.symbol.apply("++") #> "++")
+
+  val numCheck = Seq(lexer.nonlexeme.numeric.signed.number32[Int].map(x => s"Integer $x"))
+
+  val parenthesesCheck = parentheses.map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => "parenthesis")).toSeq
+
+  val squareBracketsCheck = squareBrackets.map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => "square bracket")).toSeq
+
+
+  
+
   def fully[A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
 
   /* Definition for literal tokens */
   val num = lexer.lexeme.numeric.signed.number32[Int].label("number")
-  val bool = lexer.lexeme.symbol("true") #> true | 
-             lexer.lexeme.symbol("false") #> false
+  val bool = lexer.lexeme.symbol("true") #> true |
+    lexer.lexeme.symbol("false") #> false
   val character = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
   val pair = lexer.lexeme.symbol("null")
   val ident = lexer.lexeme.names.identifier
   val pairElem = lexer.lexeme.symbol("fst") #> "fst" |
     lexer.lexeme.symbol("snd") #> "snd"
-  val negate = attempt(lexer.lexeme(char('-') ~> notFollowedBy(digit)))
+  val negate = attempt(lexer.lexeme(char('-') ~> notFollowedBy(digit))).hide
 
   val implicitVals = lexer.lexeme.symbol.implicits
 }

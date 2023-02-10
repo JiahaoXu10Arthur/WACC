@@ -4,6 +4,8 @@ import scala.io.Source
 import scala.collection.mutable.ListBuffer
 
 object Errors {
+
+  // error line position incorrect
   def errorsMkString(erros: Seq[WACCError], source: String): String = {
     val errorString = new StringBuilder()
     errorString.append(s"Errors detected when compiling file ${source}:\n")
@@ -15,6 +17,7 @@ object Errors {
       val lineMsg = s"at line ${error.pos._1} : column ${error.pos._2}\n"
       errorString.append(errTypeMsg ++ lineMsg)
       errorString.append(error.lines.printErrorLines(Some(file)))
+      errorString.append("\n\n")
     }
     errorString.toString()
   }
@@ -24,14 +27,7 @@ object Errors {
       errType: String,
       pos: (Int, Int),
       lines: WACCErrorLines
-  ) {
-    override def toString(): String = {
-      val errTypeMsg = s"$errType error "
-      val lineMsg = s"at line ${pos._1} : column ${pos._2}\n"
-      val errorMsg = errTypeMsg ++ lineMsg ++ lines.toString()
-      errorMsg
-    }
-  }
+  )
 
   /* Error line definition */
   sealed trait WACCErrorLines {
@@ -46,15 +42,18 @@ object Errors {
     override def printErrorLines(file: Option[Array[String]]): String = {
       val unexpected_ = unexpected match {
         case None        => ""
-        case Some(value) => "Unexpeccted " ++ value.toString
+        case Some(value) => "Unexpected " ++ value.toString
       }
       val expecteds_ = {
         if (expecteds.isEmpty) ""
-        else "Expected " ++ expecteds.map(_.toString()).mkString(", ")
+        else "\nExpected " ++ expecteds.map(_.toString()).mkString(", ")
       }
-      val reasons_ = reasons.mkString("\n")
-      val lineInfo_ = lineInfo.printLine(file)
-      unexpected_ ++ "\n" ++ expecteds_ ++ "\n" ++ reasons_ ++ "\n" ++ lineInfo_
+      val reasons_ = {
+        if (reasons.isEmpty) ""
+        else "\n" ++ reasons.mkString("\n")
+      }
+      val lineInfo_ = "\n" ++ lineInfo.printLine(file)
+      unexpected_ ++ expecteds_ ++ reasons_ ++ lineInfo_
     }
   }
 
@@ -82,8 +81,7 @@ object Errors {
       val seqLines = linesBefore.map(line => s"$errorLineStart$line") ++:
         Seq(
           s"$errorLineStart$line",
-          s"${" " * errorLineStart.length}",
-          s"${errorPointer(errorPointsAt, errorWidth)}"
+          s"$errorLineStart${errorPointer(errorPointsAt, errorWidth)}"
         ) ++:
         linesAfter.map(line => s"$errorLineStart$line")
       seqLines.mkString("\n")
@@ -101,9 +99,10 @@ object Errors {
         .mkString("\n")
   }
 
-  private val errorLineStart = ">"
+  private val errorLineStart = "| "
   private def errorPointer(caretAt: Int, caretWidth: Int) =
     s"${" " * caretAt}${"^" * caretWidth}"
+
   private def extractErrorLines(
       file: Array[String],
       errorPos: (Int, Int),
@@ -111,13 +110,15 @@ object Errors {
       numLinesAfter: Int
   ): Seq[String] = {
     val length = file.length
-    val errorLines = ListBuffer(file(errorPos._1))
+    val errorLine = file(errorPos._1 - 1)
+    val errorLines = ListBuffer(errorLine)
+    errorLines.append(s"${errorPointer(errorPos._2 - 1, 1)}")
     for (i <- 1 to numLinesBefore)
-      if (errorPos._1 - i >= 0)
-        errorLines.prepend(file(errorPos._1 - i))
+      if (errorPos._1 - 1 - i >= 0)
+        errorLines.prepend(file(errorPos._1 - 1 - i))
     for (i <- 1 to numLinesAfter)
-      if (errorPos._1 + i < length)
-        errorLines.append(file(errorPos._1 + i))
+      if (errorPos._1 - 1 + i < length)
+        errorLines.append(file(errorPos._1 - 1 + i))
 
     errorLines.toSeq
   }
@@ -131,6 +132,6 @@ object Errors {
     override def toString() = item
   }
   case object WACCEndOfInput extends WACCErrorItem {
-    override def toString: String = ""
+    override def toString: String = "end of file"
   }
 }

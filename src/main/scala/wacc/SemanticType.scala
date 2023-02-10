@@ -2,16 +2,30 @@ package wacc
 
 object SemanticType {
   sealed trait Type
-  case class AnyType() extends Type
+  case class AnyType() extends Type {
+    override def toString() = "Any"
+  }
 
-  case class IntType() extends Type
-  case class BoolType() extends Type
-  case class CharType() extends Type
-  case class StrType() extends Type
+  case class IntType() extends Type {
+    override def toString() = "Int"
+  }
+  case class BoolType() extends Type {
+    override def toString() = "Bool"
+  }
+  case class CharType() extends Type {
+    override def toString() = "Char"
+  }
+  case class StrType() extends Type {
+    override def toString() = "String"
+  }
 
-  case class PairType(elem1: Type, elem2: Type) extends Type
+  case class PairType(elem1: Type, elem2: Type) extends Type {
+    override def toString() = s"Pair(${elem1.toString()}, ${elem2.toString()})"
+  }
 
-  case class ArrayType(elemType: Type) extends Type
+  case class ArrayType(elemType: Type) extends Type {
+    override def toString() = s"${elemType.toString()}[]"
+  }
 
   /* Type equality involve AnyType */
   def equalType(type1: Type, type2: Type): Boolean = {
@@ -19,12 +33,10 @@ object SemanticType {
       return true
     }
 
-    if (type1 == AnyType() || type2 == AnyType()) {
-      return true
-    }
-
     var sameType = true
     (type1, type2) match {
+      case (AnyType(), _) => 
+      case (_, AnyType()) => 
       case (PairType(t1, t2), PairType(t3, t4)) => {
         sameType &&= equalType(t1, t3)
         sameType &&= equalType(t2, t4)
@@ -34,7 +46,7 @@ object SemanticType {
       }
       case _ => sameType = false
     }
-    return sameType
+    sameType
   }
 
     /* Convert syntax type to semantics type */

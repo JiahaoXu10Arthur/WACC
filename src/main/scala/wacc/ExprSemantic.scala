@@ -10,7 +10,7 @@ import SemanticErrorBuilder._
 object ExprSemantic {
 
   def checkExpr(
-      expr: Expr
+      expr: Expr,
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
     expr match {
       /* Arithmetic binary operators */
@@ -60,23 +60,26 @@ object ExprSemantic {
       st: SymbolTable,
       semErr: ListBuffer[WACCError]
   ): Type = {
+
+    /* Check first argument is Int */
     val type1 = checkExpr(expr1)
-    if (type1 != IntType()) {
+    if (!equalType(type1, IntType())) {
       semErr += buildTypeError(
         expr1.pos,
         type1,
         Set(IntType()),
-        Seq("ArithBio: Expr1 not int type")
+        Seq("First expression is not int")
       )
     }
 
+    /* Check second argument is Int */
     val type2 = checkExpr(expr2)
-    if (type2 != IntType()) {
+    if (!equalType(type2, IntType())) {
       semErr += buildTypeError(
         expr2.pos,
         type2,
         Set(IntType()),
-        Seq("ArithBio: Expr2 not int type")
+        Seq("Second expression is not int")
       )
     }
 
@@ -93,30 +96,33 @@ object ExprSemantic {
     val type1 = checkExpr(expr1)
     val type2 = checkExpr(expr2)
 
+    /* Check arguments are same type */
     if (!equalType(type1, type2)) {
       semErr += buildTypeError(
         expr2.pos,
         type2,
         Set(type1),
-        Seq("ArithBio: expressions not same type")
+        Seq("Expressions are not the same type")
       )
     }
 
-    if (type1 != IntType() && type1 != CharType()) {
+    /* Check first argument is Int or Char */
+    if (!equalType(type1, IntType()) && !equalType(type1, CharType())) {
       semErr += buildTypeError(
         expr1.pos,
         type1,
         Set(IntType(), CharType()),
-        Seq("ArithBio: Expr1 not int or char type")
+        Seq("First expression is not int nor char")
       )
     }
 
-    if (type2 != IntType() && type2 != CharType()) {
+    /* Check second argument is Int or Char */
+    if (!equalType(type2, IntType()) && !equalType(type2, CharType())) {
       semErr += buildTypeError(
         expr2.pos,
         type2,
         Set(IntType(), CharType()),
-        Seq("ArithBio: Expr2 not int or char type")
+        Seq("Second expression is not int nor char")
       )
     }
 
@@ -133,12 +139,13 @@ object ExprSemantic {
     val type1 = checkExpr(expr1)
     val type2 = checkExpr(expr2)
 
+    /* Check arguments are the same type */
     if (!equalType(type1, type2)) {
       semErr += buildTypeError(
         expr2.pos,
         type2,
         Set(type1),
-        Seq("ArithBio: Expr2 not int or char type")
+        Seq("Expressions are not the same type ")
       )
     }
     BoolType()
@@ -154,21 +161,23 @@ object ExprSemantic {
     val type1 = checkExpr(expr1)
     val type2 = checkExpr(expr2)
 
-    if (checkExpr(expr1) != BoolType()) {
+    /* Check first argument is Bool */
+    if (!equalType(type1, BoolType())) {
       semErr += buildTypeError(
         expr1.pos,
         type1,
         Set(BoolType()),
-        Seq("ArithBio: Expr1 not bool type")
+        Seq("First expression is not bool ")
       )
     }
 
-    if (checkExpr(expr2) != BoolType()) {
+    /* Check second argument is Bool */
+    if (!equalType(type2, BoolType())) {
       semErr += buildTypeError(
         expr2.pos,
         type2,
         Set(BoolType()),
-        Seq("ArithBio: Expr2 not bool type")
+        Seq("Second expression is not bool ")
       )
     }
 
@@ -182,14 +191,17 @@ object ExprSemantic {
       semErr: ListBuffer[WACCError]
   ): Type = {
     val type1 = checkExpr(expr)
-    if (checkExpr(expr) != argType) {
+
+    /* Check the argument type matches given type */
+    if (!equalType(type1, argType)) {
       semErr += buildTypeError(
         expr.pos,
         type1,
         Set(retType),
-        Seq(s"Unary: argument not $argType")
+        Seq(s"Expression is not $argType")
       )
     }
+
     retType
   }
 
@@ -199,6 +211,8 @@ object ExprSemantic {
       expr: Expr
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
     val type1 = checkExpr(expr)
+
+    /* Check argument is an array */
     checkExpr(expr) match {
       case AnyType()    =>
       case ArrayType(_) =>
@@ -207,7 +221,7 @@ object ExprSemantic {
           expr.pos,
           type1,
           Set(ArrayType(AnyType())),
-          Seq("Len: argument not array")
+          Seq("Expression is not array")
         )
     }
     IntType()
@@ -217,15 +231,19 @@ object ExprSemantic {
   def identCheck(
       ident: Ident
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
+
+    /* Search for identifier in all scope */
     st.lookUpAll(ident.name, VariableType()) match {
       case Some(symObj) => symObj.getType()
       case None => {
+        /* If cannot find, error */
         semErr += buildScopeError(
           ident.pos,
           ident.name,
           st.lookUpAllSimilar(ident.name, VariableType()),
-          Seq(s"Ident: identifier with name ${ident.name} not in scope")
+          Seq(s"Variable ${ident.name} has not been declared in this scope")
         )
+        /* Add a fake variable to avoid further error */
         st.add(
           ident.name,
           VariableType(),
@@ -244,47 +262,61 @@ object ExprSemantic {
       st: SymbolTable,
       semErr: ListBuffer[WACCError]
   ): Type = {
-    var thisLayer = checkExpr(ident)
+    val exprType = checkExpr(ident)
 
-    /* for every layer of index, check validity */
-    for (i <- indexes) {
-      thisLayer = oneArrayElemCheck(thisLayer, i, ident, thisLayer)
-    }
-
-    thisLayer
-  }
-
-  /* One layer of array elem check */
-  def oneArrayElemCheck(t: Type, index: Expr, ident: Ident, idType: Type)(
-      implicit
-      st: SymbolTable,
-      semErr: ListBuffer[WACCError]
-  ): Type = {
-    val indexType = checkExpr(index)
-    if (indexType != IntType()) {
-      semErr += buildTypeError(
-        index.pos,
-        indexType,
-        Set(IntType()),
-        Seq("ArrayElem: index not int type")
-      )
-      return AnyType()
-    }
-
-    /* First argument type should be T[] */
-    t match {
-      case AnyType()     => return AnyType()
-      case ArrayType(t1) => return t1
-      case _ => {
-        semErr += buildTypeError(
-          ident.pos,
-          idType,
-          Set(ArrayType(AnyType())),
-          Seq("ArrayElem: more extract than array nesting")
-        )
-        return AnyType()
+    /* Check every index is int */
+    var returnType = exprType
+    for (index <- indexes) {
+      val indexType = checkExpr(index)
+      indexType match {
+        case IntType() =>
+        case _ => {
+          semErr += buildTypeError(
+                      index.pos,
+                      indexType,
+                      Set(IntType()),
+                      Seq("The index of an array needs to be int type")
+                      )
+          returnType = AnyType()
+        }
       }
     }
+
+    var true_dimension = 0;
+    /* Check correct dimension */
+    for (index <- 0 until indexes.length) {
+      returnType match {
+        case AnyType() =>
+        case ArrayType(elemType) => {
+          true_dimension += 1
+          returnType = elemType
+        }
+        case other => {
+          /* If dimension mismatches , calculate the correct return type */
+          val shouldType = createNestArrayType(other, indexes.length)
+          semErr += buildTypeError(
+            ident.pos,
+            exprType,
+            Set(shouldType),
+            Seq(s"Incorrect array dimension \n" +
+                s"Trying to access dimension ${indexes.length} \n" +
+                s"Actual dimension: $true_dimension")
+          )
+          returnType = AnyType()
+        }
+      }
+    }
+
+    returnType
+  }
+
+  
+  def createNestArrayType(innerType: Type, indexNum: Int): Type = {
+    var returnType = innerType
+    for (i <- 0 until indexNum) {
+      returnType = ArrayType(returnType)
+    }
+    returnType
   }
 
 }
