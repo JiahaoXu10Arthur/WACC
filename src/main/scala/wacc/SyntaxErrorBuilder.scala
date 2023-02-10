@@ -7,7 +7,9 @@ import Lexer._
 
 class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.LexToken{
 
-  override def tokens: Seq[Parsley[String]] = seqIdents ++ seqKeywords ++ seqOperators
+  override def tokens: Seq[Parsley[String]] = 
+    identCheck ++ keywordsCheck ++ operatorsCheck ++ 
+    concatCheck ++ numCheck ++ parenthesesCheck ++ squareBracketsCheck
 
 
   override def lineInfo(

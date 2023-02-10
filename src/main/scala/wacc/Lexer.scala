@@ -51,17 +51,16 @@ object Lexer {
     boolKeywords ++ pairKeywords ++ unaryKeywords ++ otherKeywords ++ typeKeywords
 
   // class of operators
-  private val arithmeticOps = Set("-", "*", "/", "%", "+")
-  private val boolOps = Set("!", "&&", "||")
-  private val compareOps = Set(">", ">=", "<", "<=", "==", "!=")
-  private val parensOps = Set("(", ")")
-  private val indexOps = Set("[", "]")
+  private val binaryOps = Set("-", "*", "/", "%", "+", "&&", "||", ">", ">=", "<", "<=", "==", "!=")
+  private val parentheses = Set("(", ")")
+  private val squareBrackets = Set("[", "]")
 
   private val operators = Set(
     ",",
     "=",
-    ";"
-  ) ++ arithmeticOps ++ boolOps ++ compareOps ++ parensOps ++ indexOps
+    ";",
+    "!"
+  ) ++ binaryOps ++ parentheses ++ squareBrackets
 
   private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
 
@@ -140,36 +139,40 @@ object Lexer {
 
     // labels for a set of operators
     override def labelSymbolOperator(symbol: String): LabelConfig =
-      if (arithmeticOps(symbol))
-        Label("arithmetic operator")
-      else if (boolOps(symbol))
-        Label("boolean operator")
-      else if (parensOps(symbol))
-        Label("parenthese")
-      else if (compareOps(symbol))
-        Label("compare operators")
-      else if (indexOps(symbol))
+      if (binaryOps(symbol))
+        Label("binary operators")
+      else if (parentheses(symbol))
+        Label("parentheses")
+      else if (squareBrackets(symbol))
         Label("index `[]`")
       else {
         symbol match {
           case "="   => Label("assignment `=`")
           case ","   => Label("comma `,`")
           case ";"   => Label("semicolon `;`")
-          case "len" => Label("length operator `len`")
-          case "ord" => Label("ordinal operator `ord`")
-          case "chr" => Label("character operator `chr`")
+          case "!"   => Label("unary operator")
         }
       }
   }
   val lexer = new Lexer(desc, errorConfig)
 
-  val seqIdents = Seq(lexer.nonlexeme.names.identifier.map(x => s"identifier $x"))
+  val identCheck = Seq(lexer.nonlexeme.names.identifier.map(x => s"identifier $x"))
 
-  val seqKeywords =
+  val keywordsCheck =
     keywords.map(x => lexer.nonlexeme.symbol.softKeyword(x).map(_ => s"keyword $x")).toSeq
 
-  val seqOperators =
-    operators.map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"operator $x")).toSeq  
+  val operatorsCheck =
+    (binaryOps ++ Set("!")).map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"operator $x")).toSeq
+  
+  val concatCheck = Seq(lexer.nonlexeme.symbol.apply("++") #> "++")
+
+  val numCheck = Seq(lexer.nonlexeme.numeric.signed.number32[Int].map(x => s"Integer $x"))
+
+  val parenthesesCheck = parentheses.map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => "parenthesis")).toSeq
+
+  val squareBracketsCheck = squareBrackets.map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => "square bracket")).toSeq
+
+
   
 
   def fully[A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
