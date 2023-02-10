@@ -1,12 +1,13 @@
-package wacc
+package wacc.SyntaxChecker
 
 import parsley.{Parsley, Success, Failure}
-import Types._
 import parsley.expr.chain
 import parsley.lift.{lift2}
-import Parsley.{attempt}
-import Lexer.implicitVals._
 import parsley.errors.combinator._
+import Parsley.{attempt}
+
+import Lexer.implicitVals._
+import Types._
 
 object TypeParser {
 

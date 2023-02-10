@@ -1,4 +1,4 @@
-package wacc
+package wacc.SemanticChecker
 
 import SemanticType._
 

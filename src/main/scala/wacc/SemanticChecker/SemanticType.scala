@@ -1,4 +1,6 @@
-package wacc
+package wacc.SemanticChecker
+
+import wacc.SyntaxChecker.Types
 
 object SemanticType {
   sealed trait Type

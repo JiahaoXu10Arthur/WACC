@@ -1,13 +1,13 @@
 package wacc
 
-import ParserPositionBridge.{
+import wacc.SyntaxChecker.ParserPositionBridge.{
   ParserSingletonBridgePos,
   ParserBridgePos1,
   ParserBridgePos2,
   ParserBridgePos3,
   ParserBridgePos4
 }
-import Types._
+import wacc.SyntaxChecker.Types._
 
 object Ast {
   /* Program */

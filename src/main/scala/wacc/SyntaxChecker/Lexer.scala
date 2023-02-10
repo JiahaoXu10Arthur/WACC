@@ -1,4 +1,4 @@
-package wacc
+package wacc.SyntaxChecker
 
 import parsley.Parsley
 import parsley.character.{char, digit}

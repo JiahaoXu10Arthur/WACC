@@ -1,6 +1,7 @@
-package wacc
+package wacc.Error
 
 import Errors._
+import wacc.SemanticChecker.SemanticType
 
 object SemanticErrorBuilder {
   def buildTypeError(

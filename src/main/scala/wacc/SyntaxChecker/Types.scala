@@ -1,4 +1,4 @@
-package wacc
+package wacc.SyntaxChecker
 
 object Types {
   sealed trait Type

@@ -1,13 +1,15 @@
-package wacc
+package wacc.SemanticChecker
 
-import Ast._
+import scala.collection.mutable.ListBuffer
+
+import wacc.Error.Errors._
+import wacc.Error.SemanticErrorBuilder._
+import wacc.Ast._
+
 import SymbolObject._
 import SymbolObjectType._
 import StatSemantic._
 import SemanticType.{convertType}
-import Errors._
-import SemanticErrorBuilder._
-import scala.collection.mutable.ListBuffer
 
 object FunctionSemantic {
   /* Load only header into main scope */

@@ -1,10 +1,11 @@
-package wacc
+package wacc.SemanticChecker
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-import SymbolObjectType._
-import SymbolObject._
+
 import SemanticType._
+import SymbolObject._
+import SymbolObjectType._
 
 class LookUpSimilarTest extends AnyFlatSpec {
 

@@ -1,14 +1,16 @@
-package wacc
+package wacc.SemanticChecker
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-import Ast._
+import scala.collection.mutable.ListBuffer
+
+import wacc.Ast._
+import wacc.Error.Errors._
+
 import SemanticType._
 import SymbolObject._
 import SymbolObjectType._
 import ExprSemantic._
-import scala.collection.mutable.ListBuffer
-import Errors._
 
 class SemanticExprTest extends AnyFlatSpec {
 	implicit val st = new SymbolTable(null)

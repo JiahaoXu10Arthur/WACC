@@ -3,7 +3,10 @@ package wacc
 import parsley.{Success, Failure}
 import java.nio.file.Files
 import java.nio.file.Paths
-import Errors.errorsMkString
+
+import wacc.SyntaxChecker.Parser
+import wacc.SemanticChecker.SemanticChecker
+import wacc.Error.Errors.errorsMkString
 
 object Main {
   val SuccessCompile = 0

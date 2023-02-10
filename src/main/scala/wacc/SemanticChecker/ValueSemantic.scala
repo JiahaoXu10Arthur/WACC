@@ -1,12 +1,16 @@
-package wacc
-import Ast._
+package wacc.SemanticChecker
+
+import scala.collection.mutable.ListBuffer
+
+import wacc.Ast._
+import wacc.Error.SemanticErrorBuilder._
+import wacc.Error.Errors._
+
 import SemanticType._
 import ExprSemantic._
 import SymbolObject._
 import SymbolObjectType._
-import Errors._
-import SemanticErrorBuilder._
-import scala.collection.mutable.ListBuffer
+
 
 object ValueSemantic {
   def checkLvalue(

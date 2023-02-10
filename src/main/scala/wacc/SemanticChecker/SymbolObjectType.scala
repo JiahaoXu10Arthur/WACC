@@ -1,4 +1,4 @@
-package wacc
+package wacc.SemanticChecker
 
 object SymbolObjectType {
   sealed trait ObjectType

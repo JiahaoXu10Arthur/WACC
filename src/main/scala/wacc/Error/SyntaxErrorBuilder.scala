@@ -1,9 +1,9 @@
-package wacc
+package wacc.Error
 
 import Errors._
 import parsley.errors.{ErrorBuilder, tokenextractors}
 import parsley.Parsley
-import Lexer._
+import wacc.SyntaxChecker.Lexer._
 
 class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.LexToken{
 

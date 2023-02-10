@@ -1,8 +1,9 @@
-package wacc
+package wacc.SyntaxChecker
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-import Ast._
+
+import wacc.Ast._
 
 class ParserValueTest extends AnyFlatSpec {
 

@@ -7,6 +7,8 @@
 
  import org.scalatest.matchers.should.Matchers._
  import org.scalatest.wordspec.AnyWordSpec
+ import wacc.SyntaxChecker.Parser
+ import wacc.SemanticChecker.SemanticChecker
  
  class IntegrationTest extends AnyWordSpec {
 

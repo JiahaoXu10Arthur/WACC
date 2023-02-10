@@ -1,9 +1,12 @@
-package wacc
+package wacc.SyntaxChecker
 
 import parsley.{Parsley}
 import parsley.combinator.{eof}
 import Lexer.{fully}
-import Ast.{Program}
+
+import wacc.Ast.{Program}
+import wacc.Error.SyntaxErrorBuilder
+
 import StatParser.{stmts}
 import FuncParser.{funcs}
 import Lexer.implicitVals._
