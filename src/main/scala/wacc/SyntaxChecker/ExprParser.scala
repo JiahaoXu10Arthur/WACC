@@ -10,7 +10,6 @@ import parsley.expr.{GOps, InfixL, Prefix}
 
 import wacc.Ast._
 import Lexer.implicitVals._
-import wacc.Ast
 
 object ExprParser {
   private val _funcCallCheck = {

@@ -12,7 +12,6 @@ import ExprSemantic._
 import ValueSemantic._
 import SymbolObject._
 import SymbolObjectType._
-import wacc.Ast
 
 
 object StatSemantic {

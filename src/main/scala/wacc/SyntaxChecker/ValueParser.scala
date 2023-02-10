@@ -6,9 +6,7 @@ import parsley.combinator.{some, sepBy, sepBy1}
 
 import wacc.Ast._
 import ExprParser.{expr}
-// import Lexer
 import Lexer.implicitVals._
-import wacc.Ast
 
 object ValueParser {
 

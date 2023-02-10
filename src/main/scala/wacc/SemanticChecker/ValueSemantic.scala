@@ -10,7 +10,6 @@ import SemanticTypes._
 import ExprSemantic._
 import SymbolObject._
 import SymbolObjectType._
-import wacc.Ast
 
 
 object ValueSemantic {

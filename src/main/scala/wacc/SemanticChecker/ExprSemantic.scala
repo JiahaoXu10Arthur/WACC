@@ -9,7 +9,6 @@ import wacc.Error.Errors._
 import SemanticTypes._
 import SymbolObject._
 import SymbolObjectType._
-import wacc.Ast
 
 object ExprSemantic {
 
