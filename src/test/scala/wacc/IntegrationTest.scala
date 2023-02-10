@@ -8,7 +8,7 @@
  import org.scalatest.matchers.should.Matchers._
  import org.scalatest.wordspec.AnyWordSpec
  
- class TempTest extends AnyWordSpec {
+ class IntegrationTest extends AnyWordSpec {
 
    def getListOfFiles(dir: String):List[File] = {
      val d = new File(dir)
