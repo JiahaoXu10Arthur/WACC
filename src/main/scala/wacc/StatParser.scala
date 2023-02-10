@@ -1,7 +1,10 @@
 package wacc
 
 import parsley.{Parsley, Success, Failure}
+import Parsley.{attempt}
+import TypeParser.type_
 import parsley.combinator.{sepBy1}
+import parsley.errors.patterns.{VerifiedErrors}
 import Ast._
 import Lexer.implicitVals._
 import ExprParser.{expr}
@@ -19,13 +22,26 @@ object StatParser {
   lazy val begin_ =
     "begin" ~> Ast.Begin(stmts) <~ "end"
 
-  // Explain for the structure of if and while statements  
+  // Explain for the structure of if and while statements
   lazy val if_ = Ast
-    .If("if" ~> expr, "then" ~> stmts, "else".explain("all if statements must have an else clause") ~> stmts <~ "fi".explain("unclosed if statement"))
+    .If(
+      "if" ~> expr,
+      "then" ~> stmts,
+      "else".explain(
+        "all if statements must have an else clause"
+      ) ~> stmts <~ "fi".explain("unclosed if statement")
+    )
     .label("if statement")
   lazy val while_ =
-    Ast.While("while" ~> expr, "do".explain("all while statements must have an do clause") ~> stmts <~ "done".explain("unclosed while loop")).label("while statement")
-  
+    Ast
+      .While(
+        "while" ~> expr,
+        "do".explain(
+          "all while statements must have an do clause"
+        ) ~> stmts <~ "done".explain("unclosed while loop")
+      )
+      .label("while statement")
+
   val assign_ = Ast
     .Assign(ValueParser.lvalue, "=" ~> ValueParser.rvalue)
 
@@ -38,9 +54,17 @@ object StatParser {
       "=" ~> ValueParser.rvalue
     )
 
-  lazy val stmt: Parsley[Stat] = skip_ | exit_ | print_ | println_ | free_ |
-    ret_ | if_ | while_ | begin_ | declare_ |
-    assign_ | read_
+  /* Error widget definitions */
+  private val _funcDefCheck = {
+    attempt((type_ ~> Lexer.ident <~ "("))
+      .verifiedFail(n => Seq(
+        s"Unexpected function definition for `${n}`!", 
+        "all functions must be declared at the top of the main block"
+        )
+      )
+  }
+  lazy val stmt: Parsley[Stat] = _funcDefCheck | skip_ | exit_ | print_ |
+    println_ | free_ | ret_ | if_ | while_ | begin_ | declare_ | assign_ | read_
   lazy val stmts: Parsley[List[Stat]] = sepBy1(stmt, ";")
 
   def statParse(input: String): Option[List[Stat]] = {

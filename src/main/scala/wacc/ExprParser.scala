@@ -8,10 +8,20 @@ import Ast.{Expr}
 import parsley.expr.{GOps, InfixL, Prefix}
 import Lexer.implicitVals._
 import parsley.errors.combinator._
+import parsley.errors.patterns.VerifiedErrors
 
 object ExprParser {
+  private val _funcCallCheck = {
+    attempt((Lexer.ident <~ "("))
+      .verifiedUnexpected(
+        "Are you trying to call a function? \n" +
+        "Function calls may not appear in expressions and must use `call`"
+      )
+  }
+
   lazy val expr: Parsley[Expr] = precedence[Expr](
     // tightest
+    _funcCallCheck,
     Ast.IntLit(Lexer.num.label("integer literal")),
     Ast.BoolLit(Lexer.bool.label("boolean literal")),
     Ast.CharLit(Lexer.character.label("character literal")),
