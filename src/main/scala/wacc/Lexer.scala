@@ -24,6 +24,7 @@ object Lexer {
   private val boolKeywords = Set("true", "false")
   private val pairKeywords = Set("newpair", "pair")
   private val unaryKeywords = Set("len", "ord", "chr")
+  private val typeKeywords = Set("int", "char", "bool", "string")
   private val otherKeywords = Set(
     "begin",
     "end",
@@ -53,7 +54,7 @@ object Lexer {
   )
 
   private val keywords =
-    boolKeywords ++ pairKeywords ++ unaryKeywords ++ otherKeywords
+    boolKeywords ++ pairKeywords ++ unaryKeywords ++ otherKeywords ++ typeKeywords
 
   // class of operators
   private val arithmeticOps = Set("-", "*", "/", "%", "+")
@@ -132,12 +133,12 @@ object Lexer {
         Label("unary operator")
       else {
         symbol match {
-          case "char"   => Label("character literal")
           case "call"   => Label("function call")
-          case "int"    => Label("integer literal")
-          case "string" => Label("string literal")
           case "pair"   => Label("pair literal")
-
+          case "int"    => Label("integer type")
+          case "bool"   => Label("boolean type")
+          case "char"   => Label("character type")
+          case "string" => Label("string type")
           case x => Label(s"$x")
         }
       }
