@@ -71,7 +71,7 @@ object ExprSemantic {
         expr1.pos,
         type1,
         Set(IntType()),
-        Seq("First expression is not int")
+        Seq("First sub-expression is not type int")
       )
     }
 
@@ -82,7 +82,7 @@ object ExprSemantic {
         expr2.pos,
         type2,
         Set(IntType()),
-        Seq("Second expression is not int")
+        Seq("Second sub-expression is not type int")
       )
     }
 
@@ -115,7 +115,7 @@ object ExprSemantic {
         expr1.pos,
         type1,
         Set(IntType(), CharType()),
-        Seq("First expression is not int nor char")
+        Seq("First sub-expression is not type int nor type char")
       )
     }
 
@@ -125,7 +125,7 @@ object ExprSemantic {
         expr2.pos,
         type2,
         Set(IntType(), CharType()),
-        Seq("Second expression is not int nor char")
+        Seq("Second sub-expression is not type int nor type char")
       )
     }
 
@@ -170,7 +170,7 @@ object ExprSemantic {
         expr1.pos,
         type1,
         Set(BoolType()),
-        Seq("First expression is not bool ")
+        Seq("First sub-expression is not type bool ")
       )
     }
 
@@ -180,7 +180,7 @@ object ExprSemantic {
         expr2.pos,
         type2,
         Set(BoolType()),
-        Seq("Second expression is not bool ")
+        Seq("Second sub-expression is not type bool ")
       )
     }
 
@@ -201,7 +201,7 @@ object ExprSemantic {
         expr.pos,
         type1,
         Set(retType),
-        Seq(s"Expression is not $argType")
+        Seq(s"Expression is not type $argType")
       )
     }
 
@@ -224,7 +224,7 @@ object ExprSemantic {
           expr.pos,
           type1,
           Set(ArrayType(AnyType())),
-          Seq("Expression is not array")
+          Seq("Expression is not an array")
         )
     }
     IntType()
@@ -278,7 +278,7 @@ object ExprSemantic {
             index.pos,
             indexType,
             Set(IntType()),
-            Seq("The index of an array needs to be int type")
+            Seq("The index of an array needs to have type int")
           )
           returnType = AnyType()
         }
@@ -303,7 +303,7 @@ object ExprSemantic {
             Set(shouldType),
             Seq(
               s"Incorrect array dimension \n" +
-                s"Trying to access dimension ${indexes.length} \n" +
+                s"Expected dimension: ${indexes.length} \n" +
                 s"Actual dimension: $true_dimension"
             )
           )

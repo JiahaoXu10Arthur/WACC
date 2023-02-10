@@ -31,7 +31,7 @@ object FunctionSemantic {
           func.ident.pos,
           func.ident.name,
           obj.getPos(),
-          Seq(s" Illegal redeclaration of parameter ${func.ident.name} ")
+          Seq(s"Illegal redeclaration of parameter ${func.ident.name} ")
         )
       }
       case None => {
@@ -70,7 +70,7 @@ object FunctionSemantic {
             p.ident.pos,
             p.ident.name,
             obj.getPos(),
-            Seq(s" Illegal redeclaration of parameter ${p.ident.name} ")
+            Seq(s"Illegal redeclaration of parameter ${p.ident.name} ")
           )
         }
         /* Add parameter to scope */

@@ -4,7 +4,15 @@ import parsley.Parsley
 import parsley.character.{char, digit}
 import parsley.errors.combinator._
 import parsley.token.{Lexer, descriptions}
-import parsley.token.errors.{ErrorConfig, FilterConfig, Label, LabelConfig, SpecialisedMessage}
+import parsley.token.errors.{
+  ErrorConfig,
+  FilterConfig,
+  Label,
+  Reason,
+  LabelConfig,
+  LabelWithExplainConfig,
+  SpecialisedMessage
+}
 import parsley.token.predicate
 
 import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc, numeric}
@@ -108,7 +116,7 @@ object Lexer {
         nativeRadix: Int
     ): FilterConfig[BigInt] = new SpecialisedMessage[BigInt] {
       def message(n: BigInt) = Seq(
-        s"number is not within the range ${min.toString(nativeRadix)} to ${max.toString(nativeRadix)}"
+        s"Number is not within the range ${min.toString(nativeRadix)} to ${max.toString(nativeRadix)}"
       )
     }
 
@@ -149,6 +157,16 @@ object Lexer {
           case "!" => Label("unary operator")
         }
       }
+
+    // reason for escape characters
+    override def labelEscapeSequence = Reason(
+      s"This is an escape character! \n Escape characters must be escaped with a backslash `\\`"
+    )
+
+    // label for graphic characters
+    override def labelGraphicCharacter: LabelWithExplainConfig = Label("character")
+
+    // label
   }
   val lexer = new Lexer(desc, errorConfig)
 
@@ -159,6 +177,17 @@ object Lexer {
   val operatorsCheck =
     (binaryOps ++ Set("!"))
       .map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"operator $x"))
+      .toSeq
+  val miscOperatorCheck =
+    (operators -- binaryOps - "!")
+      .map(x =>
+        x match {
+          case "=" => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"assignment $x")
+          case "," => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"comma $x")
+          case ";" => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"semicolon $x")
+          case _   => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"$x")
+        }
+      )
       .toSeq
   val concatCheck = Seq(lexer.nonlexeme.symbol.apply("++") #> "++")
   val numCheck = Seq(lexer.nonlexeme.numeric.signed.number32[Int].map(x => s"Integer $x"))

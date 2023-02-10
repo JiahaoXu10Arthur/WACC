@@ -30,16 +30,16 @@ object StatParser {
       "if" ~> expr,
       "then" ~> stmts,
       "else".explain(
-        "all if statements must have an else clause"
-      ) ~> stmts <~ "fi".explain("unclosed if statement")
+        "All if statements must have an else clause"
+      ) ~> stmts <~ "fi".explain("Unclosed if statement")
     )
       .label("if statement")
   lazy val while_ =
     While(
       "while" ~> expr,
       "do".explain(
-        "all while statements must have an do clause"
-      ) ~> stmts <~ "done".explain("unclosed while loop")
+        "All while statements must have an do clause"
+      ) ~> stmts <~ "done".explain("Unclosed while loop")
     )
       .label("while statement")
 
@@ -59,7 +59,7 @@ object StatParser {
       .verifiedFail(n =>
         Seq(
           s"Unexpected function definition for `${n}`!",
-          "all functions must be declared at the top of the main block"
+          "All functions must be declared at the top of the main block"
         )
       )
   }

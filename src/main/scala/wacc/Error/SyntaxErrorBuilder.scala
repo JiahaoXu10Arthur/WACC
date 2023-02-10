@@ -8,7 +8,7 @@ import wacc.SyntaxChecker.Lexer._
 class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.LexToken {
 
   override def tokens: Seq[Parsley[String]] =
-    identCheck ++ keywordsCheck ++ operatorsCheck ++
+    identCheck ++ keywordsCheck ++ operatorsCheck ++ miscOperatorCheck ++
       concatCheck ++ numCheck ++ parenthesesCheck ++ squareBracketsCheck ++
       whiteSpaceCheck
 

@@ -160,7 +160,7 @@ object StatSemantic {
           target.pos,
           targetType,
           Set(IntType(), CharType()),
-          Seq("Only char or int can be read")
+          Seq("Only types char or int can be read")
         )
     }
   }
@@ -181,7 +181,7 @@ object StatSemantic {
           expr.pos,
           targetType,
           Set(PairType(AnyType(), AnyType()), ArrayType(AnyType())),
-          Seq("Only pair or array can be freed")
+          Seq("Only pairs and arrays can be freed")
         )
     }
   }
@@ -265,7 +265,7 @@ object StatSemantic {
         expr.pos,
         argType,
         Set(IntType()),
-        Seq("Exit code should be int")
+        Seq("Exit code should have type int")
       )
     }
   }
@@ -284,7 +284,7 @@ object StatSemantic {
         expr.pos,
         condType,
         Set(BoolType()),
-        Seq("Condition should be bool")
+        Seq("Condition should have type bool")
       )
     }
 
@@ -315,7 +315,7 @@ object StatSemantic {
         expr.pos,
         condType,
         Set(BoolType()),
-        Seq("Condition should be bool")
+        Seq("Condition should have type bool")
       )
     }
 

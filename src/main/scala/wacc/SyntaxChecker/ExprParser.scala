@@ -45,7 +45,8 @@ object ExprParser {
     GOps(InfixL)((Mul <# "*"), (Div <# "/"), (Mod <# "%")),
 
     // binary precedence 2
-    GOps(InfixL)((Add <# "+"), (Sub <# "-")),
+    GOps(InfixL)((Add <# "+"),
+                (Sub <# "-")),
 
     // binary precedence 3
     GOps(InfixL)(
