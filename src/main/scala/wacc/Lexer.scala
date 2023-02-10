@@ -181,7 +181,7 @@ object Lexer {
   val character = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
   val pair = lexer.lexeme.symbol("null")
-  val ident = lexer.lexeme.names.identifier.map(x => s"identifier $x")
+  val ident = lexer.lexeme.names.identifier
   val pairElem = lexer.lexeme.symbol("fst") #> "fst" |
     lexer.lexeme.symbol("snd") #> "snd"
   val negate = attempt(lexer.lexeme(char('-') ~> notFollowedBy(digit))).hide

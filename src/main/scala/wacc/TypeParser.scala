@@ -4,7 +4,6 @@ import parsley.{Parsley, Success, Failure}
 import Types._
 import parsley.expr.chain
 import parsley.lift.{lift2}
-import parsley.debug._
 import Parsley.{attempt}
 import Lexer.implicitVals._
 import parsley.errors.combinator._
@@ -38,7 +37,7 @@ object TypeParser {
   val pairElemType = arrayType | basicType | pairTypeIdent
 
   def typeParse(input: String): Option[Type] = {
-    (type_).debug("debug").parse(input) match {
+    (type_).parse(input) match {
       case Success(x) => {
         Some(x)
       }
