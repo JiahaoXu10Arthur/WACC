@@ -1,13 +1,13 @@
 package wacc.Error
 
 import Errors._
-import wacc.SemanticChecker.SemanticType
+import wacc.SemanticChecker.SemanticTypes
 
 object SemanticErrorBuilder {
   def buildTypeError(
       pos: (Int, Int),
-      unexpectedType: SemanticType.Type,
-      expectedType: Set[SemanticType.Type],
+      unexpectedType: SemanticTypes.Type,
+      expectedType: Set[SemanticTypes.Type],
       msg: Seq[String]
   ): WACCError = {
     buildWithUnexpected(

@@ -10,6 +10,7 @@ import wacc.Error.SyntaxErrorBuilder
 import StatParser.{stmts}
 import FuncParser.{funcs}
 import Lexer.implicitVals._
+import wacc.Ast
 
 object Parser {
   // For showing Syntax Error message

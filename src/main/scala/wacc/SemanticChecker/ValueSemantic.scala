@@ -6,10 +6,11 @@ import wacc.Ast._
 import wacc.Error.SemanticErrorBuilder._
 import wacc.Error.Errors._
 
-import SemanticType._
+import SemanticTypes._
 import ExprSemantic._
 import SymbolObject._
 import SymbolObjectType._
+import wacc.Ast
 
 
 object ValueSemantic {

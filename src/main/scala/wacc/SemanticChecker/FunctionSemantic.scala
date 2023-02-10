@@ -9,7 +9,8 @@ import wacc.Ast._
 import SymbolObject._
 import SymbolObjectType._
 import StatSemantic._
-import SemanticType.{convertType}
+import SemanticTypes.{convertType}
+import wacc.Ast
 
 object FunctionSemantic {
   /* Load only header into main scope */

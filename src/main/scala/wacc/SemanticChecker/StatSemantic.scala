@@ -7,11 +7,12 @@ import wacc.Error.Errors._
 import wacc.Error.SemanticErrorBuilder._
 import wacc.SyntaxChecker.Types
 
-import SemanticType._
+import SemanticTypes._
 import ExprSemantic._
 import ValueSemantic._
 import SymbolObject._
 import SymbolObjectType._
+import wacc.Ast
 
 
 object StatSemantic {

@@ -9,6 +9,7 @@ import parsley.errors.patterns.VerifiedErrors
 import wacc.Ast._
 import Lexer.implicitVals._
 import TypeParser.type_
+import wacc.Ast
 
 object FuncParser {
   private def bodyEndsWithRet(body: List[Stat]): Boolean = {

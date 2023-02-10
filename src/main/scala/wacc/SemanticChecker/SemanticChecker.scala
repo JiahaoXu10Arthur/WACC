@@ -6,6 +6,7 @@ import wacc.Ast._
 import wacc.Error.Errors._
 import StatSemantic._
 import FunctionSemantic._
+import wacc.Ast
 
 
 object SemanticChecker {

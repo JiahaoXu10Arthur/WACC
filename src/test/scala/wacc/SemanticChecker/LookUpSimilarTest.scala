@@ -3,7 +3,7 @@ package wacc.SemanticChecker
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-import SemanticType._
+import SemanticTypes._
 import SymbolObject._
 import SymbolObjectType._
 

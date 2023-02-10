@@ -11,6 +11,7 @@ import wacc.Ast._
 import Lexer.implicitVals._
 import ExprParser.{expr}
 import TypeParser.type_
+import wacc.Ast
 
 object StatParser {
   val exit_ = "exit" ~> Exit(expr)
