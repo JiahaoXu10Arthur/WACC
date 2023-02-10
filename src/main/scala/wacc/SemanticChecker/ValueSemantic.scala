@@ -11,7 +11,6 @@ import ExprSemantic._
 import SymbolObject._
 import SymbolObjectType._
 
-
 object ValueSemantic {
   def checkLvalue(
       lvalue: Lvalue

@@ -37,8 +37,8 @@ object SemanticTypes {
 
     var sameType = true
     (type1, type2) match {
-      case (AnyType(), _) => 
-      case (_, AnyType()) => 
+      case (AnyType(), _) =>
+      case (_, AnyType()) =>
       case (PairType(t1, t2), PairType(t3, t4)) => {
         sameType &&= equalType(t1, t3)
         sameType &&= equalType(t2, t4)
@@ -51,27 +51,27 @@ object SemanticTypes {
     sameType
   }
 
-    /* Convert syntax type to semantics type */
+  /* Convert syntax type to semantics type */
   def convertType(syntaxType: Types.Type): Type = {
     syntaxType match {
-      case Types.IntType()  => IntType()
-      case Types.BoolType() => BoolType()
-      case Types.CharType() => CharType()
-      case Types.StrType()  => StrType()
+      case Types.IntType()        => IntType()
+      case Types.BoolType()       => BoolType()
+      case Types.CharType()       => CharType()
+      case Types.StrType()        => StrType()
       case Types.PairType(t1, t2) => PairType(convertType(t1), convertType(t2))
-      case Types.ArrayType(t) => ArrayType(convertType(t))
+      case Types.ArrayType(t)     => ArrayType(convertType(t))
     }
   }
 
   /* Convert special syntax type - pair elem type - to semantics type */
   def convertType(syntaxType: Types.PairElemType): Type = {
     syntaxType match {
-      case Types.IntType()  => IntType()
-      case Types.BoolType() => BoolType()
-      case Types.CharType() => CharType()
-      case Types.StrType()  => StrType()
-      case Types.PairTypeIdent()  => PairType(AnyType(), AnyType())
-      case Types.ArrayType(t) => ArrayType(convertType(t))
+      case Types.IntType()       => IntType()
+      case Types.BoolType()      => BoolType()
+      case Types.CharType()      => CharType()
+      case Types.StrType()       => StrType()
+      case Types.PairTypeIdent() => PairType(AnyType(), AnyType())
+      case Types.ArrayType(t)    => ArrayType(convertType(t))
     }
   }
 

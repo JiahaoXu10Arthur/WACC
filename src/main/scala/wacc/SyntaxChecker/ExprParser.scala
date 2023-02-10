@@ -16,7 +16,7 @@ object ExprParser {
     attempt((Lexer.ident <~ "("))
       .verifiedUnexpected(
         "Are you trying to call a function? \n" +
-        "Function calls may not appear in expressions and must use `call`"
+          "Function calls may not appear in expressions and must use `call`"
       )
   }
 
@@ -61,12 +61,12 @@ object ExprParser {
     // binary precedence 5
     GOps(InfixL)((And <# "&&")),
 
-		// binary precedence 6
-		GOps(InfixL) ((Or <# "||"))
-	)//.label("expression")
-		
-	def exprParse (input: String): Option[Expr] = {
-		expr.parse(input) match {
+    // binary precedence 6
+    GOps(InfixL)((Or <# "||"))
+  ) // .label("expression")
+
+  def exprParse(input: String): Option[Expr] = {
+    expr.parse(input) match {
       case Success(x) => {
         Some(x)
       }

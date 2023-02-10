@@ -13,7 +13,7 @@ object Errors {
 
     /* transform the errors to the correct format*/
     for (error <- erros) {
-      val errTypeMsg = s"${error.errType} error "
+      val errTypeMsg = s" ${error.errType} error "
       val lineMsg = s"at line ${error.pos._1} : column ${error.pos._2}\n"
       errorString.append(errTypeMsg ++ lineMsg)
       errorString.append(error.lines.printErrorLines(Some(file)))
@@ -42,27 +42,26 @@ object Errors {
     override def printErrorLines(file: Option[Array[String]]): String = {
       val unexpected_ = unexpected match {
         case None        => ""
-        case Some(value) => "Unexpected " ++ value.toString
+        case Some(value) => " Unexpected " ++ value.toString
       }
       val expecteds_ = {
         if (expecteds.isEmpty) ""
-        else "\nExpected " ++ expecteds.map(_.toString()).mkString(", ")
+        else "\n Expected " ++ expecteds.map(_.toString()).mkString(", ")
       }
       val reasons_ = {
         if (reasons.isEmpty) ""
-        else "\n" ++ reasons.mkString("\n")
+        else "\n " ++ reasons.mkString("\n ")
       }
       val lineInfo_ = "\n" ++ lineInfo.printLine(file)
       unexpected_ ++ expecteds_ ++ reasons_ ++ lineInfo_
     }
   }
 
-  case class SpecialisedError(msgs: Seq[String], lineInfo: ErrorLineInfo)
-      extends WACCErrorLines {
+  case class SpecialisedError(msgs: Seq[String], lineInfo: ErrorLineInfo) extends WACCErrorLines {
     override def printErrorLines(file: Option[Array[String]]): String = {
-      val msgs_ = msgs.mkString("\n")
+      val msgs_ = msgs.mkString("\n ")
       val lineInfo_ = lineInfo.printLine(file)
-      msgs_ ++ "\n" ++ lineInfo_
+      " " ++ msgs_ ++ "\n" ++ lineInfo_
     }
   }
 

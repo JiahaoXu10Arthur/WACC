@@ -29,7 +29,7 @@ object FuncParser {
       Ident(Lexer.ident),
       ("(" ~> sepBy(param, ",") <~ ")"),
       "is" ~> StatParser.stmts <~ "end"
-   )
+    )
   ).guardAgainst {
     case Func(_, id, _, body) if !bodyEndsWithRet(body) =>
       Seq(

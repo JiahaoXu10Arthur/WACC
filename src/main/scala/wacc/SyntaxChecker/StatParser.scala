@@ -25,7 +25,7 @@ object StatParser {
     "begin" ~> Begin(stmts) <~ "end"
 
   // Explain for the structure of if and while statements
-  lazy val if_ = 
+  lazy val if_ =
     If(
       "if" ~> expr,
       "then" ~> stmts,
@@ -33,14 +33,14 @@ object StatParser {
         "all if statements must have an else clause"
       ) ~> stmts <~ "fi".explain("unclosed if statement")
     )
-    .label("if statement")
+      .label("if statement")
   lazy val while_ =
     While(
-        "while" ~> expr,
-        "do".explain(
-          "all while statements must have an do clause"
-        ) ~> stmts <~ "done".explain("unclosed while loop")
-      )
+      "while" ~> expr,
+      "do".explain(
+        "all while statements must have an do clause"
+      ) ~> stmts <~ "done".explain("unclosed while loop")
+    )
       .label("while statement")
 
   val assign_ = Assign(ValueParser.lvalue, "=" ~> ValueParser.rvalue)
@@ -48,17 +48,18 @@ object StatParser {
   // lable declartion "=" as type
   // distinguish from assignment "="
   val declare_ = Declare(
-      TypeParser.type_.label("type"),
-      Ident(Lexer.ident),
-      "=" ~> ValueParser.rvalue
-    )
+    TypeParser.type_.label("type"),
+    Ident(Lexer.ident),
+    "=" ~> ValueParser.rvalue
+  )
 
   /* Error widget definitions */
   private val _funcDefCheck = {
     attempt((type_ ~> Lexer.ident <~ "("))
-      .verifiedFail(n => Seq(
-        s"Unexpected function definition for `${n}`!", 
-        "all functions must be declared at the top of the main block"
+      .verifiedFail(n =>
+        Seq(
+          s"Unexpected function definition for `${n}`!",
+          "all functions must be declared at the top of the main block"
         )
       )
   }

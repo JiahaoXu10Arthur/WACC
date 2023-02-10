@@ -17,6 +17,8 @@ object Main {
     val filename = args.head
     val string = new String(Files.readAllBytes(Paths.get(filename)))
 
+    println("===== COMPILING =====")
+
     /* Syntax Check */
     Parser.parse(string) match {
       /* Syntax check success */
@@ -26,22 +28,22 @@ object Main {
         errors match {
           /* Semantic check success */
           case errors if errors.isEmpty => {
-            println(s"${args.head} parse success")
+            println(s"Compile ${args.head} successful!")
             System.exit(SUCCESS)
           }
 
           /* Error detected, semantic error */
           case errors => {
-            println(s"${args.head} parse fail: ")
             println(errorsMkString(errors, filename))
+            println(s"Exiting with code $SEMANTIC_ERR...")
             System.exit(SEMANTIC_ERR)
           }
         }
       }
       /* Syntax check failed, syntax error */
       case Failure(err) => {
-        println(s"${args.head} parse fail: ")
         println(errorsMkString(Seq(err), filename))
+        println(s"Exiting with code $SYNTAX_ERR...")
         System.exit(SYNTAX_ERR)
       }
     }

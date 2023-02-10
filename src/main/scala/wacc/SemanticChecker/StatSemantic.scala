@@ -13,7 +13,6 @@ import ValueSemantic._
 import SymbolObject._
 import SymbolObjectType._
 
-
 object StatSemantic {
   def checkStat(
       stat: Stat
@@ -89,7 +88,7 @@ object StatSemantic {
   ): Unit = {
     newValue match {
       case newValue: PairElem => pairCheck(target, newValue)
-      case _ => retCheck(target, newValue)
+      case _                  => retCheck(target, newValue)
     }
   }
 
@@ -299,7 +298,7 @@ object StatSemantic {
 
     /* Add new symbol table to st's subSymbolTable */
     st.addSubSt(new_st1)
-		st.addSubSt(new_st2)
+    st.addSubSt(new_st2)
   }
 
   /* Expr type: Bool
