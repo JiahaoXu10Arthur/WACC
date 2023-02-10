@@ -112,9 +112,7 @@ object Errors {
     val length = file.length
     val errorLine = file(errorPos._1 - 1)
     val errorLines = ListBuffer(errorLine)
-    val pointerStart = errorLine.takeWhile(_.isWhitespace).length
-    val pointerWidth = errorLine.trim().length
-    errorLines.append(s"${errorPointer(pointerStart, pointerWidth)}")
+    errorLines.append(s"${errorPointer(errorPos._2 - 1, 1)}")
     for (i <- 1 to numLinesBefore)
       if (errorPos._1 - 1 - i >= 0)
         errorLines.prepend(file(errorPos._1 - 1 - i))
