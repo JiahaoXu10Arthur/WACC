@@ -1,16 +1,10 @@
 package wacc
 
 import parsley.Parsley
-import parsley.character.char
-import parsley.character.digit
+import parsley.character.{char, digit}
 import parsley.errors.combinator._
-import parsley.token.Lexer
-import parsley.token.descriptions
-import parsley.token.errors.ErrorConfig
-import parsley.token.errors.FilterConfig
-import parsley.token.errors.Label
-import parsley.token.errors.LabelConfig
-import parsley.token.errors.SpecialisedMessage
+import parsley.token.{Lexer,descriptions}
+import parsley.token.errors.{ErrorConfig, FilterConfig, Label, LabelConfig, SpecialisedMessage}
 import parsley.token.predicate
 
 import descriptions.{LexicalDesc, SpaceDesc, SymbolDesc, NameDesc, numeric}
@@ -169,6 +163,15 @@ object Lexer {
   }
   val lexer = new Lexer(desc, errorConfig)
 
+  val seqIdents = Seq(lexer.nonlexeme.names.identifier.map(x => s"identifier $x"))
+
+  val seqKeywords =
+    keywords.map(x => lexer.nonlexeme.symbol.softKeyword(x).map(_ => s"keyword $x")).toSeq
+
+  val seqOperators =
+    operators.map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"operator $x")).toSeq  
+  
+
   def fully[A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
 
   /* Definition for literal tokens */
@@ -178,7 +181,7 @@ object Lexer {
   val character = lexer.lexeme.text.character.ascii
   val str = lexer.lexeme.text.string.ascii
   val pair = lexer.lexeme.symbol("null")
-  val ident = lexer.lexeme.names.identifier
+  val ident = lexer.lexeme.names.identifier.map(x => s"identifier $x")
   val pairElem = lexer.lexeme.symbol("fst") #> "fst" |
     lexer.lexeme.symbol("snd") #> "snd"
   val negate = attempt(lexer.lexeme(char('-') ~> notFollowedBy(digit))).hide
