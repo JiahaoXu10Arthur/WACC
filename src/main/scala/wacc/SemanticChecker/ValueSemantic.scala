@@ -127,7 +127,7 @@ object ValueSemantic {
           lvalue.pos,
           lType,
           Set(PairType(AnyType(), AnyType())),
-          Seq("Pair elem: not Pair Type")
+          Seq("Keywords fst and snd should be applied on pairs")
         )
         AnyType()
       }
