@@ -1,14 +1,17 @@
-package wacc
+package wacc.SyntaxChecker
 
 import parsley.{Parsley, Success, Failure}
 import Parsley.{attempt}
-import TypeParser.type_
 import parsley.combinator.{sepBy1}
 import parsley.errors.patterns.{VerifiedErrors}
-import Ast._
+import parsley.errors.combinator._
+
+import wacc.Ast._
+
 import Lexer.implicitVals._
 import ExprParser.{expr}
-import parsley.errors.combinator._
+import TypeParser.type_
+import wacc.Ast
 
 object StatParser {
   val exit_ = "exit" ~> Exit(expr)
@@ -20,11 +23,11 @@ object StatParser {
   val skip_ = Skip <# "skip"
 
   lazy val begin_ =
-    "begin" ~> Ast.Begin(stmts) <~ "end"
+    "begin" ~> Begin(stmts) <~ "end"
 
   // Explain for the structure of if and while statements
-  lazy val if_ = Ast
-    .If(
+  lazy val if_ = 
+    If(
       "if" ~> expr,
       "then" ~> stmts,
       "else".explain(
@@ -33,8 +36,7 @@ object StatParser {
     )
     .label("if statement")
   lazy val while_ =
-    Ast
-      .While(
+    While(
         "while" ~> expr,
         "do".explain(
           "all while statements must have an do clause"
@@ -42,15 +44,13 @@ object StatParser {
       )
       .label("while statement")
 
-  val assign_ = Ast
-    .Assign(ValueParser.lvalue, "=" ~> ValueParser.rvalue)
+  val assign_ = Assign(ValueParser.lvalue, "=" ~> ValueParser.rvalue)
 
   // lable declartion "=" as type
   // distinguish from assignment "="
-  val declare_ = Ast
-    .Declare(
+  val declare_ = Declare(
       TypeParser.type_.label("type"),
-      Ast.Ident(Lexer.ident),
+      Ident(Lexer.ident),
       "=" ~> ValueParser.rvalue
     )
 

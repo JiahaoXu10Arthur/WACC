@@ -1,9 +1,10 @@
-package wacc
+package wacc.SemanticChecker
 
 import collection.mutable.Map
+import scala.collection.mutable.ListBuffer
+
 import SymbolObject._
 import SymbolObjectType._
-import scala.collection.mutable.ListBuffer
 
 class SymbolTable(st: SymbolTable) {
 

@@ -1,6 +1,6 @@
-package wacc
+package wacc.SemanticChecker
 
-import SemanticType._
+import SemanticTypes._
 
 object SymbolObject {
 

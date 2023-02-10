@@ -1,10 +1,13 @@
-package wacc
+package wacc.SemanticChecker
 
-import Ast._
+
+import scala.collection.mutable.ListBuffer
+import wacc.Ast._
+import wacc.Error.Errors._
 import StatSemantic._
 import FunctionSemantic._
-import scala.collection.mutable.ListBuffer
-import Errors._
+import wacc.Ast
+
 
 object SemanticChecker {
 

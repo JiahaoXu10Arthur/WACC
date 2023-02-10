@@ -1,6 +1,8 @@
-package wacc
+package wacc.SemanticChecker
 
-object SemanticType {
+import wacc.SyntaxChecker.Types
+
+object SemanticTypes {
   sealed trait Type
   case class AnyType() extends Type {
     override def toString() = "Any"

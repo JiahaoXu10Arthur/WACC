@@ -1,14 +1,16 @@
-package wacc
+package wacc.SyntaxChecker
 
 import parsley.{Parsley, Success, Failure}
 import Parsley.{attempt}
 import parsley.expr.{precedence}
 import parsley.combinator.{some}
-import Ast.{Expr}
-import parsley.expr.{GOps, InfixL, Prefix}
-import Lexer.implicitVals._
 import parsley.errors.combinator._
 import parsley.errors.patterns.VerifiedErrors
+import parsley.expr.{GOps, InfixL, Prefix}
+
+import wacc.Ast._
+import Lexer.implicitVals._
+import wacc.Ast
 
 object ExprParser {
   private val _funcCallCheck = {
@@ -22,46 +24,46 @@ object ExprParser {
   lazy val expr: Parsley[Expr] = precedence[Expr](
     // tightest
     _funcCallCheck,
-    Ast.IntLit(Lexer.num.label("integer literal")),
-    Ast.BoolLit(Lexer.bool.label("boolean literal")),
-    Ast.CharLit(Lexer.character.label("character literal")),
-    Ast.StrLit(Lexer.str.label("string literal")),
-    (Ast.PairLit <# Lexer.pair),
-    attempt(Ast.ArrayElem(Ast.Ident(Lexer.ident), some("[" ~> expr <~ "]"))),
-    Ast.Ident(Lexer.ident),
+    IntLit(Lexer.num.label("integer literal")),
+    BoolLit(Lexer.bool.label("boolean literal")),
+    CharLit(Lexer.character.label("character literal")),
+    StrLit(Lexer.str.label("string literal")),
+    (PairLit <# Lexer.pair),
+    attempt(ArrayElem(Ident(Lexer.ident), some("[" ~> expr <~ "]"))),
+    Ident(Lexer.ident),
     ("(" ~> expr <~ ")").hide
   )(
     // unary precedence 0)
     GOps(Prefix)(
-      (Ast.Not <# "!".label("unary operator")),
-      (Ast.Neg <# Lexer.negate.label("unary operator")),
-      (Ast.Len <# "len"),
-      (Ast.Ord <# "ord"),
-      (Ast.Chr <# "chr")
+      (Not <# "!".label("unary operator")),
+      (Neg <# Lexer.negate.label("unary operator")),
+      (Len <# "len"),
+      (Ord <# "ord"),
+      (Chr <# "chr")
     ),
 
     // binary precendence 1
-    GOps(InfixL)((Ast.Mul <# "*"), (Ast.Div <# "/"), (Ast.Mod <# "%")),
+    GOps(InfixL)((Mul <# "*"), (Div <# "/"), (Mod <# "%")),
 
     // binary precedence 2
-    GOps(InfixL)((Ast.Add <# "+"), (Ast.Sub <# "-")),
+    GOps(InfixL)((Add <# "+"), (Sub <# "-")),
 
     // binary precedence 3
     GOps(InfixL)(
-      (Ast.Lte <# "<="),
-      (Ast.Lt <# "<"),
-      (Ast.Gte <# ">="),
-      (Ast.Gt <# ">")
+      (Lte <# "<="),
+      (Lt <# "<"),
+      (Gte <# ">="),
+      (Gt <# ">")
     ),
 
     // binary precedence 4
-    GOps(InfixL)((Ast.Eq <# "=="), (Ast.Neq <# "!=")),
+    GOps(InfixL)((Eq <# "=="), (Neq <# "!=")),
 
     // binary precedence 5
-    GOps(InfixL)((Ast.And <# "&&")),
+    GOps(InfixL)((And <# "&&")),
 
 		// binary precedence 6
-		GOps(InfixL) ((Ast.Or <# "||"))
+		GOps(InfixL) ((Or <# "||"))
 	)//.label("expression")
 		
 	def exprParse (input: String): Option[Expr] = {

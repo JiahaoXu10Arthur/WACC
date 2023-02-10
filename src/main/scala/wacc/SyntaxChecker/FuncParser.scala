@@ -1,13 +1,15 @@
-package wacc
+package wacc.SyntaxChecker
 
 import parsley.{Parsley, Success, Failure}
 import Parsley.{attempt, lookAhead}
 import parsley.combinator.{sepBy, many}
-import parsley.errors.combinator.{ErrorMethods}
-import parsley.errors.patterns.{VerifiedErrors}
+import parsley.errors.combinator._
+import parsley.errors.patterns.VerifiedErrors
+
+import wacc.Ast._
 import Lexer.implicitVals._
-import Ast._
 import TypeParser.type_
+import wacc.Ast
 
 object FuncParser {
   private def bodyEndsWithRet(body: List[Stat]): Boolean = {
@@ -20,15 +22,15 @@ object FuncParser {
       case _        => false
     }
   }
-  val param = Param(type_, Ast.Ident(Lexer.ident)).label("function parameter")
+  val param = Param(type_, Ident(Lexer.ident)).label("function parameter")
 
   val func: Parsley[Func] = (
     Func(
       type_,
-      Ast.Ident(Lexer.ident),
+      Ident(Lexer.ident),
       ("(" ~> sepBy(param, ",") <~ ")"),
       "is" ~> StatParser.stmts <~ "end"
-    )
+   )
   ).guardAgainst {
     case Func(_, id, _, body) if !bodyEndsWithRet(body) =>
       Seq(

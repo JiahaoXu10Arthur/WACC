@@ -1,4 +1,4 @@
-package wacc
+package wacc.Error
 
 import scala.io.Source
 import scala.collection.mutable.ListBuffer

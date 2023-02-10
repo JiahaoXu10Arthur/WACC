@@ -1,4 +1,4 @@
-package wacc
+package wacc.SemanticChecker
 
 import SymbolObject._
 import SymbolObjectType._

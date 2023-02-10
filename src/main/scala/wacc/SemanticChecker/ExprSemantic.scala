@@ -1,11 +1,15 @@
-package wacc
-import Ast._
-import SemanticType._
+package wacc.SemanticChecker
+
+import scala.collection.mutable.ListBuffer
+
+import wacc.Ast._
+import wacc.Error.SemanticErrorBuilder._
+import wacc.Error.Errors._
+
+import SemanticTypes._
 import SymbolObject._
 import SymbolObjectType._
-import scala.collection.mutable.ListBuffer
-import Errors._
-import SemanticErrorBuilder._
+import wacc.Ast
 
 object ExprSemantic {
 

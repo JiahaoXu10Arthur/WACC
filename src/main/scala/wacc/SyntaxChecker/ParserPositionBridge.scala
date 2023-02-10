@@ -1,4 +1,4 @@
-package wacc
+package wacc.SyntaxChecker
 
 import parsley.{Parsley}
 import parsley.implicits.zipped.{Zipped2, Zipped3, Zipped4}
