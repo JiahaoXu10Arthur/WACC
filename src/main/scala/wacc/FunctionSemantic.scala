@@ -23,6 +23,7 @@ object FunctionSemantic {
 
 		/* Check for function redefinition */
     st.lookUp(func.ident.name, FunctionType()) match {
+      /* Function redefinition */
       case Some(obj) => {
         semErr += buildFuncRedefError(
           func.ident.pos,
@@ -70,6 +71,7 @@ object FunctionSemantic {
             Seq(s" Illegal redeclaration of parameter ${p.ident.name} ")
           )
         }
+        /* Add parameter to scope */
         case None => {
           new_st.add(
             p.ident.name,
@@ -81,7 +83,7 @@ object FunctionSemantic {
       }
     }
 
-    /* Add func to its self scope */
+    /* Add function definition to its self scope */
     new_st.add(
       func.ident.name,
       FunctionType(),

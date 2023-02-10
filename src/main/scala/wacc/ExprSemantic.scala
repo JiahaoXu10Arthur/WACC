@@ -10,7 +10,7 @@ import SemanticErrorBuilder._
 object ExprSemantic {
 
   def checkExpr(
-      expr: Expr
+      expr: Expr,
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
     expr match {
       /* Arithmetic binary operators */
@@ -60,6 +60,8 @@ object ExprSemantic {
       st: SymbolTable,
       semErr: ListBuffer[WACCError]
   ): Type = {
+
+    /* Check first argument is Int */
     val type1 = checkExpr(expr1)
     if (!equalType(type1, IntType())) {
       semErr += buildTypeError(
@@ -70,6 +72,7 @@ object ExprSemantic {
       )
     }
 
+    /* Check second argument is Int */
     val type2 = checkExpr(expr2)
     if (!equalType(type2, IntType())) {
       semErr += buildTypeError(
@@ -93,6 +96,7 @@ object ExprSemantic {
     val type1 = checkExpr(expr1)
     val type2 = checkExpr(expr2)
 
+    /* Check arguments are same type */
     if (!equalType(type1, type2)) {
       semErr += buildTypeError(
         expr2.pos,
@@ -102,6 +106,7 @@ object ExprSemantic {
       )
     }
 
+    /* Check first argument is Int or Char */
     if (!equalType(type1, IntType()) && !equalType(type1, CharType())) {
       semErr += buildTypeError(
         expr1.pos,
@@ -111,6 +116,7 @@ object ExprSemantic {
       )
     }
 
+    /* Check second argument is Int or Char */
     if (!equalType(type2, IntType()) && !equalType(type2, CharType())) {
       semErr += buildTypeError(
         expr2.pos,
@@ -133,6 +139,7 @@ object ExprSemantic {
     val type1 = checkExpr(expr1)
     val type2 = checkExpr(expr2)
 
+    /* Check arguments are the same type */
     if (!equalType(type1, type2)) {
       semErr += buildTypeError(
         expr2.pos,
@@ -154,6 +161,7 @@ object ExprSemantic {
     val type1 = checkExpr(expr1)
     val type2 = checkExpr(expr2)
 
+    /* Check first argument is Bool */
     if (!equalType(type1, BoolType())) {
       semErr += buildTypeError(
         expr1.pos,
@@ -163,6 +171,7 @@ object ExprSemantic {
       )
     }
 
+    /* Check second argument is Bool */
     if (!equalType(type2, BoolType())) {
       semErr += buildTypeError(
         expr2.pos,
@@ -182,6 +191,8 @@ object ExprSemantic {
       semErr: ListBuffer[WACCError]
   ): Type = {
     val type1 = checkExpr(expr)
+
+    /* Check the argument type matches given type */
     if (!equalType(type1, argType)) {
       semErr += buildTypeError(
         expr.pos,
@@ -190,6 +201,7 @@ object ExprSemantic {
         Seq(s"Expression is not $argType")
       )
     }
+
     retType
   }
 
@@ -199,6 +211,8 @@ object ExprSemantic {
       expr: Expr
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
     val type1 = checkExpr(expr)
+
+    /* Check argument is an array */
     checkExpr(expr) match {
       case AnyType()    =>
       case ArrayType(_) =>
@@ -217,16 +231,19 @@ object ExprSemantic {
   def identCheck(
       ident: Ident
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
+
+    /* Search for identifier in all scope */
     st.lookUpAll(ident.name, VariableType()) match {
       case Some(symObj) => symObj.getType()
       case None => {
-
+        /* If cannot find, error */
         semErr += buildScopeError(
           ident.pos,
           ident.name,
           st.lookUpAllSimilar(ident.name, VariableType()),
           Seq(s"Variable ${ident.name} has not been declared in this scope")
         )
+        /* Add a fake variable to avoid further error */
         st.add(
           ident.name,
           VariableType(),
@@ -247,7 +264,7 @@ object ExprSemantic {
   ): Type = {
     val exprType = checkExpr(ident)
 
-    /* Check index is int */
+    /* Check every index is int */
     var returnType = exprType
     for (index <- indexes) {
       val indexType = checkExpr(index)
@@ -275,6 +292,7 @@ object ExprSemantic {
           returnType = elemType
         }
         case other => {
+          /* If dimension mismatches , calculate the correct return type */
           val shouldType = createNestArrayType(other, indexes.length)
           semErr += buildTypeError(
             ident.pos,

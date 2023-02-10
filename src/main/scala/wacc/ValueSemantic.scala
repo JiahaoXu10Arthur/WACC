@@ -13,8 +13,9 @@ object ValueSemantic {
       lvalue: Lvalue
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
     lvalue match {
-      case lvalue: Expr   => checkExpr(lvalue)
-      case lvalue: Rvalue => checkRvalue(lvalue)
+      case lvalue: Ident     => identCheck(lvalue)
+      case lvalue: ArrayElem => arrayElemCheck(lvalue.ident, lvalue.index)
+      case lvalue: PairElem  => pairElemCheck(lvalue.index, lvalue.lvalue)
     }
   }
 
@@ -51,9 +52,10 @@ object ValueSemantic {
       semErr: ListBuffer[WACCError]
   ): Type = {
     var funcObj: FuncObj = null
-    /* Find funcObj */
+    /* Search funcObj in all scope*/
     st.lookUpAll(ident.name, FunctionType()) match {
       case Some(symObj: FuncObj) => funcObj = symObj
+      /* If no function found, error */
       case _ => {
         semErr += buildScopeError(
           ident.pos,
@@ -61,6 +63,7 @@ object ValueSemantic {
           st.lookUpAllSimilar(ident.name, FunctionType()),
           Seq(s"Function ${ident.name} has not been defined")
         )
+        /* Add fake function to the scope to avoid further error */
         st.add(
           ident.name,
           FunctionType(),
@@ -71,7 +74,7 @@ object ValueSemantic {
     }
 
     val lengthArgs = args.length
-    /* check number of parameters */
+    /* check number of parameters macthes function declaration  */
     if (lengthArgs != funcObj.argc) {
       semErr += buildArgNumError(
         args(lengthArgs - 1).pos,
@@ -81,7 +84,7 @@ object ValueSemantic {
       )
     }
 
-    /* check every parameter's type */
+    /* check every parameter's type matches function declaration */
     for (i <- 0 until lengthArgs.min(funcObj.argc)) {
       val type1 = funcObj.args(i).getType()
       val type2 = checkExpr(args(i))
@@ -143,9 +146,8 @@ object ValueSemantic {
       return ArrayType(AnyType())
     }
 
-    /* check every parameter's type */
+    /* check every element's type is the same */
     for (i <- 0 until values.length - 1) {
-      // checkValueRef(args(i), st)
       val type1 = checkExpr(values(i))
       val type2 = checkExpr(values(i + 1))
 
@@ -159,6 +161,7 @@ object ValueSemantic {
         ArrayType(AnyType())
       }
     }
+
     ArrayType(checkExpr(values(0)))
   }
 
