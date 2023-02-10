@@ -5,12 +5,12 @@ import parsley.errors.{ErrorBuilder, tokenextractors}
 import parsley.Parsley
 import wacc.SyntaxChecker.Lexer._
 
-class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.LexToken{
+class SyntaxErrorBuilder extends ErrorBuilder[WACCError] with tokenextractors.LexToken {
 
-  override def tokens: Seq[Parsley[String]] = 
-    identCheck ++ keywordsCheck ++ operatorsCheck ++ 
-    concatCheck ++ numCheck ++ parenthesesCheck ++ squareBracketsCheck
-
+  override def tokens: Seq[Parsley[String]] =
+    identCheck ++ keywordsCheck ++ operatorsCheck ++
+      concatCheck ++ numCheck ++ parenthesesCheck ++ squareBracketsCheck ++
+      whiteSpaceCheck
 
   override def lineInfo(
       line: String,

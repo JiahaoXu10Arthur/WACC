@@ -3,7 +3,7 @@ package wacc.SyntaxChecker
 import parsley.Parsley
 import parsley.character.{char, digit}
 import parsley.errors.combinator._
-import parsley.token.{Lexer,descriptions}
+import parsley.token.{Lexer, descriptions}
 import parsley.token.errors.{ErrorConfig, FilterConfig, Label, LabelConfig, SpecialisedMessage}
 import parsley.token.predicate
 
@@ -79,23 +79,19 @@ object Lexer {
       commentLineAllowsEOF = true,
       space = predicate.Basic(Character.isWhitespace)
     ),
-
     symbolDesc = SymbolDesc.plain.copy(
       hardKeywords = keywords,
       hardOperators = operators
     ),
-    
     textDesc = TextDesc.plain.copy(
       escapeSequences = EscapeDesc.plain.copy(
         escBegin = '\\',
         literals = escLiterals,
         gapsSupported = false
       ),
-
       characterLiteralEnd = '\'',
       stringEnds = Set("\""),
-      graphicCharacter =
-        predicate.Basic(c => c >= ' ' && c != '\"' && c != '\\' && c != '\'')
+      graphicCharacter = predicate.Basic(c => c >= ' ' && c != '\"' && c != '\\' && c != '\'')
     ),
     nameDesc = NameDesc.plain.copy(
       identifierStart = isAlphaOrUnderscore,
@@ -132,7 +128,7 @@ object Lexer {
           case "bool"   => Label("boolean type")
           case "char"   => Label("character type")
           case "string" => Label("string type")
-          case x => Label(s"$x")
+          case x        => Label(s"$x")
         }
       }
     }
@@ -147,33 +143,30 @@ object Lexer {
         Label("index `[]`")
       else {
         symbol match {
-          case "="   => Label("assignment `=`")
-          case ","   => Label("comma `,`")
-          case ";"   => Label("semicolon `;`")
-          case "!"   => Label("unary operator")
+          case "=" => Label("assignment `=`")
+          case "," => Label("comma `,`")
+          case ";" => Label("semicolon `;`")
+          case "!" => Label("unary operator")
         }
       }
   }
   val lexer = new Lexer(desc, errorConfig)
 
+  /* Tokens definition for error building */
   val identCheck = Seq(lexer.nonlexeme.names.identifier.map(x => s"identifier $x"))
-
   val keywordsCheck =
     keywords.map(x => lexer.nonlexeme.symbol.softKeyword(x).map(_ => s"keyword $x")).toSeq
-
   val operatorsCheck =
-    (binaryOps ++ Set("!")).map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"operator $x")).toSeq
-  
+    (binaryOps ++ Set("!"))
+      .map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => s"operator $x"))
+      .toSeq
   val concatCheck = Seq(lexer.nonlexeme.symbol.apply("++") #> "++")
-
   val numCheck = Seq(lexer.nonlexeme.numeric.signed.number32[Int].map(x => s"Integer $x"))
-
-  val parenthesesCheck = parentheses.map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => "parenthesis")).toSeq
-
-  val squareBracketsCheck = squareBrackets.map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => "square bracket")).toSeq
-
-
-  
+  val parenthesesCheck =
+    parentheses.map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => "parenthesis")).toSeq
+  val squareBracketsCheck =
+    squareBrackets.map(x => lexer.nonlexeme.symbol.softOperator(x).map(_ => "square bracket")).toSeq
+  val whiteSpaceCheck = Seq(lexer.space.whiteSpace #> "whitespace")
 
   def fully[A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
 

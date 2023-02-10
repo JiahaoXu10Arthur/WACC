@@ -17,13 +17,13 @@ object FunctionSemantic {
       func: Func
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
 
-		/* Find each parameter */
+    /* Find each parameter */
     val args = new ListBuffer[ParamObj]()
     func.params.foreach { p =>
       args += new ParamObj(convertType(p.paramType), p.pos)
     }
 
-		/* Check for function redefinition */
+    /* Check for function redefinition */
     st.lookUp(func.ident.name, FunctionType()) match {
       /* Function redefinition */
       case Some(obj) => {
@@ -62,7 +62,7 @@ object FunctionSemantic {
     val new_st = new SymbolTable(st)
     val args = new ListBuffer[ParamObj]()
 
-		/* Check for parameter redefinition */
+    /* Check for parameter redefinition */
     func.params.foreach { p =>
       new_st.lookUp(p.ident.name, VariableType()) match {
         case Some(obj) => {
@@ -98,10 +98,10 @@ object FunctionSemantic {
       )
     )
 
-		/* Check body of function */
+    /* Check body of function */
     func.stats.foreach(s => checkStat(s)(new_st, semErr))
 
-		/* Add new symbol table to st's subSt */
-		st.addSubSt(new_st)
+    /* Add new symbol table to st's subSt */
+    st.addSubSt(new_st)
   }
 }

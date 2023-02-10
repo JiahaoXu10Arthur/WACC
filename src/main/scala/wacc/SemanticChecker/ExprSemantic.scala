@@ -13,7 +13,7 @@ import SymbolObjectType._
 object ExprSemantic {
 
   def checkExpr(
-      expr: Expr,
+      expr: Expr
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
     expr match {
       /* Arithmetic binary operators */
@@ -275,11 +275,11 @@ object ExprSemantic {
         case IntType() =>
         case _ => {
           semErr += buildTypeError(
-                      index.pos,
-                      indexType,
-                      Set(IntType()),
-                      Seq("The index of an array needs to be int type")
-                      )
+            index.pos,
+            indexType,
+            Set(IntType()),
+            Seq("The index of an array needs to be int type")
+          )
           returnType = AnyType()
         }
       }
@@ -301,9 +301,11 @@ object ExprSemantic {
             ident.pos,
             exprType,
             Set(shouldType),
-            Seq(s"Incorrect array dimension \n" +
+            Seq(
+              s"Incorrect array dimension \n" +
                 s"Trying to access dimension ${indexes.length} \n" +
-                s"Actual dimension: $true_dimension")
+                s"Actual dimension: $true_dimension"
+            )
           )
           returnType = AnyType()
         }
@@ -313,7 +315,6 @@ object ExprSemantic {
     returnType
   }
 
-  
   def createNestArrayType(innerType: Type, indexNum: Int): Type = {
     var returnType = innerType
     for (i <- 0 until indexNum) {
