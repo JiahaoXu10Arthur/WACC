@@ -9,7 +9,6 @@ import parsley.errors.patterns.VerifiedErrors
 import wacc.Ast._
 import Lexer.implicitVals._
 import TypeParser.type_
-import wacc.Ast
 
 object FuncParser {
   private def bodyEndsWithRet(body: List[Stat]): Boolean = {
@@ -30,7 +29,7 @@ object FuncParser {
       Ident(Lexer.ident),
       ("(" ~> sepBy(param, ",") <~ ")"),
       "is" ~> StatParser.stmts <~ "end"
-   )
+    )
   ).guardAgainst {
     case Func(_, id, _, body) if !bodyEndsWithRet(body) =>
       Seq(

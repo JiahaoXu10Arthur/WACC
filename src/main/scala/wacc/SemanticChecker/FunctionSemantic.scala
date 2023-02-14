@@ -10,7 +10,6 @@ import SymbolObject._
 import SymbolObjectType._
 import StatSemantic._
 import SemanticTypes.{convertType}
-import wacc.Ast
 
 object FunctionSemantic {
   /* Load only header into main scope */
@@ -18,13 +17,13 @@ object FunctionSemantic {
       func: Func
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
 
-		/* Find each parameter */
+    /* Find each parameter */
     val args = new ListBuffer[ParamObj]()
     func.params.foreach { p =>
       args += new ParamObj(convertType(p.paramType), p.pos)
     }
 
-		/* Check for function redefinition */
+    /* Check for function redefinition */
     st.lookUp(func.ident.name, FunctionType()) match {
       /* Function redefinition */
       case Some(obj) => {
@@ -32,7 +31,7 @@ object FunctionSemantic {
           func.ident.pos,
           func.ident.name,
           obj.getPos(),
-          Seq(s" Illegal redeclaration of parameter ${func.ident.name} ")
+          Seq(s"Illegal redeclaration of parameter ${func.ident.name} ")
         )
       }
       case None => {
@@ -63,7 +62,7 @@ object FunctionSemantic {
     val new_st = new SymbolTable(st)
     val args = new ListBuffer[ParamObj]()
 
-		/* Check for parameter redefinition */
+    /* Check for parameter redefinition */
     func.params.foreach { p =>
       new_st.lookUp(p.ident.name, VariableType()) match {
         case Some(obj) => {
@@ -71,7 +70,7 @@ object FunctionSemantic {
             p.ident.pos,
             p.ident.name,
             obj.getPos(),
-            Seq(s" Illegal redeclaration of parameter ${p.ident.name} ")
+            Seq(s"Illegal redeclaration of parameter ${p.ident.name} ")
           )
         }
         /* Add parameter to scope */
@@ -99,13 +98,10 @@ object FunctionSemantic {
       )
     )
 
-		/* Check body of function */
+    /* Check body of function */
     func.stats.foreach(s => checkStat(s)(new_st, semErr))
 
-		/* Add new symbol table to st's subSt */
-		st.addSubSt(new_st)
-
-    /* Record the symbol table to AST node */
-    func.symb = st
+    /* Add new symbol table to st's subSt */
+    st.addSubSt(new_st)
   }
 }

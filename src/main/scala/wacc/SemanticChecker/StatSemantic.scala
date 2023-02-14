@@ -13,7 +13,6 @@ import ValueSemantic._
 import SymbolObject._
 import SymbolObjectType._
 
-
 object StatSemantic {
   def checkStat(
       stat: Stat
@@ -92,7 +91,7 @@ object StatSemantic {
   ): Unit = {
     newValue match {
       case newValue: PairElem => pairCheck(target, newValue)
-      case _ => retCheck(target, newValue)
+      case _                  => retCheck(target, newValue)
     }
   }
 
@@ -164,7 +163,7 @@ object StatSemantic {
           target.pos,
           targetType,
           Set(IntType(), CharType()),
-          Seq("Only char or int can be read")
+          Seq("Only types char or int can be read")
         )
     }
   }
@@ -185,7 +184,7 @@ object StatSemantic {
           expr.pos,
           targetType,
           Set(PairType(AnyType(), AnyType()), ArrayType(AnyType())),
-          Seq("Only pair or array can be freed")
+          Seq("Only pairs and arrays can be freed")
         )
     }
   }
@@ -269,7 +268,7 @@ object StatSemantic {
         expr.pos,
         argType,
         Set(IntType()),
-        Seq("Exit code should be int")
+        Seq("Exit code should have type int")
       )
     }
   }
@@ -288,7 +287,7 @@ object StatSemantic {
         expr.pos,
         condType,
         Set(BoolType()),
-        Seq("Condition should be bool")
+        Seq("Condition should have type bool")
       )
     }
 
@@ -302,7 +301,7 @@ object StatSemantic {
 
     /* Add new symbol table to st's subSymbolTable */
     st.addSubSt(new_st1)
-		st.addSubSt(new_st2)
+    st.addSubSt(new_st2)
   }
 
   /* Expr type: Bool
@@ -319,7 +318,7 @@ object StatSemantic {
         expr.pos,
         condType,
         Set(BoolType()),
-        Seq("Condition should be bool")
+        Seq("Condition should have type bool")
       )
     }
 

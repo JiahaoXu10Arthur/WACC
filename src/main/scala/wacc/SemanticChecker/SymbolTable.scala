@@ -43,7 +43,7 @@ class SymbolTable(st: SymbolTable) {
     None
   }
 
-  /* Find similar value in this st with the given key provided as suggestion 
+  /* Find similar value in this st with the given key provided as suggestion
      Similar means: without case sensitivity */
   def lookUpSimilar(
       typeIn: String,
@@ -62,8 +62,8 @@ class SymbolTable(st: SymbolTable) {
     return similar.toSet
   }
 
-  /* Find similar value in this st and all parent st, 
-     with the given key provided as suggestion 
+  /* Find similar value in this st and all parent st,
+     with the given key provided as suggestion
      Similar means: without case sensitivity */
   def lookUpAllSimilar(
       typeIn: String,

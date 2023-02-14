@@ -62,13 +62,11 @@ class SemanticExprTest extends AnyFlatSpec {
 		/* No symbol table, semantic error */
 		checkExpr(testArray1)
 		semErr.length shouldBe 1
-		println(semErr.toString())
 
 		/* TypeObj in symbol table is wrong, semantic error */
 		st.add("array", VariableType(), new VariableObj(IntType(), (0, 0)))
 		checkExpr(testArray1)
 		semErr.length shouldBe 2
-		println(semErr.toString())
 		
 		st.add("array", VariableType(), new VariableObj(ArrayType(ArrayType(IntType())), (0, 0)))
 		/* After add symbol table, should get type */

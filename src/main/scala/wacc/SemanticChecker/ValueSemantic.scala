@@ -10,8 +10,6 @@ import SemanticTypes._
 import ExprSemantic._
 import SymbolObject._
 import SymbolObjectType._
-import wacc.Ast
-
 
 object ValueSemantic {
   def checkLvalue(
@@ -129,7 +127,7 @@ object ValueSemantic {
           lvalue.pos,
           lType,
           Set(PairType(AnyType(), AnyType())),
-          Seq("Pair elem: not Pair Type")
+          Seq("Keywords fst and snd should be applied on pairs")
         )
         AnyType()
       }

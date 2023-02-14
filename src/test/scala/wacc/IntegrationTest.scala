@@ -56,7 +56,6 @@
                 true
                }
                case Failure(msg) => {
-                println(msg)
                 false
                }
            }) shouldBe true
@@ -68,7 +67,6 @@
                 false
                }
                case Failure(msg) => {
-                println(msg)
                 true
                }
            }) shouldBe true
@@ -81,7 +79,6 @@
                 true
                }
                case Failure(msg) => {
-                println(msg)
                 false
                }
            }) shouldBe true
