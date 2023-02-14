@@ -104,5 +104,8 @@ object FunctionSemantic {
 
 		/* Add new symbol table to st's subSt */
 		st.addSubSt(new_st)
+
+    /* Record the symbol table to AST node */
+    func.symb = st
   }
 }

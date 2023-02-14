@@ -12,7 +12,6 @@ import ExprSemantic._
 import ValueSemantic._
 import SymbolObject._
 import SymbolObjectType._
-import wacc.Ast
 
 
 object StatSemantic {
@@ -35,6 +34,9 @@ object StatSemantic {
       case While(expr, stat)        => whileCheck(expr, stat)
       case Begin(stat)              => beginCheck(stat)
     }
+
+    /* Record the symbol table to AST node */
+    stat.symb = st
     true
   }
 
