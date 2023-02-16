@@ -6,7 +6,7 @@ import parsley.expr.{precedence}
 import parsley.combinator.{some}
 import parsley.errors.combinator._
 import parsley.errors.patterns.VerifiedErrors
-import parsley.expr.{GOps, InfixL, Prefix}
+import parsley.expr.{GOps, Prefix, InfixL, InfixR, InfixN}
 
 import wacc.Ast._
 import Lexer.implicitVals._
@@ -49,7 +49,7 @@ object ExprParser {
                 (Sub <# "-")),
 
     // binary precedence 3
-    GOps(InfixL)(
+    GOps(InfixN)(
       (Lte <# "<="),
       (Lt <# "<"),
       (Gte <# ">="),
@@ -57,14 +57,14 @@ object ExprParser {
     ),
 
     // binary precedence 4
-    GOps(InfixL)((Eq <# "=="), (Neq <# "!=")),
+    GOps(InfixN)((Eq <# "=="), (Neq <# "!=")),
 
     // binary precedence 5
-    GOps(InfixL)((And <# "&&")),
+    GOps(InfixR)((And <# "&&")),
 
     // binary precedence 6
-    GOps(InfixL)((Or <# "||"))
-  ) // .label("expression")
+    GOps(InfixR)((Or <# "||"))
+  ) .label("expression")
 
   def exprParse(input: String): Option[Expr] = {
     expr.parse(input) match {

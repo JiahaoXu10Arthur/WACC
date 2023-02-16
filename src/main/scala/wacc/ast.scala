@@ -100,9 +100,6 @@ object Ast {
   case class Ident(name: String)(val pos: (Int, Int)) extends Expr with Lvalue
   object Ident extends ParserBridgePos1[String, Ident]
 
-  /* Arg1: Ident -> Refer to ArrayObj in st -> T[]
-       Arg2: Int[] -> every element Int
-       Return: T */
   case class ArrayElem(ident: Ident, index: List[Expr])(val pos: (Int, Int))
       extends Expr
       with Lvalue

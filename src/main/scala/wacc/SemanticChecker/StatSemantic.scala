@@ -52,7 +52,7 @@ object StatSemantic {
           ident.pos,
           ident.name,
           pos,
-          Seq(s"Illegal redeclaration of parameter ${ident.name}")
+          Seq(s"Illegal redeclaration of identifier ${ident.name}")
         )
       /* For parameter shadowing:
           If local variable and function parameter have the same name,
