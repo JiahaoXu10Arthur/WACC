@@ -33,8 +33,8 @@ object Instructions {
   sealed trait Instruction
 
   sealed trait ExprInstr extends Instruction
-    case class AddInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
-    case class SubInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
+    case class AddInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
+    case class SubInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
     case class MulInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
     case class DivInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
     case class ModInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
@@ -62,13 +62,20 @@ object Instructions {
 		case class ReadInstr() extends StatInstr
 		case class FreeInstr() extends StatInstr
 		case class ReturnInstr() extends StatInstr
-		case class ExitInstr(opr: Operand) extends StatInstr
-		case class PrintInstr() extends StatInstr
-		case class PrintlnInstr() extends StatInstr
+		case class ExitInstr() extends StatInstr
+		case class PrintInstr(t: PrintType) extends StatInstr
+    case class PrintlnInstr() extends StatInstr
 		case class IfInstr() extends StatInstr
 		case class WhileInstr() extends StatInstr
 		case class BeginInstr() extends StatInstr
     case class MovInstr (destReg: Register, opr: Operand) extends StatInstr
+
+  sealed trait PrintType
+    case object PrintI extends PrintType
+    case object PrintB extends PrintType
+    case object PrintC extends PrintType
+    case object PrintS extends PrintType
+    case object PrintP extends PrintType
   
   sealed trait StackInstr extends Instruction
     case class PushInstr(registers: Seq[Register]) extends StackInstr
