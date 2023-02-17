@@ -10,7 +10,7 @@
  import wacc.SyntaxChecker.Parser
  import wacc.SemanticChecker.SemanticChecker
  
- class IntegrationTest extends AnyWordSpec {
+ class FrontIntegrationTest extends AnyWordSpec {
 
    def getListOfFiles(dir: String):List[File] = {
      val d = new File(dir)
