@@ -16,7 +16,7 @@ before_script:
 
 stages:
   - compile
-  - test
+  - frontEndTest
 
 compile_job:
   stage: compile
@@ -25,9 +25,25 @@ compile_job:
     - sbt clean compile
     - echo "compile successful!"
 
-test_job: 
-  stage: test
+syntax_test: 
+  stage: frontEndTest
   script:
-    - echo "testing..."
-    - sbt test
+    - echo "Running front end syntax unit test..."
+    - sbt "Test / testOnly *SyntaxChecker*"
     - echo "test successful!"
+
+semantic_test: 
+  stage: frontEndTest
+  script:
+    - echo "Running front end semantic unit test..."
+    - sbt "Test / testOnly *SemanticChecker*"
+    - echo "test successful!"
+
+front_int_test:
+  stage: frontEndTest
+  script:
+    - echo "Running front end integration test..."
+    - sbt "Test / testOnly *FrontIntegrationTest"
+    - echo "test successful!"
+
+    
