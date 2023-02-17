@@ -27,7 +27,7 @@ compile_job:
 
 syntax_test: 
   stage: frontEndTest
-  needs: ["compile"]
+  needs: ["compile_job"]
   script:
     - echo "Running front end syntax unit test..."
     - sbt "Test / testOnly *SyntaxChecker*"
@@ -35,7 +35,7 @@ syntax_test:
 
 semantic_test: 
   stage: frontEndTest
-  needs: ["compile"]
+  needs: ["compile_job"]
   script:
     - echo "Running front end semantic unit test..."
     - sbt "Test / testOnly *SemanticChecker*"
@@ -43,7 +43,7 @@ semantic_test:
 
 front_int_test:
   stage: frontEndTest
-  needs: ["compile"]
+  needs: ["compile_job"]
   script:
     - echo "Running front end integration test..."
     - sbt "Test / testOnly *FrontIntegrationTest"
