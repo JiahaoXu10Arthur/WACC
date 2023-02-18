@@ -5,6 +5,8 @@ import wacc.SemanticChecker.SymbolTable
 import wacc.Instructions._
 import wacc.SemanticChecker.SymbolObjectType._
 import wacc.SemanticChecker.SemanticTypes._
+import wacc.SemanticChecker.ExprSemantic.checkExpr
+import wacc.Error.Errors._
 
 import ExprTranslator._
 
@@ -22,15 +24,15 @@ object StatTranslator {
       case Skip()                           =>
       case Declare(type1, ident, initValue) => translateDeclare(ident, initValue)
       case Assign(target, newValue)         => translateAssign(target, newValue)
-      case Read(lvalue)                     => ???
-      case Free(expr)                       => ???
+      case Read(lvalue)                     => translateRead(lvalue)
+      case Free(expr)                       => translateFree(expr)
       case Return(expr)                     => translateReturn(expr)
       case Exit(expr)                       => translateExit(expr)
       case Print(expr)                      => translatePrint(expr)
       case Println(expr)                    => translatePrintln(expr)
       case If(expr, stat1, stat2)           => ???
       case While(expr, stat)                => ???
-      case Begin(stat)                      => ???
+      case Begin(stat)                      => translateBegin(stat)
     }
 
     instrs.toSeq
@@ -43,18 +45,32 @@ object StatTranslator {
     instrs += MovInstr(R0, oringinLoc)                                              
   }
 
+  /* Move an operand to R8 */
   def moveToR8(content: Operand)(implicit st: SymbolTable,
                                           stateST: StateTable,
                                           instrs: ListBuffer[Instruction]) = {
     instrs += MovInstr(R8, content)                                              
   }
 
+  /* Find variable by name in stateTable to find its location */
   def findVarLoc(identifier: String, stateST: StateTable): Register = {
     stateST.lookUpAll(identifier) match {
       case Some(location: Register) => location
       case _ => null
     }
-  }    
+  }
+
+  /* Translate for malloc part */
+  def translateMalloc(size: Int)(implicit st: SymbolTable,
+                                          stateST: StateTable,
+                                          instrs: ListBuffer[Instruction]) = {
+    // Allocate memory
+    instrs += MovInstr(R0, Immediate(size))
+    instrs += BranchLinkInstr(Label("malloc"))
+
+    // Give the memory pointer to R12
+    instrs += MovInstr(R12, R0)                                        
+  }
     
   private def translateDeclare(ident: Ident, 
                                initValue: Rvalue)(implicit st: SymbolTable,
@@ -63,7 +79,7 @@ object StatTranslator {
     initValue match {
       case initValue: Expr => translateExpr(initValue)
       case initValue: ArrayLit => 
-      case initValue: NewPair => 
+      case initValue: NewPair => declarePair(initValue.expr1, initValue.expr2)
       case initValue: PairElem => 
       case initValue: Call => 
     }
@@ -76,15 +92,70 @@ object StatTranslator {
     stateST.add(ident.name, R4)
   }
 
-  private def translateAssign (target: Lvalue, 
-                               newValue: Rvalue)(implicit st: SymbolTable,
-                                                          stateST: StateTable,
-                                                          instrs: ListBuffer[Instruction]) = {
+  private def declarePair(elem1: Expr, 
+                          elem2: Expr)(implicit st: SymbolTable,
+                                                stateST: StateTable,
+                                                instrs: ListBuffer[Instruction]) = {
+    storePairElem(elem1)
+    storePairElem(elem2)
+  
+    // Allocate for pair
+    translateMalloc(8)
+
+    // Pop second elem from stack
+    PopInstr(Seq(R8))
+    // Store second elem
+    instrs += StoreInstr(R8, RegOffset(R12, 4))
+
+    // Pop first elem from stack
+    PopInstr(Seq(R8))
+    // Store first elem
+    instrs += StoreInstr(R8, RegOffset(R12, 0))
+
+  }
+
+  private def sizeOfElem(elemType: Type): Int = {
+    elemType match {
+      case IntType() => 4
+      case BoolType() => 1
+      case CharType() => 1
+      case PairType(_, _) => 4
+      case ArrayType(_) => 4
+      case _ => 0
+    }
+  }
+
+  private def storePairElem(elem: Expr)(implicit st: SymbolTable,
+                                                 stateST: StateTable,
+                                                 instrs: ListBuffer[Instruction]) = {
+
+    val _type = checkExpr(elem)(st, new ListBuffer[WACCError]())
+    val size = sizeOfElem(_type)
+
+    // If size == 0 -> pair elem is null, do not store
+    if (size != 0) {
+      translateMalloc(size)
+
+      // Load value of elem
+      translateExpr(elem)
+      instrs += StoreInstr(R8, RegOffset(R12, 0))
+
+      // Move value of elem to R8
+      MovInstr(R8, R12)
+      // Push R8
+      PushInstr(Seq(R8))
+    }
+  }
+
+  private def translateAssign(target: Lvalue, 
+                              newValue: Rvalue)(implicit st: SymbolTable,
+                                                         stateST: StateTable,
+                                                         instrs: ListBuffer[Instruction]) = {
     var location: Register = null
     target match {
       case target: Ident => location = findVarLoc(target.name, stateST)
-      case target: ArrayElem =>
-      case target: PairElem =>
+      case target: ArrayElem => 
+      case target: PairElem => 
     }
                                                             
     newValue match {
@@ -110,7 +181,7 @@ object StatTranslator {
     // assume expr will be read to R8
     moveRegToR0(R8)
 
-    instrs += ExitInstr()
+    instrs += BranchLinkInstr(Label("exit"))
   }
 
   /* Return will return value in R0 */
@@ -139,7 +210,7 @@ object StatTranslator {
       case _ => 
     }
 
-    instrs += PrintInstr(printType)
+    instrs += BranchLinkInstr(Label(printType.linkName))
   }
 
   private def checkPrintType(identifier: String)(implicit st: SymbolTable,
@@ -172,6 +243,80 @@ object StatTranslator {
                                                     stateST: StateTable,
                                                     instrs: ListBuffer[Instruction]) = {
     translatePrint(expr)
-    instrs += PrintlnInstr()
+    instrs += BranchLinkInstr(Label("_println"))
+  }
+
+  /* Read will read value to R0 */
+  private def translateRead(lvalue: Lvalue)(implicit st: SymbolTable,
+                                                     stateST: StateTable,
+                                                     instrs: ListBuffer[Instruction]) = {
+    var location: Register = null
+    var readType: ReadType = null
+
+    lvalue match {
+      case lvalue: Ident => {
+        location = findVarLoc(lvalue.name, stateST)
+
+        /* Check read int or char */
+        st.lookUpAll(lvalue.name, VariableType()) match {
+          case Some(obj) => obj.getType() match {
+            case IntType()  => readType = ReadI
+            case CharType() => readType = ReadC
+            case _ =>
+          }
+          case None =>
+        }
+      }
+      case lvalue: ArrayElem => 
+      case lvalue: PairElem => 
+    }
+    
+    /* Read original data to r0 */
+    moveRegToR0(location)
+    /* Read from input */
+    instrs += BranchLinkInstr(Label(readType.linkName))
+    /* store input data to variable */
+    instrs += MovInstr(location, R0)
+  }
+
+  /* Free will free value in R0 */
+  /* Free can be appied to array and pair */
+  private def translateFree(expr: Expr)(implicit st: SymbolTable,
+                                                 stateST: StateTable,
+                                                 instrs: ListBuffer[Instruction]) = {
+    translateExpr(expr)
+    
+    var location: Register = null
+    var branchLinkName: String = ""
+
+    expr match {
+      case expr: Ident => {
+        location = findVarLoc(expr.name, stateST)
+        st.lookUpAll(expr.name, VariableType()) match {
+          case Some(obj) => obj.getType() match {
+            case PairType(_, _)  => branchLinkName = "_freepair"
+            case ArrayType(_)  => branchLinkName = "free"
+            case _ =>
+          }
+          case _ =>
+        }
+      }
+      case _ =>
+    }
+    
+    /* Move pointer to r0 */
+    moveRegToR0(location)
+
+    /* Jump to free */
+    instrs += BranchLinkInstr(Label(branchLinkName))
+  }
+
+  /* New scope will have new state table */
+  private def translateBegin(stats: List[Stat])(implicit st: SymbolTable,
+                                                         stateST: StateTable,
+                                                         instrs: ListBuffer[Instruction]) = {
+    /* Create new state table */
+    val new_stateST = new StateTable(stateST)
+    stats.foreach(s => translateStatement(s)(st, new_stateST, instrs))
   }
 }

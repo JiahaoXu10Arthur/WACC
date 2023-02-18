@@ -54,28 +54,54 @@ object Instructions {
     case class LenInstr(destReg: Register, str: Label) extends ExprInstr
     case class OrdInstr(destReg: Register, imm: Immediate) extends ExprInstr
     case class ChrInstr(destReg: Register, imm: Immediate) extends ExprInstr
+  
+  sealed trait MemoryInstr extends Instruction
+    case class StoreInstr(srcReg: Register, destLoc: RegOffset) extends MemoryInstr
+    case class LoadInstr(dest: Register, srcLoc: RegOffset) extends MemoryInstr
 
   sealed trait StatInstr extends Instruction
 		case class SkipInstr() extends StatInstr
 		case class DeclareInstr() extends StatInstr
 		case class AssignInstr() extends StatInstr
-		case class ReadInstr() extends StatInstr
-		case class FreeInstr() extends StatInstr
-		case class ReturnInstr() extends StatInstr
-		case class ExitInstr() extends StatInstr
-		case class PrintInstr(t: PrintType) extends StatInstr
-    case class PrintlnInstr() extends StatInstr
+		// case class ReadInstr() extends StatInstr
+		// case class FreeInstr() extends StatInstr
+		// case class ReturnInstr() extends StatInstr
+		// case class ExitInstr() extends StatInstr
+		// case class PrintInstr(t: PrintType) extends StatInstr
+    // case class PrintlnInstr() extends StatInstr
 		case class IfInstr() extends StatInstr
 		case class WhileInstr() extends StatInstr
-		case class BeginInstr() extends StatInstr
+		// case class BeginInstr() extends StatInstr
     case class MovInstr (destReg: Register, opr: Operand) extends StatInstr
 
-  sealed trait PrintType
-    case object PrintI extends PrintType
-    case object PrintB extends PrintType
-    case object PrintC extends PrintType
-    case object PrintS extends PrintType
-    case object PrintP extends PrintType
+  sealed trait PrintType {
+    var linkName: String = ""
+  }
+    case object PrintI extends PrintType {
+      linkName = "_printi"
+    }
+    case object PrintB extends PrintType {
+      linkName = "_printb"
+    }
+    case object PrintC extends PrintType {
+      linkName = "_printc"
+    }
+    case object PrintS extends PrintType {
+      linkName = "_prints"
+    }
+    case object PrintP extends PrintType {
+      linkName = "_printp"
+    }
+
+  sealed trait ReadType {
+    var linkName: String = ""
+  }    
+    case object ReadI extends ReadType {
+      linkName = "_readi"
+    }
+    case object ReadC extends ReadType {
+      linkName = "_readc"
+    }
   
   sealed trait StackInstr extends Instruction
     case class PushInstr(registers: Seq[Register]) extends StackInstr

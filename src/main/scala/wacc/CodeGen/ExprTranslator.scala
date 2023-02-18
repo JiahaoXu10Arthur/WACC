@@ -1,6 +1,5 @@
 package wacc.CodeGen
 
-import java.beans.Expression
 
 import wacc.Ast._
 import wacc.SemanticChecker.SymbolTable
@@ -19,7 +18,7 @@ object ExprTranslator {
 
     expr match {
       case Add(expr1, expr2)   => translateAdd(expr1, expr2)
-      case Sub(expr1, expr2)   => ???
+      case Sub(expr1, expr2)   => translateSub(expr1, expr2)
       case Mul(expr1, expr2)   => ???
       case Div(expr1, expr2)   => ???
       case Mod(expr1, expr2)   => ???
@@ -43,6 +42,7 @@ object ExprTranslator {
       case PairLit()           => translatePairLit()
       // case Ident(name)         => ???
       case ArrayElem(ident, index)   => ???
+      case _ =>
     }
 
     ins.toSeq
@@ -97,14 +97,14 @@ object ExprTranslator {
     expr1 match {
 			case expr1: IntLit => loc1 = translateInt(expr1.value)
 			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _: Expression => translateExpr(expr1)
+			case _ => translateExpr(expr1)
 		}
 
 		var loc2: Register = null
 		expr2 match {
 			case expr2: IntLit => loc2 = translateInt(expr2.value)
 			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _: Expression => translateExpr(expr2)
+			case _ => translateExpr(expr2)
 		}
 
     // Assume R10 is the temporary result register
@@ -120,14 +120,14 @@ object ExprTranslator {
     expr1 match {
 			case expr1: IntLit => loc1 = translateInt(expr1.value)
 			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _: Expression => translateExpr(expr1)
+			case _ => translateExpr(expr1)
 		}
 
 		var loc2: Register = null
 		expr2 match {
 			case expr2: IntLit => loc2 = translateInt(expr2.value)
 			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _: Expression => translateExpr(expr2)
+			case _ => translateExpr(expr2)
 		}
 
     // Assume R10 is the temporary result register
