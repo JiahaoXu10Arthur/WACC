@@ -1,4 +1,4 @@
-image: sbtscala/scala-sbt:11.0.0_1.8.2_2.13.10
+image: sbtscala/scala-sbt:graalvm-ce-22.3.0-b2-java17_1.8.2_2.13.10
 
 # before_script:
 #   # Enable the usage of sources over https
