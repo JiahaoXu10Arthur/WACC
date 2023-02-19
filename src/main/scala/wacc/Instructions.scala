@@ -72,7 +72,7 @@ object Instructions {
   sealed trait JumpInstr extends Instruction
     case class BranchLinkInstr(label: BranchLinkName) extends JumpInstr  // bl exit
     case class BranchInstr(label: Label) extends JumpInstr      // b .L0
-    case class CondBranchLinkInstr(cond: CondCode, label: Label) extends JumpInstr
+    case class CondBranchLinkInstr(cond: CondCode, label: BranchLinkName) extends JumpInstr
     case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
 
   sealed trait CondCode

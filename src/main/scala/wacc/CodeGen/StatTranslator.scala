@@ -89,9 +89,9 @@ object StatTranslator {
                                                            instrs: ListBuffer[Instruction]) = {
     initValue match {
       case initValue: Expr => translateExpr(initValue)
-      case initValue: ArrayLit => declareArray(initValue.values)
-      case initValue: NewPair => declarePair(initValue.expr1, initValue.expr2)
-      case initValue: PairElem => translatePairElem(initValue.index, initValue.lvalue)
+      case initValue: ArrayLit => translateArrayLit(initValue)
+      case initValue: NewPair => translateNewPair(initValue)
+      case initValue: PairElem => translatePairElem(initValue)
       case initValue: Call => 
     }
     
@@ -103,10 +103,11 @@ object StatTranslator {
     stateST.add(ident.name, R4)
   }
 
-  private def declareArray(elems: List[Expr])(implicit st: SymbolTable,
-                                                       stateST: StateTable,
-                                                       instrs: ListBuffer[Instruction]) = {
-    val arr_len = elems.size
+  private def translateArrayLit(arrayValue: ArrayLit)(
+                                implicit st: SymbolTable,
+                                         stateST: StateTable,
+                                         instrs: ListBuffer[Instruction]) = {
+    val arr_len = arrayValue.values.size
     // Array store len + 1 elems -> +1 for store length
     val arr_size = (arr_len + 1) * 4
 
@@ -125,7 +126,7 @@ object StatTranslator {
     // For loop to store each element
     for (i <- 0 until arr_size by 4){
       // Load elem into R8
-      translateExpr(elems(i))
+      translateExpr(arrayValue.values(i))
 
       // Store elem to a[i]
       instrs += StoreInstr(R8, RegOffset(R12, i))
@@ -137,12 +138,12 @@ object StatTranslator {
   
   }
 
-  private def declarePair(elem1: Expr, 
-                          elem2: Expr)(implicit st: SymbolTable,
-                                                stateST: StateTable,
-                                                instrs: ListBuffer[Instruction]) = {
-    storePairElem(elem1)
-    storePairElem(elem2)
+  private def translateNewPair(pairValue: NewPair)(
+                               implicit st: SymbolTable,
+                                        stateST: StateTable,
+                                        instrs: ListBuffer[Instruction]) = {
+    storePairElem(pairValue.expr1)
+    storePairElem(pairValue.expr2)
   
     // Allocate for pair
     translateMalloc(8)
@@ -184,21 +185,27 @@ object StatTranslator {
     }
   }
 
-  private def translatePairElem(index: String,
-                                lvalue: Lvalue)(implicit st: SymbolTable,
-                                                         stateST: StateTable,
-                                                         instrs: ListBuffer[Instruction]) = {
+  private def translatePairElem(pairValue: PairElem)(
+                                implicit st: SymbolTable,
+                                         stateST: StateTable,
+                                         instrs: ListBuffer[Instruction]): Unit = {
     var location: Register = null
-    lvalue match {
+    pairValue.lvalue match {
       case lvalue: Ident => location = findVarLoc(lvalue.name, stateST)
       case lvalue: ArrayElem => 
-      case lvalue: PairElem => 
+      case lvalue: PairElem => translatePairElem(lvalue)
     }
 
     // Check null for pair
     instrs += CmpInstr(location, Immediate(0))
     instrs += CondBranchLinkInstr(EqCond, CheckNull)
-  
+
+    // Move fst/snd of pair to R8
+    pairValue.index match {
+      case "fst" => instrs += LoadInstr(R8, RegOffset(location, 0))
+      case "snd" => instrs += LoadInstr(R8, RegOffset(location, 4))
+    }
+
   }
 
   private def translateAssign(target: Lvalue, 
@@ -209,14 +216,14 @@ object StatTranslator {
     target match {
       case target: Ident => location = findVarLoc(target.name, stateST)
       case target: ArrayElem => 
-      case target: PairElem => 
+      case target: PairElem => translatePairElem(target)
     }
                                                             
     newValue match {
       case initValue: Expr => translateExpr(initValue)
-      case initValue: ArrayLit => 
-      case initValue: NewPair => 
-      case initValue: PairElem => 
+      case initValue: ArrayLit => translateArrayLit(initValue)
+      case initValue: NewPair => translateNewPair(initValue)
+      case initValue: PairElem => translatePairElem(initValue)
       case initValue: Call => 
     }
     
@@ -324,7 +331,10 @@ object StatTranslator {
         }
       }
       case lvalue: ArrayElem => 
-      case lvalue: PairElem => 
+      case lvalue: PairElem => {
+        translatePairElem(lvalue)
+        location = R8
+      }
     }
     
     /* Read original data to r0 */
