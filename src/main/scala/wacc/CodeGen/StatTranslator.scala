@@ -58,7 +58,7 @@ object StatTranslator {
                                           instrs: ListBuffer[Instruction]) = {
     // Allocate memory
     instrs += MovInstr(R0, Immediate(size))
-    instrs += BranchLinkInstr(Label("malloc"))
+    instrs += BranchLinkInstr(MallocLabel)
 
     // Give the memory pointer to R12
     instrs += MovInstr(R12, R0)                                        
@@ -197,7 +197,7 @@ object StatTranslator {
 
     // Check null for pair
     instrs += CmpInstr(location, Immediate(0))
-    instrs += CondBranchLinkInstr(EqCond, Label("_errNull"))
+    instrs += CondBranchLinkInstr(EqCond, CheckNull)
   
   }
 
@@ -235,7 +235,7 @@ object StatTranslator {
     // assume expr will be read to R8
     moveRegToR0(R8)
 
-    instrs += BranchLinkInstr(Label("exit"))
+    instrs += BranchLinkInstr(ExitLabel)
   }
 
   /* Return will return value in R0 */
@@ -252,41 +252,43 @@ object StatTranslator {
   private def translatePrint(expr: Expr)(implicit st: SymbolTable,
                                                   stateST: StateTable,
                                                   instrs: ListBuffer[Instruction]) = {
-    var printType: PrintType = null
+    var printType: BranchLinkName = null
     expr match {
       case expr: Ident  => printType = checkPrintType(expr.name)
       case expr: StrLit => {
 
         // Load string from .data to R8
 
-        printType = PrintS
+        printType = PrintStr
       }
       case _ => 
     }
 
-    instrs += BranchLinkInstr(Label(printType.linkName))
+    instrs += BranchLinkInstr(printType)
   }
 
-  private def checkPrintType(identifier: String)(implicit st: SymbolTable,
-                                                          stateST: StateTable,
-                                                          instrs: ListBuffer[Instruction]): PrintType = {
-    var printType: PrintType = null
+  private def checkPrintType(identifier: String)(
+                             implicit st: SymbolTable,
+                                      stateST: StateTable,
+                                      instrs: ListBuffer[Instruction]): BranchLinkName = {
+    var printType: BranchLinkName = null
 
     // look up variable type to find suitable print type
     st.lookUpAll(identifier, VariableType()) match {
       case Some(obj) => obj.getType() match {
-        case IntType()  => printType = PrintI
-        case BoolType() => printType = PrintB
-        case CharType() => printType = PrintC
-        case StrType()  => printType = PrintS
-        case PairType(_, _) => printType = PrintP
-        case ArrayType(_) => printType   = PrintP
+        case IntType()  => printType = PrintInt
+        case BoolType() => printType = PrintBool
+        case CharType() => printType = PrintChar
+        case StrType()  => printType = PrintStr
+        case PairType(_, _) => printType = PrintPointer
+        case ArrayType(_) => printType   = PrintPointer
         case _ =>
       }
       case None =>
     }
 
     // find the location of content register
+    // Move content to R0 for print
     moveRegToR0(findVarLoc(identifier, stateST))
 
     printType
@@ -297,7 +299,7 @@ object StatTranslator {
                                                     stateST: StateTable,
                                                     instrs: ListBuffer[Instruction]) = {
     translatePrint(expr)
-    instrs += BranchLinkInstr(Label("_println"))
+    instrs += BranchLinkInstr(PrintLine)
   }
 
   /* Read will read value to R0 */
@@ -305,7 +307,7 @@ object StatTranslator {
                                                      stateST: StateTable,
                                                      instrs: ListBuffer[Instruction]) = {
     var location: Register = null
-    var readType: ReadType = null
+    var readType: BranchLinkName = null
 
     lvalue match {
       case lvalue: Ident => {
@@ -314,8 +316,8 @@ object StatTranslator {
         /* Check read int or char */
         st.lookUpAll(lvalue.name, VariableType()) match {
           case Some(obj) => obj.getType() match {
-            case IntType()  => readType = ReadI
-            case CharType() => readType = ReadC
+            case IntType()  => readType = ReadInt
+            case CharType() => readType = ReadChar
             case _ =>
           }
           case None =>
@@ -328,7 +330,7 @@ object StatTranslator {
     /* Read original data to r0 */
     moveRegToR0(location)
     /* Read from input */
-    instrs += BranchLinkInstr(Label(readType.linkName))
+    instrs += BranchLinkInstr(readType)
     /* store input data to variable */
     instrs += MovInstr(location, R0)
   }
@@ -341,15 +343,15 @@ object StatTranslator {
     translateExpr(expr)
     
     var location: Register = null
-    var branchLinkName: String = ""
+    var freeType: BranchLinkName = null
 
     expr match {
       case expr: Ident => {
         location = findVarLoc(expr.name, stateST)
         st.lookUpAll(expr.name, VariableType()) match {
           case Some(obj) => obj.getType() match {
-            case PairType(_, _)  => branchLinkName = "_freepair"
-            case ArrayType(_)  => branchLinkName = "free"
+            case PairType(_, _)  => freeType = FreePair
+            case ArrayType(_)  => freeType = FreeLabel
             case _ =>
           }
           case _ =>
@@ -362,7 +364,7 @@ object StatTranslator {
     moveRegToR0(location)
 
     /* Jump to free */
-    instrs += BranchLinkInstr(Label(branchLinkName))
+    instrs += BranchLinkInstr(freeType)
   }
 
   /* New scope will have new state table */

@@ -3,8 +3,10 @@ package wacc
 object Instructions {
   sealed trait Operand
     case class Immediate(value: Int) extends Operand
-    case class Label(name: String) extends Operand
     case class RegOffset(reg: Register, offset: Int) extends Operand
+  
+  // Need to discuss which pattern here
+  sealed abstract class Label(name: String) extends Operand
   
   sealed trait Register extends Operand
     case object R0 extends Register
@@ -68,7 +70,7 @@ object Instructions {
     case class PopInstr(registers: Seq[Register]) extends StackInstr
 
   sealed trait JumpInstr extends Instruction
-    case class BranchLinkInstr(label: Label) extends JumpInstr  // bl exit
+    case class BranchLinkInstr(label: BranchLinkName) extends JumpInstr  // bl exit
     case class BranchInstr(label: Label) extends JumpInstr      // b .L0
     case class CondBranchLinkInstr(cond: CondCode, label: Label) extends JumpInstr
     case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
@@ -80,38 +82,29 @@ object Instructions {
     case object GteCond extends CondCode
     case object LtCond extends CondCode
     case object LteCond extends CondCode
-
-  sealed trait PrintType {
-    var linkName: String = ""
-  }
-    case object PrintI extends PrintType {
-      linkName = "_printi"
-    }
-    case object PrintB extends PrintType {
-      linkName = "_printb"
-    }
-    case object PrintC extends PrintType {
-      linkName = "_printc"
-    }
-    case object PrintS extends PrintType {
-      linkName = "_prints"
-    }
-    case object PrintP extends PrintType {
-      linkName = "_printp"
-    }
-
-  sealed trait ReadType {
-    var linkName: String = ""
-  }    
-    case object ReadI extends ReadType {
-      linkName = "_readi"
-    }
-    case object ReadC extends ReadType {
-      linkName = "_readc"
-    }
     
-  // sealed trait BranchLinkName
-  //   case object checkNull extends Label("_errNull")
+  sealed trait BranchLinkName extends Label
+    case object MallocLabel extends Label("malloc") with BranchLinkName
+    case object ExitLabel extends Label("exit") with BranchLinkName
+    case object FreeLabel extends Label("free") with BranchLinkName
 
-  
+    case object PrintLine extends Label("_println") with BranchLinkName
+    case object PrintInt  extends Label("_printi") with BranchLinkName
+    case object PrintBool extends Label("_printb") with BranchLinkName
+    case object PrintChar extends Label("_printc") with BranchLinkName
+    case object PrintStr  extends Label("_prints") with BranchLinkName
+    case object PrintPointer extends Label("_printp") with BranchLinkName
+
+    case object ReadInt  extends Label("_readi") with BranchLinkName
+    case object ReadChar extends Label("_readc") with BranchLinkName
+
+    case object CheckNull extends Label("_errNull") with BranchLinkName
+    case object CheckOverflow extends Label("_errOverflow") with BranchLinkName
+    case object CheckDivZero  extends Label("_errDivZero") with BranchLinkName
+    case object CheckBound extends Label("_boundsCheck") with BranchLinkName
+
+    case object ArrayStore extends Label("_arrStore") with BranchLinkName
+    case object ArrayLoad  extends Label("_arrLoad") with BranchLinkName
+    case object FreePair   extends Label("_freepair") with BranchLinkName
+
 }
