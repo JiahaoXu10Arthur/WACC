@@ -33,21 +33,16 @@ object Instructions {
   sealed trait Instruction
 
   sealed trait ExprInstr extends Instruction
-    case class AddInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
-    case class SubInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
+    case class AddInstr(destReg: Register, reg1: Register, opr: Operand) extends ExprInstr
+    case class SubInstr(destReg: Register, reg1: Register, opr: Operand) extends ExprInstr
     case class MulInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
     case class DivInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
     case class ModInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
 
     case class AndInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
     case class OrInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
-    
-    case class CmpGtInstr(srcReg: Register, opr: Operand) extends ExprInstr
-    case class CmpGteInstr(srcReg: Register, opr: Operand) extends ExprInstr
-    case class CmpLtInstr(srcReg: Register, opr: Operand) extends ExprInstr
-    case class CmpLteInstr(srcReg: Register, opr: Operand) extends ExprInstr
-    case class CmpEqInstr(srcReg: Register, opr: Operand) extends ExprInstr
-    case class CmpNeqInstr(srcReg: Register, opr: Operand) extends ExprInstr
+
+    case class CmpInstr(srcReg: Register, opr: Operand) extends ExprInstr
 
     case class NotInstr(destReg: Register, srcReg: Register) extends ExprInstr
     case class NegInstr(destReg: Register, srcReg: Register) extends ExprInstr
@@ -63,16 +58,28 @@ object Instructions {
 		case class SkipInstr() extends StatInstr
 		case class DeclareInstr() extends StatInstr
 		case class AssignInstr() extends StatInstr
-		// case class ReadInstr() extends StatInstr
-		// case class FreeInstr() extends StatInstr
-		// case class ReturnInstr() extends StatInstr
-		// case class ExitInstr() extends StatInstr
-		// case class PrintInstr(t: PrintType) extends StatInstr
-    // case class PrintlnInstr() extends StatInstr
 		case class IfInstr() extends StatInstr
 		case class WhileInstr() extends StatInstr
-		// case class BeginInstr() extends StatInstr
     case class MovInstr (destReg: Register, opr: Operand) extends StatInstr
+    case class CondMovInstr (cond: CondCode, destReg: Register, opr: Operand)
+
+  sealed trait StackInstr extends Instruction
+    case class PushInstr(registers: Seq[Register]) extends StackInstr
+    case class PopInstr(registers: Seq[Register]) extends StackInstr
+
+  sealed trait JumpInstr extends Instruction
+    case class BranchLinkInstr(label: Label) extends JumpInstr  // bl exit
+    case class BranchInstr(label: Label) extends JumpInstr      // b .L0
+    case class CondBranchLinkInstr(cond: CondCode, label: Label) extends JumpInstr
+    case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
+
+  sealed trait CondCode
+    case object EqCond extends CondCode
+    case object NeqCond extends CondCode
+    case object GtCond extends CondCode
+    case object GteCond extends CondCode
+    case object LtCond extends CondCode
+    case object LteCond extends CondCode
 
   sealed trait PrintType {
     var linkName: String = ""
@@ -102,13 +109,9 @@ object Instructions {
     case object ReadC extends ReadType {
       linkName = "_readc"
     }
-  
-  sealed trait StackInstr extends Instruction
-    case class PushInstr(registers: Seq[Register]) extends StackInstr
-    case class PopInstr(registers: Seq[Register]) extends StackInstr
+    
+  // sealed trait BranchLinkName
+  //   case object checkNull extends Label("_errNull")
 
-  sealed trait JumpInstr extends Instruction
-    case class BranchLinkInstr(label: Label) extends JumpInstr  // bl exit
-    case class BranchInstr(label: Label)                        // b .L0
   
 }
