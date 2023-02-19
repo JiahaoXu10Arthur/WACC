@@ -52,14 +52,6 @@ object StatTranslator {
     instrs += MovInstr(R8, content)                                              
   }
 
-  /* Find variable by name in stateTable to find its location */
-  def findVarLoc(identifier: String, stateST: StateTable): Register = {
-    stateST.lookUpAll(identifier) match {
-      case Some(location: Register) => location
-      case _ => null
-    }
-  }
-
   /* Translate for malloc part */
   def translateMalloc(size: Int)(implicit st: SymbolTable,
                                           stateST: StateTable,
@@ -71,16 +63,35 @@ object StatTranslator {
     // Give the memory pointer to R12
     instrs += MovInstr(R12, R0)                                        
   }
-    
+
+  /* Find variable by name in stateTable to find its location */
+  def findVarLoc(identifier: String, stateST: StateTable): Register = {
+    stateST.lookUpAll(identifier) match {
+      case Some(location: Register) => location
+      case _ => null
+    }
+  }
+
+  private def sizeOfElem(elemType: Type): Int = {
+    elemType match {
+      case IntType() => 4
+      case BoolType() => 1
+      case CharType() => 1
+      case PairType(_, _) => 4
+      case ArrayType(_) => 4
+      case _ => 0
+    }
+  }
+
   private def translateDeclare(ident: Ident, 
                                initValue: Rvalue)(implicit st: SymbolTable,
                                                            stateST: StateTable,
                                                            instrs: ListBuffer[Instruction]) = {
     initValue match {
       case initValue: Expr => translateExpr(initValue)
-      case initValue: ArrayLit => 
+      case initValue: ArrayLit => declareArray(initValue.values)
       case initValue: NewPair => declarePair(initValue.expr1, initValue.expr2)
-      case initValue: PairElem => 
+      case initValue: PairElem => translatePairElem(initValue.index, initValue.lvalue)
       case initValue: Call => 
     }
     
@@ -90,6 +101,40 @@ object StatTranslator {
 
     // Add the location of variable to stateTable
     stateST.add(ident.name, R4)
+  }
+
+  private def declareArray(elems: List[Expr])(implicit st: SymbolTable,
+                                                       stateST: StateTable,
+                                                       instrs: ListBuffer[Instruction]) = {
+    val arr_len = elems.size
+    // Array store len + 1 elems -> +1 for store length
+    val arr_size = (arr_len + 1) * 4
+
+    // malloc array
+    // @ (arr-len) element array
+    translateMalloc(arr_size)
+
+    // @ array pointers are shifted forwards by 4 bytes (to account for size)
+    // move array pointer to a[1]
+    instrs += AddInstr(R12, R12, Immediate(4))
+
+    // store length of array in a[0]
+    moveToR8(Immediate(arr_len))
+    instrs += StoreInstr(R8, RegOffset(R12, -4))
+
+    // For loop to store each element
+    for (i <- 0 until arr_size by 4){
+      // Load elem into R8
+      translateExpr(elems(i))
+
+      // Store elem to a[i]
+      instrs += StoreInstr(R8, RegOffset(R12, i))
+    }
+
+    // Store array pointer back to R8
+    // Do this because translateDeclare will Move R8 to R4 at last
+    moveToR8(R12)
+  
   }
 
   private def declarePair(elem1: Expr, 
@@ -112,17 +157,9 @@ object StatTranslator {
     // Store first elem
     instrs += StoreInstr(R8, RegOffset(R12, 0))
 
-  }
-
-  private def sizeOfElem(elemType: Type): Int = {
-    elemType match {
-      case IntType() => 4
-      case BoolType() => 1
-      case CharType() => 1
-      case PairType(_, _) => 4
-      case ArrayType(_) => 4
-      case _ => 0
-    }
+    // Store pair pointer back to R8
+    // Do this because translateDeclare will Move R8 to R4 at last
+    moveToR8(R12)
   }
 
   private def storePairElem(elem: Expr)(implicit st: SymbolTable,
@@ -141,10 +178,27 @@ object StatTranslator {
       instrs += StoreInstr(R8, RegOffset(R12, 0))
 
       // Move value of elem to R8
-      MovInstr(R8, R12)
+      moveToR8(R12)
       // Push R8
       PushInstr(Seq(R8))
     }
+  }
+
+  private def translatePairElem(index: String,
+                                lvalue: Lvalue)(implicit st: SymbolTable,
+                                                         stateST: StateTable,
+                                                         instrs: ListBuffer[Instruction]) = {
+    var location: Register = null
+    lvalue match {
+      case lvalue: Ident => location = findVarLoc(lvalue.name, stateST)
+      case lvalue: ArrayElem => 
+      case lvalue: PairElem => 
+    }
+
+    // Check null for pair
+    instrs += CmpInstr(location, Immediate(0))
+    instrs += CondBranchLinkInstr(EqCond, Label("_errNull"))
+  
   }
 
   private def translateAssign(target: Lvalue, 
