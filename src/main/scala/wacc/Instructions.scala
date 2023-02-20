@@ -65,7 +65,7 @@ object Instructions {
 		case class IfInstr() extends StatInstr
 		case class WhileInstr() extends StatInstr
     case class MovInstr (destReg: Register, opr: Operand) extends StatInstr
-    case class CondMovInstr (cond: CondCode, destReg: Register, opr: Operand)
+    case class CondMovInstr (cond: CondCode, destReg: Register, opr: Operand) extends StatInstr
 
   sealed trait StackInstr extends Instruction
     case class PushInstr(registers: Seq[Register]) extends StackInstr

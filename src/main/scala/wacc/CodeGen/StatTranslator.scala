@@ -295,10 +295,10 @@ object StatTranslator {
   private def translateCall(callValue: Call)(
                               implicit st: SymbolTable,
                                        stateST: StateTable,
-                                       instrs: ListBuffer[Instruction]): Register = {
+                                       instrs: ListBuffer[Instruction]) = {
     val branchName = "wacc_" + callValue.ident.name
     
-    instrs += BranchInstr(Label(branchName))
+    instrs += BranchInstr(new Label(branchName))
   }
 
   private def translateAssign(target: Lvalue, 

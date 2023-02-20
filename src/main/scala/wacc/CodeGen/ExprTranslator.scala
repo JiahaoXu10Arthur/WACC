@@ -104,8 +104,8 @@ object ExprTranslator {
   private def translateStr(value: String)(implicit st: SymbolTable, 
                                           ins: ListBuffer[Instruction], 
                                           stateST: StateTable): Register = {
-    val strLabel = findLabelByString(value)
-    LoadInstr(R8, strLabel)
+    // val strLabel = findLabelByString(value)
+    // LoadInstr(R8, strLabel)
 
     R8
   }
@@ -383,9 +383,11 @@ object ExprTranslator {
 		}
 
 		ins += CmpInstr(loc1, Immediate(1))
-    ins += CondBranchInstr(NeqCond, ".L0")
+    ins += CondBranchInstr(NeqCond, new Label(".L0"))
+
     ins += CmpInstr(loc2, Immediate(1))  //Chunky code but appeared on ref compiler
-    ins += BranchInstr(".L0")
+    ins += BranchInstr(new Label(".L0"))
+    
     ins += CondMovInstr(EqCond, R8, Immediate(1)) // R8 here should be loc2, but ref compiler used r8
     ins += CondMovInstr(NeqCond, R8, Immediate(0)) // R8 here should be loc2, but ref compiler used r8
     // The assembly code on the ref compiler for And is just a piece of shit. Too many unused chunky repetitive code.
@@ -412,9 +414,11 @@ object ExprTranslator {
 
     // Same with Add. A chunk of bullshit. Need futher discussion
 		ins += CmpInstr(loc1, Immediate(1))
-    ins += CondBranchInstr(NeqCond, ".L0")
+    ins += CondBranchInstr(NeqCond, new Label(".L0"))
+
     ins += CmpInstr(loc2, Immediate(1))  //Chunky code but appeared on ref compiler
-    ins += BranchInstr(".L0")
+    ins += BranchInstr(new Label(".L0"))
+
     ins += CondMovInstr(EqCond, R8, Immediate(1)) // R8 here should be loc2, but ref compiler used r8
     ins += CondMovInstr(NeqCond, R8, Immediate(0)) // R8 here should be loc2, but ref compiler used r8
     // The assembly code on the ref compiler for And is just a piece of shit. Too many unused chunky repetitive code.
@@ -427,8 +431,8 @@ object ExprTranslator {
                ins: ListBuffer[Instruction]) = {
     var loc: Register = null
     expr match {
-			case expr1: IntLit => loc = translateInt(expr.value)
-			case expr1: Ident  => loc = findVarLoc(expr.name, stateST)
+			case expr: IntLit => loc = translateInt(expr.value)
+			case expr: Ident  => loc = findVarLoc(expr.name, stateST)
 			case _ => translateExpr(expr)
 		}
 
@@ -442,10 +446,9 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ins: ListBuffer[Instruction]) = {
-    var loc: Register = null
-    expr match {
-			case expr1: IntLit => loc = translateInt(expr.value)
-			case expr1: Ident  => loc = findVarLoc(expr.name, stateST)
+    val loc: Register = expr match {
+			case expr: IntLit => translateInt(expr.value)
+			case expr: Ident  => findVarLoc(expr.name, stateST)
 			case _ => translateExpr(expr)
 		}
 
@@ -460,12 +463,12 @@ object ExprTranslator {
                ins: ListBuffer[Instruction]) = {
     var loc: Register = null
     expr match {
-			case expr1: IntLit => loc = translateInt(expr.value)
-			case expr1: Ident  => loc = findVarLoc(expr.name, stateST)
+			case expr: IntLit => loc = translateInt(expr.value)
+			case expr: Ident  => loc = findVarLoc(expr.name, stateST)
 			case _ => translateExpr(expr)
 		}
 
-    ins += LoadInstr(R8, LoadInstr(loc, -4))  // load from a[0] → len a
+    ins += LoadInstr(R8, RegOffset(loc, -4))  // load from a[0] → len a
   }
 
   private def translateOrd(
@@ -475,8 +478,8 @@ object ExprTranslator {
                ins: ListBuffer[Instruction]) = {
     var loc: Register = null
     expr match {
-			case expr1: IntLit => loc = translateInt(expr.value)
-			case expr1: Ident  => loc = findVarLoc(expr.name, stateST)
+			case expr: IntLit => loc = translateInt(expr.value)
+			case expr: Ident  => loc = findVarLoc(expr.name, stateST)
 			case _ => translateExpr(expr)
 		}
 
@@ -491,8 +494,8 @@ object ExprTranslator {
                ins: ListBuffer[Instruction]) = {
     var loc: Register = null
     expr match {
-			case expr1: IntLit => loc = translateInt(expr.value)
-			case expr1: Ident  => loc = findVarLoc(expr.name, stateST)
+			case expr: IntLit => loc = translateInt(expr.value)
+			case expr: Ident  => loc = findVarLoc(expr.name, stateST)
 			case _ => translateExpr(expr)
 		}
 
