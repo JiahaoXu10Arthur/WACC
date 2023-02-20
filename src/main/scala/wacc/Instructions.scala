@@ -37,12 +37,12 @@ object Instructions {
   sealed trait ExprInstr extends Instruction
     case class AddInstr(destReg: Register, reg1: Register, opr: Operand) extends ExprInstr
     case class SubInstr(destReg: Register, reg1: Register, opr: Operand) extends ExprInstr
-    case class MulInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
-    case class DivInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
-    case class ModInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr
+    case class MulInstr(destRegLo: Register, destRegHi: Register, reg1: Register, reg2: Register) extends ExprInstr
+    case class DivInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr // may be unused
+    case class ModInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr // may be unused
 
-    case class AndInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
-    case class OrInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
+    case class AndInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr // unused in and, but used in chr
+    case class OrInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr // may be unused
 
     case class CmpInstr(srcReg: Register, opr: Operand) extends ExprInstr
 
@@ -51,6 +51,8 @@ object Instructions {
     case class LenInstr(destReg: Register, str: Label) extends ExprInstr
     case class OrdInstr(destReg: Register, imm: Immediate) extends ExprInstr
     case class ChrInstr(destReg: Register, imm: Immediate) extends ExprInstr
+
+    case class RsbsInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
   
   sealed trait MemoryInstr extends Instruction
     case class StoreInstr(srcReg: Register, destLoc: RegOffset) extends MemoryInstr
@@ -106,5 +108,7 @@ object Instructions {
     case object ArrayStore extends Label("_arrStore") with BranchLinkName
     case object ArrayLoad  extends Label("_arrLoad") with BranchLinkName
     case object FreePair   extends Label("_freepair") with BranchLinkName
+
+    case object DivBl extends Label("__aeabi_idivmod") with BranchLinkName
 
 }
