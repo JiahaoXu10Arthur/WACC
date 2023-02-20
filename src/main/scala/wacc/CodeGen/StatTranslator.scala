@@ -93,7 +93,7 @@ object StatTranslator {
       case initValue: ArrayLit => declareArrayLit(initValue)
       case initValue: NewPair => declareNewPair(initValue)
       case initValue: PairElem => declarePairElem(initValue)
-      case initValue: Call => 
+      case initValue: Call => translateCall(initValue)
     }
     
     // Move to the first available register
@@ -290,6 +290,15 @@ object StatTranslator {
     }
 
     R8
+  }
+
+  private def translateCall(callValue: Call)(
+                              implicit st: SymbolTable,
+                                       stateST: StateTable,
+                                       instrs: ListBuffer[Instruction]): Register = {
+    val branchName = "wacc_" + callValue.ident.name
+    
+    instrs += BranchInstr(Label(branchName))
   }
 
   private def translateAssign(target: Lvalue, 
