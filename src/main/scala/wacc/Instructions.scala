@@ -55,8 +55,8 @@ object Instructions {
     case class RsbsInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
   
   sealed trait MemoryInstr extends Instruction
-    case class StoreInstr(srcReg: Register, destLoc: RegOffset) extends MemoryInstr
-    case class LoadInstr(dest: Register, srcLoc: RegOffset) extends MemoryInstr
+    case class StoreInstr(srcReg: Register, destLoc: Operand) extends MemoryInstr
+    case class LoadInstr(dest: Register, srcLoc: Operand) extends MemoryInstr
 
   sealed trait StatInstr extends Instruction
 		case class SkipInstr() extends StatInstr
@@ -86,8 +86,10 @@ object Instructions {
     case object GteCond extends CondCode
     case object LtCond extends CondCode
     case object LteCond extends CondCode
+    case object VsCond extends CondCode
     
   sealed trait BranchLinkName extends Label
+    case object DivisionLabel extends Label("__aeabi_idivmod") with BranchLinkName
     case object MallocLabel extends Label("malloc") with BranchLinkName
     case object ExitLabel extends Label("exit") with BranchLinkName
     case object FreeLabel extends Label("free") with BranchLinkName
@@ -111,7 +113,4 @@ object Instructions {
     case object ArrayStoreB extends Label("_arrStoreB") with BranchLinkName
     case object ArrayLoad  extends Label("_arrLoad") with BranchLinkName
     case object FreePair   extends Label("_freepair") with BranchLinkName
-
-    case object DivBl extends Label("__aeabi_idivmod") with BranchLinkName
-
 }

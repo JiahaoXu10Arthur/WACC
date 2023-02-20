@@ -23,12 +23,12 @@ object ExprTranslator {
       case Div(expr1, expr2)   => translateDiv(expr1, expr2)
       case Mod(expr1, expr2)   => translateMod(expr1, expr2)
 
-      case Gt(expr1, expr2)    => translateGt(expr1, expr2)
-      case Gte(expr1, expr2)   => translateGte(expr1, expr2)
-      case Lt(expr1, expr2)    => translateLt(expr1, expr2)
-      case Lte(expr1, expr2)   => translateLte(expr1, expr2)
-      case Eq(expr1, expr2)    => translateEq(expr1, expr2)
-      case Neq(expr1, expr2)   => ???
+      case Gt(expr1, expr2)    => translateCmp(expr1, expr2, GtCond, LteCond)
+      case Gte(expr1, expr2)   => translateCmp(expr1, expr2, GteCond, LtCond)
+      case Lt(expr1, expr2)    => translateCmp(expr1, expr2, LtCond, GteCond)
+      case Lte(expr1, expr2)   => translateCmp(expr1, expr2, LteCond, GtCond)
+      case Eq(expr1, expr2)    => translateCmp(expr1, expr2, EqCond, NeqCond)
+      case Neq(expr1, expr2)   => translateCmp(expr1, expr2, NeqCond, EqCond)
 
       case And(expr1, expr2)   => translateAnd(expr1, expr2)  // need to be further considered
       case Or(expr1, expr2)    => translateOr(expr1, expr2)   // need to be further considered
@@ -44,7 +44,7 @@ object ExprTranslator {
       case StrLit(value)       => translateStr(value)
       case PairLit()           => translatePairLit()
       case Ident(name)         => translateIdent(name)
-      case ArrayElem(ident, index)   => translateArrayElem(ident, index) // need to be further considered
+      case expr: ArrayElem     => loadArrayElem(expr)  // need to be further considered
     }
 
     R8
@@ -53,120 +53,114 @@ object ExprTranslator {
   /* Assume Move to R8 */
   private def translateInt(value: Int)(implicit st: SymbolTable, 
                                                 ins: ListBuffer[Instruction], 
-                                                stateST: StateTable): Register = {
-    moveToR8(Immediate(value))
-
-    R8
+                                                stateST: StateTable) = {
+    if (value >= 0) {
+      moveToR8(Immediate(value))
+    } else {
+      // use load for negative value
+      ins += LoadInstr(R8, Immediate(value))
+    }
+    
+    ins += PushInstr(Seq(R8))
   }
 
   /* Assume Move to R8 */
   private def translateBool(value: Boolean)(implicit st: SymbolTable, 
                                                      ins: ListBuffer[Instruction], 
-                                                     stateST: StateTable): Register = {
+                                                     stateST: StateTable) = {
     value match {
       case true  => moveToR8(Immediate(1))
       case false => moveToR8(Immediate(0))
     }
 
-    R8
+    ins += PushInstr(Seq(R8))
   }
 
   /* Assume Move to R8 */
   private def translateChar(value: Char)(implicit st: SymbolTable, 
                                                      ins: ListBuffer[Instruction], 
-                                                     stateST: StateTable): Register = {
+                                                     stateST: StateTable) = {
     moveToR8(Immediate(value.toInt))
     
-    R8
+    ins += PushInstr(Seq(R8))
   }
 
   /* Assume Move to R8 */
   private def translatePairLit()(implicit st: SymbolTable, 
                                           ins: ListBuffer[Instruction], 
-                                          stateST: StateTable): Register = {
+                                          stateST: StateTable) = {
     // null --> #0
     moveToR8(Immediate(0))
 
-    R8
+    ins += PushInstr(Seq(R8))
   }
 
   /* Assume Move to R8 */
   def translateIdent(name: String)(
                              implicit st: SymbolTable, 
                                       ins: ListBuffer[Instruction], 
-                                      stateST: StateTable): Register = {
+                                      stateST: StateTable) = {
     moveToR8(findVarLoc(name, stateST))
 
-    R8
+    ins += PushInstr(Seq(R8))
   }
 
   /* Assume Move to R8 */
   private def translateStr(value: String)(implicit st: SymbolTable, 
                                           ins: ListBuffer[Instruction], 
-                                          stateST: StateTable): Register = {
+                                          stateST: StateTable) = {
     // val strLabel = findLabelByString(value)
     // LoadInstr(R8, strLabel)
 
-    R8
-  }
-
-  /* Assume Move to R8 */
-  private def translateArrayElem(ident: Ident, index: List[Expr])(implicit st: SymbolTable, 
-                                          ins: ListBuffer[Instruction], 
-                                          stateST: StateTable): Register = {
-    
-
-    R8
+    ins += PushInstr(Seq(R8))
   }
 
   private def translateAdd(
 			expr1: Expr, expr2: Expr
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
-               ins: ListBuffer[Instruction]): Register = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
+               ins: ListBuffer[Instruction]) = {
 
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
+    // Expr1 store in R8
+    translateExpr(expr1)
+    ins += PopInstr(Seq(R8))
 
-    // Assume R10 is the temporary result register
-		ins +=  AddInstr(R10, loc1, loc2)
+    // Expr2 store in R9
+    translateExpr(expr2)
+    ins += PopInstr(Seq(R9))
 
-    R10
+    // Result store in R8
+    ins += AddInstr(R8, R8, R9)
+
+    // Check overflow
+    ins += CondBranchLinkInstr(VsCond, CheckOverflow) 
+
+    // Push Result
+    ins += PushInstr(Seq(R8))
   }
 
 	private def translateSub(
 			expr1: Expr, expr2: Expr
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
-               ins: ListBuffer[Instruction]): Register = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
+               ins: ListBuffer[Instruction]) = {
 
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
+    // Expr1 store in R8
+    translateExpr(expr1)
+    ins += PopInstr(Seq(R8))
 
-    // Assume R10 is the temporary result register
-		ins +=  SubInstr(R10, loc1, loc2)
+    // Expr2 store in R9
+    translateExpr(expr2)
+    ins += PopInstr(Seq(R9))
 
-    R10
+    // Result store in R8
+    ins += SubInstr(R8, R8, R9)   
+
+    // Check overflow
+    ins += CondBranchLinkInstr(VsCond, CheckOverflow)         
+
+    // Push Result
+    ins += PushInstr(Seq(R8))
   }
 
   private def translateMul(
@@ -174,22 +168,25 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ins: ListBuffer[Instruction]) = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
 
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
+    // Expr1 store in R8
+    translateExpr(expr1)
+    ins += PopInstr(Seq(R8))
 
-    // Assume R10 is the temporary result register
-		ins +=  MulInstr(R8, R9, loc1, loc2)
+    // Expr2 store in R9
+    translateExpr(expr2)
+    ins += PopInstr(Seq(R9))
+
+    // Result store in R8
+    ins +=  MulInstr(R8, R9, R8, R9)
+
+    // Check overflow
+    // Need to modify here. Use constant to define ASR #31
+    ins += CmpInstr(R9, RegOffset(R8, 0))
+    ins += CondBranchLinkInstr(NeqCond, CheckOverflow)
+
+    // Push Result
+    ins += PushInstr(Seq(R8))
   }
 
   private def translateDiv(
@@ -197,25 +194,24 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ins: ListBuffer[Instruction]) = {
-    // need to move both expressions to r0 and r1
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
 
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
+    // Expr1 store in R0
+    translateExpr(expr1)
+    ins += PopInstr(Seq(R0))
 
-    // Taking value from r0 and r1
-		ins += BranchLinkInstr(CheckDivZero)
-    ins += BranchLinkInstr(DivBl)
-    // Things are stored in r0 and r1 after bl
+    // Expr2 store in R1
+    translateExpr(expr2)
+    ins += PopInstr(Seq(R1))
+
+    // Check not div by 0
+    ins += CmpInstr(R1, Immediate(0))
+    ins += CondBranchLinkInstr(EqCond, CheckDivZero)
+
+    // Perform division
+    ins += BranchLinkInstr(DivisionLabel)
+
+    // Push result
+    ins += PushInstr(Seq(R0))
   }
 
   private def translateMod(
@@ -223,145 +219,52 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ins: ListBuffer[Instruction]) = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
 
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
+    // Expr1 store in R0
+    translateExpr(expr1)
+    ins += PopInstr(Seq(R0))
 
-    // Same with Div, but need to move what is stored in r1 to r0 after bl
-		ins += BranchLinkInstr(CheckDivZero)
-    ins += BranchLinkInstr(DivBl)
-    ins += MovInstr(R0, R1)
+    // Expr2 store in R1
+    translateExpr(expr2)
+    ins += PopInstr(Seq(R1))
+
+    // Check not div by 0
+    ins += CmpInstr(R1, Immediate(0))
+    ins += CondBranchLinkInstr(EqCond, CheckDivZero)
+
+    // Perform division
+    ins += BranchLinkInstr(DivisionLabel)
+
+    // Push result
+    ins += PushInstr(Seq(R1))
   }
 
-  private def translateGt(
-			expr1: Expr, expr2: Expr
-		)(implicit st: SymbolTable, 
-               stateST: StateTable,
-               ins: ListBuffer[Instruction]) = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
+  private def translateCmp(expr1: Expr, 
+                           expr2: Expr,
+                           trueCode: CondCode,
+                           falseCode: CondCode)(
+                           implicit st: SymbolTable, 
+                                    stateST: StateTable,
+                                    ins: ListBuffer[Instruction]) = {
+    // Expr1 store in R8
+    translateExpr(expr1)
+    ins += PopInstr(Seq(R8))
 
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
+    // Expr2 store in R9
+    translateExpr(expr2)
+    ins += PopInstr(Seq(R9))
 
-		ins += CmpInstr(loc1, loc2)
-    ins += CondMovInstr(GtCond, R8, Immediate(1))
-    ins += CondMovInstr(LteCond, R8, Immediate(0))
+    // Compare expr1, expr2
+		ins += CmpInstr(R8, R9)
+
+    // Two checker
+    ins += CondMovInstr(trueCode, R8, Immediate(1))
+    ins += CondMovInstr(falseCode, R8, Immediate(0))
+
+    // Push result
+    ins += PushInstr(Seq(R8))
   }
 
-  private def translateGte(
-			expr1: Expr, expr2: Expr
-		)(implicit st: SymbolTable, 
-               stateST: StateTable,
-               ins: ListBuffer[Instruction]) = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
-
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
-
-		ins += CmpInstr(loc1, loc2)
-    ins += CondMovInstr(GteCond, R8, Immediate(1))
-    ins += CondMovInstr(LtCond, R8, Immediate(0))
-  }
-
-  private def translateLt(
-			expr1: Expr, expr2: Expr
-		)(implicit st: SymbolTable, 
-               stateST: StateTable,
-               ins: ListBuffer[Instruction]) = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
-
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
-
-		ins += CmpInstr(loc1, loc2)
-    ins += CondMovInstr(LtCond, R8, Immediate(1))
-    ins += CondMovInstr(GteCond, R8, Immediate(0))
-  }
-
-  private def translateLte(
-			expr1: Expr, expr2: Expr
-		)(implicit st: SymbolTable, 
-               stateST: StateTable,
-               ins: ListBuffer[Instruction]) = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
-
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
-
-		ins += CmpInstr(loc1, loc2)
-    ins += CondMovInstr(LteCond, R8, Immediate(1))
-    ins += CondMovInstr(GtCond, R8, Immediate(0))
-  }
-
-  private def translateEq(
-			expr1: Expr, expr2: Expr
-		)(implicit st: SymbolTable, 
-               stateST: StateTable,
-               ins: ListBuffer[Instruction]) = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
-
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
-
-		ins += CmpInstr(loc1, loc2)
-    ins += CondMovInstr(EqCond, R8, Immediate(1))
-    ins += CondMovInstr(NeqCond, R8, Immediate(0))
-  }
 
   private def translateAnd(
 			expr1: Expr, expr2: Expr

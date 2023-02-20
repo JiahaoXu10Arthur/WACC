@@ -218,7 +218,7 @@ object StatTranslator {
      R3: Array pointer
      R10: Index
      R14: General purpose */
-  private def loadArrayElem(arrayValue: ArrayElem)(
+ def loadArrayElem(arrayValue: ArrayElem)(
                                  implicit st: SymbolTable,
                                           stateST: StateTable,
                                           instrs: ListBuffer[Instruction]): Register = {
