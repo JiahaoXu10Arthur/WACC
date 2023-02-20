@@ -6,6 +6,7 @@ import java.nio.file.Paths
 
 import wacc.SyntaxChecker.Parser
 import wacc.SemanticChecker.SemanticChecker
+import wacc.CodeGen.Translator
 import wacc.Error.Errors.errorsMkString
 
 object Main {
@@ -29,6 +30,10 @@ object Main {
           /* Semantic check success */
           case errors if errors.isEmpty => {
             println(s"Compile ${args.head} successful!")
+
+            val IR = Translator.translate(x)
+            IR.foreach(ins => println(ins))
+
             System.exit(SUCCESS)
           }
 
