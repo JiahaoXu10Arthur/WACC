@@ -293,12 +293,48 @@ object StatTranslator {
   }
 
   private def translateCall(callValue: Call)(
-                              implicit st: SymbolTable,
-                                       stateST: StateTable,
-                                       instrs: ListBuffer[Instruction]) = {
+                            implicit st: SymbolTable,
+                                     stateST: StateTable,
+                                     instrs: ListBuffer[Instruction]) = {
+    // Store parameter
+    // First 3 parameters -> R0, R1, R2
+    // More parameters -> On stack
+    val para_len = callValue.args.size
+    var index = 0
+
+    while (index < para_len) {
+
+      translateExpr(callValue.args(index))
+
+      // First 3 parameters
+      if (index < 3) {
+
+        // Change it later, should have pool of usable register
+        val reg = 
+          index match {
+            case 0 => R0
+            case 1 => R1
+            case 2 => R2
+          }
+
+        instrs += MovInstr(reg, R8)
+      } else {
+        // More parameters
+        // Push R8
+        instrs += StoreInstr(R8, RegOffset(SP, -4))
+      }
+
+      index += 1
+    }
+
+    // Create branch jump
     val branchName = "wacc_" + callValue.ident.name
-    
     instrs += BranchInstr(new Label(branchName))
+
+    // Move function return value to R8
+    moveToR8(R0)
+
+    R8
   }
 
   private def translateAssign(target: Lvalue, 

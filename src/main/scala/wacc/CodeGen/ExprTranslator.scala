@@ -381,16 +381,23 @@ object ExprTranslator {
 			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
 			case _ => translateExpr(expr2)
 		}
+    
+    // Check if expr1 is true
+    ins += CmpInstr(loc1, Immediate(1))
 
-		ins += CmpInstr(loc1, Immediate(1))
+    // If expr1 false, shortcut
     ins += CondBranchInstr(NeqCond, new Label(".L0"))
 
-    ins += CmpInstr(loc2, Immediate(1))  //Chunky code but appeared on ref compiler
+    // Check if expr2 is true
+    ins += CmpInstr(loc2, Immediate(1))
+
+    // .L0
     ins += BranchInstr(new Label(".L0"))
     
+    // If both true, true
     ins += CondMovInstr(EqCond, R8, Immediate(1)) // R8 here should be loc2, but ref compiler used r8
+    // If one of it false, false
     ins += CondMovInstr(NeqCond, R8, Immediate(0)) // R8 here should be loc2, but ref compiler used r8
-    // The assembly code on the ref compiler for And is just a piece of shit. Too many unused chunky repetitive code.
   }
 
   private def translateOr(
@@ -412,16 +419,21 @@ object ExprTranslator {
 			case _ => translateExpr(expr2)
 		}
 
-    // Same with Add. A chunk of bullshit. Need futher discussion
+    // Check if expr1 is true
 		ins += CmpInstr(loc1, Immediate(1))
-    ins += CondBranchInstr(NeqCond, new Label(".L0"))
+    // If expr1 true, shortcut
+    ins += CondBranchInstr(EqCond, new Label(".L0"))
 
-    ins += CmpInstr(loc2, Immediate(1))  //Chunky code but appeared on ref compiler
+    // Check if expr2 is true
+    ins += CmpInstr(loc2, Immediate(1))
+
+    // .L0
     ins += BranchInstr(new Label(".L0"))
 
+    // If one of it true, true
     ins += CondMovInstr(EqCond, R8, Immediate(1)) // R8 here should be loc2, but ref compiler used r8
+    // If both false, false
     ins += CondMovInstr(NeqCond, R8, Immediate(0)) // R8 here should be loc2, but ref compiler used r8
-    // The assembly code on the ref compiler for And is just a piece of shit. Too many unused chunky repetitive code.
   }
 
   private def translateNot(
