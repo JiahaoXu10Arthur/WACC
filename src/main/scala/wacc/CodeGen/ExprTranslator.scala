@@ -12,9 +12,9 @@ import scala.collection.mutable.ListBuffer
 object ExprTranslator {
   def translateExpr(
       expr: Expr
-    )(implicit st: SymbolTable, 
-							 stateST: StateTable,
-               ins: ListBuffer[Instruction]): Register = {
+    )(implicit st: SymbolTable,
+               stateST: StateTable,
+               instrs: ListBuffer[Instruction]): Register = {
 
     expr match {
       case Add(expr1, expr2)   => translateAdd(expr1, expr2)
@@ -51,18 +51,20 @@ object ExprTranslator {
   }
 
   /* Assume Move to R8 */
-  private def translateInt(value: Int)(implicit st: SymbolTable, 
-                                                ins: ListBuffer[Instruction], 
-                                                stateST: StateTable): Register = {
+  private def translateInt(value: Int)(
+                           implicit st: SymbolTable,
+                                    stateST: StateTable, 
+                                    instrs: ListBuffer[Instruction]): Register = {
     moveToR8(Immediate(value))
 
     R8
   }
 
   /* Assume Move to R8 */
-  private def translateBool(value: Boolean)(implicit st: SymbolTable, 
-                                                     ins: ListBuffer[Instruction], 
-                                                     stateST: StateTable): Register = {
+  private def translateBool(value: Boolean)(
+                            implicit st: SymbolTable,
+                                     stateST: StateTable,
+                                     instrs: ListBuffer[Instruction]): Register = {
     value match {
       case true  => moveToR8(Immediate(1))
       case false => moveToR8(Immediate(0))
@@ -72,18 +74,19 @@ object ExprTranslator {
   }
 
   /* Assume Move to R8 */
-  private def translateChar(value: Char)(implicit st: SymbolTable, 
-                                                     ins: ListBuffer[Instruction], 
-                                                     stateST: StateTable): Register = {
+  private def translateChar(value: Char)(
+                            implicit st: SymbolTable,
+                                     stateST: StateTable, 
+                                     instrs: ListBuffer[Instruction]): Register = {
     moveToR8(Immediate(value.toInt))
     
     R8
   }
 
   /* Assume Move to R8 */
-  private def translatePairLit()(implicit st: SymbolTable, 
-                                          ins: ListBuffer[Instruction], 
-                                          stateST: StateTable): Register = {
+  private def translatePairLit()(implicit st: SymbolTable,
+                                          stateST: StateTable, 
+                                          instrs: ListBuffer[Instruction]): Register = {
     // null --> #0
     moveToR8(Immediate(0))
 
@@ -92,19 +95,19 @@ object ExprTranslator {
 
   /* Assume Move to R8 */
   def translateIdent(name: String)(
-                             implicit st: SymbolTable, 
-                                      ins: ListBuffer[Instruction], 
-                                      stateST: StateTable): Register = {
+                             implicit st: SymbolTable,
+                                      stateST: StateTable, 
+                                      instrs: ListBuffer[Instruction]): Register = {
     moveToR8(findVarLoc(name, stateST))
 
     R8
   }
 
-  private def translateAdd(
-			expr1: Expr, expr2: Expr
-		)(implicit st: SymbolTable, 
-               stateST: StateTable,
-               ins: ListBuffer[Instruction]): Register = {
+  private def translateAdd(expr1: Expr, 
+                           expr2: Expr)(
+                           implicit st: SymbolTable,
+                                    stateST: StateTable,
+                                    instrs: ListBuffer[Instruction]): Register = {
     var loc1: Register = null
     expr1 match {
 			case expr1: IntLit => loc1 = translateInt(expr1.value)
@@ -120,16 +123,16 @@ object ExprTranslator {
 		}
 
     // Assume R10 is the temporary result register
-		ins +=  AddInstr(R10, loc1, loc2)
+		instrs +=  AddInstr(R10, loc1, loc2)
 
     R10
   }
 
-	private def translateSub(
-			expr1: Expr, expr2: Expr
-		)(implicit st: SymbolTable, 
-               stateST: StateTable,
-               ins: ListBuffer[Instruction]): Register = {
+	private def translateSub(expr1: Expr, 
+                           expr2: Expr)(
+                           implicit st: SymbolTable,
+                                    stateST: StateTable,
+                                    instrs: ListBuffer[Instruction]): Register = {
     var loc1: Register = null
     expr1 match {
 			case expr1: IntLit => loc1 = translateInt(expr1.value)
@@ -145,7 +148,7 @@ object ExprTranslator {
 		}
 
     // Assume R10 is the temporary result register
-		ins +=  SubInstr(R10, loc1, loc2)
+		instrs +=  SubInstr(R10, loc1, loc2)
 
     R10
   }

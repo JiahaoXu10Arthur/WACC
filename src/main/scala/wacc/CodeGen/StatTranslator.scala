@@ -40,8 +40,8 @@ object StatTranslator {
 
   /* Move a specific register to R0 */
   def moveRegToR0(oringinLoc: Register)(implicit st: SymbolTable,
-                                                         stateST: StateTable,
-                                                         instrs: ListBuffer[Instruction]) = {
+                                                 stateST: StateTable,
+                                                 instrs: ListBuffer[Instruction]) = {
     instrs += MovInstr(R0, oringinLoc)                                              
   }
 
@@ -153,12 +153,12 @@ object StatTranslator {
     translateMalloc(8)
 
     // Pop second elem from stack
-    PopInstr(Seq(R8))
+    instrs += PopInstr(Seq(R8))
     // Store second elem
     instrs += StoreInstr(R8, RegOffset(R12, 4))
 
     // Pop first elem from stack
-    PopInstr(Seq(R8))
+    instrs += PopInstr(Seq(R8))
     // Store first elem
     instrs += StoreInstr(R8, RegOffset(R12, 0))
 
@@ -187,7 +187,7 @@ object StatTranslator {
       // Move value of elem to R8
       moveToR8(R12)
       // Push R8
-      PushInstr(Seq(R8))
+      instrs += PushInstr(Seq(R8))
     }
   }
 
@@ -258,9 +258,9 @@ object StatTranslator {
   // Now only find example of 1 dimension array assign
   private def storeArrayElem(arrayValue: ArrayElem,
                              assign_loc: Operand)(
-                                 implicit st: SymbolTable,
-                                          stateST: StateTable,
-                                          instrs: ListBuffer[Instruction]): Register = {
+                             implicit st: SymbolTable,
+                                      stateST: StateTable,
+                                      instrs: ListBuffer[Instruction]): Register = {
 
     // Location of array pointer
     val pointer_loc = findVarLoc(arrayValue.ident.name, stateST)
@@ -290,8 +290,6 @@ object StatTranslator {
     }
 
     R8
-
-
   }
 
   private def translateAssign(target: Lvalue, 
@@ -318,8 +316,6 @@ object StatTranslator {
     // Move value to target
     // May not needed when arrayElem?
     instrs += MovInstr(target_loc, value_loc)
-
-    target_loc
   }
 
   /* Exit will return value in R0 */
@@ -348,28 +344,10 @@ object StatTranslator {
   private def translatePrint(expr: Expr)(implicit st: SymbolTable,
                                                   stateST: StateTable,
                                                   instrs: ListBuffer[Instruction]) = {
-    var printType: BranchLinkName = null
-    expr match {
-      case expr: Ident  => printType = checkPrintType(expr)
-      case expr: StrLit => {
+    // find the location of content register
+    val location = translateExpr(expr)
 
-        // Load string from .data to R8
-
-        printType = PrintStr
-      }
-      case _ => 
-    }
-
-    instrs += BranchLinkInstr(printType)
-  }
-
-  private def checkPrintType(ident: Ident)(
-                             implicit st: SymbolTable,
-                                      stateST: StateTable,
-                                      instrs: ListBuffer[Instruction]): BranchLinkName = {
-    // var printType: BranchLinkName = null
-
-    val _type = checkExpr(ident)(st, new ListBuffer[WACCError]())
+    val _type = checkExpr(expr)(st, new ListBuffer[WACCError]())
     val printType = _type match {
       case IntType()  => PrintInt
       case BoolType() => PrintBool
@@ -380,11 +358,10 @@ object StatTranslator {
       case _ => null
     }
 
-    // find the location of content register
     // Move content to R0 for print
-    moveRegToR0(findVarLoc(ident.name, stateST))
+    moveRegToR0(location)
 
-    printType
+    instrs += BranchLinkInstr(printType)
   }
 
   /* Println will print value in R0 */
@@ -454,13 +431,12 @@ object StatTranslator {
                                                        stateST: StateTable,
                                                        instrs: ListBuffer[Instruction]) = {
     // Translate condition
-    // Need CondCode return here
     translateExpr(expr)
 
     // may need to specially check when expr: bool
 
     // if true, branch to stat1
-    instrs += CondBranchInstr(EqCond, new Label(".L0"))
+    instrs += CondBranchInstr(checkCondCode(expr), new Label(".L0"))
 
     // Somewhere create Branch1 later --> translate stat1 there
 
@@ -474,11 +450,13 @@ object StatTranslator {
 
     // Translate branch1
     // .L0:
+    instrs += JumpLabel(".L0")
     val new_stateST2 = new StateTable(stateST)
     stats2.foreach(s => translateStatement(s)(s.symb, new_stateST2, instrs))
 
     // The rest of code needs to be in branch2
     // .L1:
+    instrs += JumpLabel(".L1")
   }
 
   /* New scope will have new state table */
@@ -491,25 +469,38 @@ object StatTranslator {
     
     // Translate Branch 2 here
     // .L1:
+    instrs += JumpLabel(".L1")
     val new_stateST = new StateTable(stateST)
     stats.foreach(s => translateStatement(s)(s.symb, new_stateST, instrs))
 
     // .L0:
     // Translate condition
-    // Need CondCode return here
+    instrs += JumpLabel(".L0")
     translateExpr(expr)
 
     // may need to specially check when expr: bool
 
     // If condition is true, jump back to branch 2
-    instrs += CondBranchInstr(EqCond, new Label(".L1"))
+    instrs += CondBranchInstr(checkCondCode(expr), new Label(".L1"))
 
     // Rest of the code goes here
   }
 
+  private def checkCondCode(cond: Expr): CondCode = {
+    cond match {
+      case BoolLit(_) => EqCond
+      case Eq(_, _) => EqCond
+      case Neq(_, _) => NeqCond
+      case Gt(_, _) => GtCond
+      case Gte(_, _) => GteCond
+      case Lt(_, _) => LtCond
+      case Lte(_, _) => LteCond
+      case _ => null
+    }
+  }
+
   /* New scope will have new state table */
-  private def translateBegin(stats: List[Stat])(implicit st: SymbolTable,
-                                                         stateST: StateTable,
+  private def translateBegin(stats: List[Stat])(implicit stateST: StateTable,
                                                          instrs: ListBuffer[Instruction]) = {
     /* Create new state table */
     val new_stateST = new StateTable(stateST)

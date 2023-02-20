@@ -74,6 +74,8 @@ object Instructions {
     case class BranchInstr(label: Label) extends JumpInstr      // b .L0
     case class CondBranchLinkInstr(cond: CondCode, label: BranchLinkName) extends JumpInstr
     case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
+    
+  case class JumpLabel(label: String) extends Instruction
 
   sealed trait CondCode
     case object EqCond extends CondCode
