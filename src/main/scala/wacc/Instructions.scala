@@ -6,7 +6,7 @@ object Instructions {
     case class RegOffset(reg: Register, offset: Int) extends Operand
   
   // Need to discuss which pattern here
-  sealed abstract class Label(name: String) extends Operand
+  sealed class Label(name: String) extends Operand
   
   sealed trait Register extends Operand
     case object R0 extends Register
@@ -74,7 +74,7 @@ object Instructions {
   sealed trait JumpInstr extends Instruction
     case class BranchLinkInstr(label: BranchLinkName) extends JumpInstr  // bl exit
     case class BranchInstr(label: Label) extends JumpInstr      // b .L0
-    case class CondBranchLinkInstr(cond: CondCode, label: Label) extends JumpInstr
+    case class CondBranchLinkInstr(cond: CondCode, label: BranchLinkName) extends JumpInstr
     case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
 
   sealed trait CondCode
@@ -106,6 +106,7 @@ object Instructions {
     case object CheckBound extends Label("_boundsCheck") with BranchLinkName
 
     case object ArrayStore extends Label("_arrStore") with BranchLinkName
+    case object ArrayStoreB extends Label("_arrStoreB") with BranchLinkName
     case object ArrayLoad  extends Label("_arrLoad") with BranchLinkName
     case object FreePair   extends Label("_freepair") with BranchLinkName
 
