@@ -55,6 +55,15 @@ object StatTranslator {
     }
   }
 
+  /* Find variable by name in stateTable to find its location */
+  def findLvalueLoc(lvalue: Lvalue, stateST: StateTable): Location = {
+    lvalue match {
+      case Ident(name) => findVarLoc(name, stateST)
+      case ArrayElem(ident, index) => findVarLoc(ident.name, stateST)
+      case PairElem(index, lvalue) => findLvalueLoc(lvalue, stateST)
+    }
+  }
+
   def sizeOfElem(elemType: Type): Int = {
     elemType match {
       case IntType() => 4
@@ -75,7 +84,7 @@ object StatTranslator {
       case initValue: Expr     => translateExpr(initValue)
       case initValue: ArrayLit => declareArrayLit(initValue)
       case initValue: NewPair  => declareNewPair(initValue)
-      case initValue: PairElem => declarePairElem(initValue)
+      case initValue: PairElem => loadPairElem(initValue)
       case initValue: Call     => translateCall(initValue)
     }
 
@@ -130,8 +139,8 @@ object StatTranslator {
                              implicit st: SymbolTable,
                                       stateST: StateTable,
                                       ins: ListBuffer[Instruction]) = {
-    storePairElem(pairValue.expr1)
-    storePairElem(pairValue.expr2)
+    declareNewPairLit(pairValue.expr1)
+    declareNewPairLit(pairValue.expr2)
   
     // Allocate for pair
     translateMalloc(8)
@@ -150,9 +159,10 @@ object StatTranslator {
     ins += PushInstr(Seq(R12))
   }
 
-  private def storePairElem(elem: Expr)(implicit st: SymbolTable,
-                                                 stateST: StateTable,
-                                                 ins: ListBuffer[Instruction]) = {
+  private def declareNewPairLit(elem: Expr)(
+                                implicit st: SymbolTable,
+                                         stateST: StateTable,
+                                         ins: ListBuffer[Instruction]) = {
 
     val _type = checkExprType(elem)
     val size = sizeOfElem(_type)
@@ -174,31 +184,71 @@ object StatTranslator {
     }
   }
 
-  private def declarePairElem(pairValue: PairElem)(
-                              implicit st: SymbolTable,
-                                       stateST: StateTable,
-                                       ins: ListBuffer[Instruction]): Unit = {
-    pairValue.lvalue match {
-      case lvalue: Ident     => translateExpr(lvalue)
-      case lvalue: ArrayElem => loadArrayElem(lvalue)
-      case lvalue: PairElem  => declarePairElem(lvalue)
-    }
+  private def storeIdent(ident: Ident)(
+                              implicit stateST: StateTable,
+                                       ins: ListBuffer[Instruction]) = {
+    // assign value now on stack
 
-    // Pop result
+    // Pop assign value to R8
     ins += PopInstr(Seq(R8))
 
+    // Move assign value to target_loc
+    val target_loc = findVarLoc(ident.name, stateST)
+
+    target_loc match {
+      case target_loc: Register  => ins += MovInstr(target_loc, R8)
+      case target_loc: RegOffset => ins += StoreInstr(R8, target_loc)
+    }
+  }
+
+  private def loadPairElem(pairValue: PairElem)(
+                              implicit stateST: StateTable,
+                                       ins: ListBuffer[Instruction]) = {
+
+    val location = findLvalueLoc(pairValue, stateST)
+
+    // If pair on stack, move to R8
+    val locReg = location match {
+      case location: RegOffset => {
+        ins += LoadInstr(R8, location)
+        R8
+      }
+      case location: Register => location
+    }
+
     // Check null for pair
-    ins += CmpInstr(R8, Immediate(0))
+    ins += CmpInstr(locReg, Immediate(0))
     ins += CondBranchLinkInstr(EqCond, CheckNull)
 
     // Move fst/snd of pair to R8
     pairValue.index match {
-      case "fst" => ins += LoadInstr(R8, RegOffset(R8, 0))
-      case "snd" => ins += LoadInstr(R8, RegOffset(R8, 4))
+      case "fst" => ins += LoadInstr(R8, RegOffset(locReg, 0))
+      case "snd" => ins += LoadInstr(R8, RegOffset(locReg, 4))
     }
 
-    // Push Pair pointer
+    // Push result
     ins += PushInstr(Seq(R8))
+  }
+
+  private def storePairElem(pairValue: PairElem)(
+                             implicit stateST: StateTable,
+                                      ins: ListBuffer[Instruction]) = {
+    // Assign value on stack now
+
+    // Load pair elem pointer to stack
+    loadPairElem(pairValue)
+
+    // Pop pair elem pointer to R9
+    ins += PopInstr(Seq(R9))
+
+    // Pop assign value ro R8
+    ins += PopInstr(Seq(R8))
+
+    // Move assign value to fst/snd elem
+    pairValue.index match {
+      case "fst" => ins += StoreInstr(R8, RegOffset(R9, 0))
+      case "snd" => ins += StoreInstr(R8, RegOffset(R9, 4))
+    }
   }
 
   /* Special convention for arrLoad
@@ -251,6 +301,7 @@ object StatTranslator {
     // For each dimension
     for (i <- arrayValue.index) {
 
+      // Push index
       translateExpr(i)
       // Pop index into R10
       ins += PopInstr(Seq(R10))
@@ -331,28 +382,16 @@ object StatTranslator {
       case initValue: Expr     => translateExpr(initValue)
       case initValue: ArrayLit => declareArrayLit(initValue)
       case initValue: NewPair  => declareNewPair(initValue)
-      case initValue: PairElem => declarePairElem(initValue)
+      case initValue: PairElem => loadPairElem(initValue)
       case initValue: Call     => translateCall(initValue)
     }
 
-    // New value on stack
+    // New value now on stack
     
     target match {
-      case target: Ident => {
-        // Pop assign value to R8
-        ins += PopInstr(Seq(R8))
-
-        // Move assign value to target_loc
-        val target_loc = findVarLoc(target.name, stateST)
-
-        target_loc match {
-          case target_loc: Register  => ins += MovInstr(target_loc, R8)
-          case target_loc: RegOffset => ins += StoreInstr(R8, target_loc)
-        }
-        
-      }
+      case target: Ident => storeIdent(target)
       case target: ArrayElem => storeArrayElem(target)
-      case target: PairElem => declarePairElem(target)
+      case target: PairElem => storePairElem(target)
     }
     
   }
@@ -431,13 +470,10 @@ object StatTranslator {
         // Read from input
         ins += BranchLinkInstr(readType)
 
-        // Move read value from R0 back to target_loc
-        val target_loc = findVarLoc(lvalue.name, stateST)
+        // Push R0 as assign value
+        ins += PushInstr(Seq(R0))
 
-         target_loc match {
-          case target_loc: Register  => ins += MovInstr(target_loc, R0)
-          case target_loc: RegOffset => ins += StoreInstr(R0, target_loc)
-        }
+        storeIdent(lvalue)
       }
       case lvalue: ArrayElem => {
 
@@ -448,13 +484,28 @@ object StatTranslator {
         // Read from input
         ins += BranchLinkInstr(readType)
 
-        // Push read value from R0
+        // Push R0 as assign value
         ins += PushInstr(Seq(R0))
 
         // Store read value in ArrayElem
         storeArrayElem(lvalue)
       }
-      case lvalue: PairElem => declarePairElem(lvalue)
+      case lvalue: PairElem => {
+
+        loadPairElem(lvalue)
+        // Pop original value to R0
+        ins += PopInstr(Seq(R0))
+
+        // Read from input
+        ins += BranchLinkInstr(readType)
+
+        // Push R0 as assign value
+        ins += PushInstr(Seq(R0))
+
+        // Store read value in PairElem
+        storePairElem(lvalue)
+      }
+      
     }
 
   }
