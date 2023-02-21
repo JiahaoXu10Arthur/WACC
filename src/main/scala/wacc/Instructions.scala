@@ -6,9 +6,28 @@ object Instructions {
     case class RegOffset(reg: Register, offset: Int) extends Operand
   
   // Need to discuss which pattern here
-  sealed class Label(name: String) extends Operand
+  sealed class Label(name: String)
   
-  sealed trait Register extends Operand
+  sealed trait Register extends Operand {
+    def assemble(): String = this match {
+      case R0 => "r0"
+      case R1 => "r1"
+      case R2 => "r2"
+      case R3 => "r3"
+      case R4 => "r4"
+      case R5 => "r5"
+      case R6 => "r6"
+      case R7 => "r7"
+      case R8 => "r8"
+      case R9 => "r9"
+      case R10 => "r10"
+      case R11 => "fp"
+      case R12 => "r12"
+      case R13 => "sp"
+      case R14 => "lr"
+      case R15 => "pc"
+    }
+  }
     case object R0 extends Register
     case object R1 extends Register
     case object R2 extends Register
@@ -40,11 +59,10 @@ object Instructions {
     case class AddInstr(destReg: Register, reg1: Register, opr: Operand) extends ExprInstr
     case class SubInstr(destReg: Register, reg1: Register, opr: Operand) extends ExprInstr
     case class MulInstr(destRegLo: Register, destRegHi: Register, reg1: Register, reg2: Register) extends ExprInstr
-    case class DivInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr // may be unused
-    case class ModInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr // may be unused
+    case class RsbsInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
 
-    case class AndInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr // unused in and, but used in chr
-    case class OrInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr // may be unused
+    // Bitwise and logical instruction
+    case class AndInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
 
     case class CmpInstr(srcReg: Register, opr: Operand) extends ExprInstr
 
@@ -54,18 +72,12 @@ object Instructions {
     case class OrdInstr(destReg: Register, imm: Immediate) extends ExprInstr
     case class ChrInstr(destReg: Register, imm: Immediate) extends ExprInstr
 
-    case class RsbsInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
   
   sealed trait MemoryInstr extends Instruction
     case class StoreInstr(srcReg: Register, destLoc: Operand) extends MemoryInstr
     case class LoadInstr(dest: Register, srcLoc: Operand) extends MemoryInstr
 
   sealed trait StatInstr extends Instruction
-		case class SkipInstr() extends StatInstr
-		case class DeclareInstr() extends StatInstr
-		case class AssignInstr() extends StatInstr
-		case class IfInstr() extends StatInstr
-		case class WhileInstr() extends StatInstr
     case class MovInstr (destReg: Register, opr: Operand) extends StatInstr
     case class CondMovInstr (cond: CondCode, destReg: Register, opr: Operand) extends StatInstr
 
@@ -78,7 +90,7 @@ object Instructions {
     case class BranchInstr(label: Label) extends JumpInstr      // b .L0
     case class CondBranchLinkInstr(cond: CondCode, label: BranchLinkName) extends JumpInstr
     case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
-    
+
   case class JumpLabel(label: String) extends Instruction
 
   sealed trait CondCode
