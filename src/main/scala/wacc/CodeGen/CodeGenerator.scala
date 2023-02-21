@@ -25,22 +25,22 @@ object CodeGenerator {
       case instr: MemoryInstr => assembleMemory(instr)
       case instr: StackInstr  => assembleStack(instr)
       case instr: StatInstr   => assembleStat(instr)
-      case CreateLabel(name)  => s"$name:"
+      case CreateLabel(label)  => s"${label.getName}:"
       case _                  => "not implemented yet"
     }
   }
 
   private def asmReg(reg: Register): String = reg match {
-    case R0 => "r0"
-    case R1 => "r1"
-    case R2 => "r2"
-    case R3 => "r3"
-    case R4 => "r4"
-    case R5 => "r5"
-    case R6 => "r6"
-    case R7 => "r7"
-    case R8 => "r8"
-    case R9 => "r9"
+    case R0  => "r0"
+    case R1  => "r1"
+    case R2  => "r2"
+    case R3  => "r3"
+    case R4  => "r4"
+    case R5  => "r5"
+    case R6  => "r6"
+    case R7  => "r7"
+    case R8  => "r8"
+    case R9  => "r9"
     case R10 => "r10"
     case R11 => "fp"
     case R12 => "r12"
@@ -50,10 +50,10 @@ object CodeGenerator {
   }
 
   private def asmOp(op: Operand): String = op match {
-    case op: Register => asmReg(op)
-    case op: Label => op.getName
+    case op: Register           => asmReg(op)
+    case op: Label              => op.getName
     case RegOffset(reg, offset) => s"[${asmReg(reg)}, #$offset]"
-    case Immediate(value) => s"#$value"
+    case Immediate(value)       => s"#$value"
   }
 
   private def asmCond(cond: CondCode): String = cond match {
@@ -107,24 +107,24 @@ object CodeGenerator {
   }
 
   private def assembleJump(instr: JumpInstr): String = instr match {
-    case BranchLinkInstr(label) => s"bl ${label.getName}"
-    case BranchInstr(label) => s"b ${label.getName}"
+    case BranchLinkInstr(label)           => s"bl ${label.getName}"
+    case BranchInstr(label)               => s"b ${label.getName}"
     case CondBranchLinkInstr(cond, label) => s"bl${asmCond(cond)} ${label.getName}"
-    case CondBranchInstr(cond, label) => s"b${asmCond(cond)} ${label.getName}"
+    case CondBranchInstr(cond, label)     => s"b${asmCond(cond)} ${label.getName}"
   }
 
   private def assembleMemory(instr: MemoryInstr): String = instr match {
-    case StoreInstr(srcReg, destLoc) => s"str ${asmReg(srcReg)} ${asmOp(destLoc)}"
-    case LoadInstr(dest, srcLoc) => s"ldr ${asmReg(dest)} ${asmOp(srcLoc)}"
+    case StoreInstr(srcReg, destLoc) => s"str ${asmReg(srcReg)}, ${asmOp(destLoc)}"
+    case LoadInstr(dest, srcLoc)     => s"ldr ${asmReg(dest)}, ${asmOp(srcLoc)}"
   }
 
   private def assembleStat(instr: StatInstr): String = instr match {
-    case MovInstr(destReg, opr) => s"mov ${asmReg(destReg)} ${asmOp(opr)}"
-    case CondMovInstr(cond, destReg, opr) => s"mov${asmCond(cond)} ${asmReg(destReg)} ${asmOp(opr)}"
+    case MovInstr(destReg, opr)           => s"mov ${asmReg(destReg)}, ${asmOp(opr)}"
+    case CondMovInstr(cond, destReg, opr) => s"mov${asmCond(cond)}, ${asmReg(destReg)}, ${asmOp(opr)}"
   }
 
   private def assembleStack(instr: StackInstr): String = instr match {
-    case PopInstr(registers) => s"pop {${registers.mkString(", ")}}"
-    case PushInstr(registers) => s"push {${registers.mkString(", ")}}"
+    case PopInstr(registers)  => s"pop {${registers.map(asmReg).mkString(", ")}}"
+    case PushInstr(registers) => s"push {${registers.map(asmReg).mkString(", ")}}"
   }
 }

@@ -545,10 +545,10 @@ object StatTranslator {
     ins += PopInstr(Seq(R8))
 
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"$branchCounter")
+    val branch_0 = JumpLabel(s"L$branchCounter")
     branchCounter += 1
 
-    val branch_1 = JumpLabel(s"$branchCounter")
+    val branch_1 = JumpLabel(s"L$branchCounter")
     branchCounter += 1
 
     // if true, branch to stat1 (if true branch)
@@ -583,10 +583,10 @@ object StatTranslator {
                                                          stateST: StateTable,
                                                          ins: ListBuffer[Instruction]) = {
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"$branchCounter")
+    val branch_0 = JumpLabel(s"L$branchCounter")
     branchCounter += 1
 
-    val branch_1 = JumpLabel(s"$branchCounter")
+    val branch_1 = JumpLabel(s"L$branchCounter")
     branchCounter += 1
 
 

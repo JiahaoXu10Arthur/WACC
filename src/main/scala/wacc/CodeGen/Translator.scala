@@ -16,7 +16,7 @@ object Translator {
     implicit val stateST = new StateTable(null)
     implicit val ins = new ListBuffer[Instruction]()
 
-    ins += CreateLabel(JumpLabel("main:"))
+    ins += CreateLabel(JumpLabel("main"))
 
 		val regsForUse = new ListBuffer[Register]()
 		val regsAvailable = Seq(R4, R5, R6, R7)
