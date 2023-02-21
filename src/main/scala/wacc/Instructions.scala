@@ -1,12 +1,13 @@
 package wacc
 
 object Instructions {
+
+  // Need to discuss which pattern here
+  sealed class Label(name: String)
+
   sealed trait Operand
     case class Immediate(value: Int) extends Operand
     case class RegOffset(reg: Register, offset: Int) extends Operand
-  
-  // Need to discuss which pattern here
-  sealed class Label(name: String) extends Operand
   
   sealed trait Register extends Operand
     case object R0 extends Register

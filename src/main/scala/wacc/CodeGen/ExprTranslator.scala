@@ -9,12 +9,13 @@ import StatTranslator._
 
 import scala.collection.mutable.ListBuffer
 
+
 object ExprTranslator {
   def translateExpr(
       expr: Expr
     )(implicit st: SymbolTable, 
 							 stateST: StateTable,
-               ins: ListBuffer[Instruction]): Register = {
+               ins: ListBuffer[Instruction]): Unit = {
 
     expr match {
       case Add(expr1, expr2)   => translateAdd(expr1, expr2)
@@ -46,8 +47,6 @@ object ExprTranslator {
       case Ident(name)         => translateIdent(name)
       case expr: ArrayElem     => loadArrayElem(expr)  // need to be further considered
     }
-
-    R8
   }
 
   /* Assume Move to R8 */
@@ -262,6 +261,7 @@ object ExprTranslator {
     ins += CondMovInstr(falseCode, R8, Immediate(0))
 
     // Do not need to push for compare?
+    ins += PushInstr(Seq(R8))
   }
 
 
@@ -399,7 +399,5 @@ object ExprTranslator {
     // Push result
     ins += PushInstr(Seq(R8))
   }
-
-
 
 }

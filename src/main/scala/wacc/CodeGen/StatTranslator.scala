@@ -4,9 +4,6 @@ import wacc.Ast._
 import wacc.SemanticChecker.SymbolTable
 import wacc.Instructions._
 import wacc.SemanticChecker.SemanticTypes._
-import wacc.SemanticChecker.ExprSemantic.checkExpr
-import wacc.SemanticChecker.ValueSemantic.checkLvalue
-import wacc.Error.Errors._
 
 import ExprTranslator._
 
@@ -71,7 +68,7 @@ object StatTranslator {
     }
   }
 
-  private def sizeOfElem(elemType: Type): Int = {
+  def sizeOfElem(elemType: Type): Int = {
     elemType match {
       case IntType() => 4
       case BoolType() => 1
@@ -88,11 +85,11 @@ object StatTranslator {
                                         stateST: StateTable,
                                         instrs: ListBuffer[Instruction]) = {
     initValue match {
-      case initValue: Expr => translateExpr(initValue)
+      case initValue: Expr     => translateExpr(initValue)
       case initValue: ArrayLit => declareArrayLit(initValue)
-      case initValue: NewPair => declareNewPair(initValue)
+      case initValue: NewPair  => declareNewPair(initValue)
       case initValue: PairElem => declarePairElem(initValue)
-      case initValue: Call => translateCall(initValue)
+      case initValue: Call     => translateCall(initValue)
     }
 
     // Pop result
@@ -138,12 +135,8 @@ object StatTranslator {
       instrs += StoreInstr(R8, RegOffset(R12, i))
     }
 
-    // Store array pointer back to R8
-    // Do this because translateDeclare will Move R8 to R4 at last
-    moveToR8(R12)
-
-    // Push result
-    instrs += PushInstr(Seq(R8))
+    // Push Array pointer
+    instrs += PushInstr(Seq(R12))
   }
 
   private def declareNewPair(pairValue: NewPair)(
@@ -166,19 +159,15 @@ object StatTranslator {
     // Store first elem
     instrs += StoreInstr(R8, RegOffset(R12, 0))
 
-    // Store pair pointer back to R8
-    // Do this because translateDeclare will Move R8 to R4 at last
-    moveToR8(R12)
-
-    // Push result
-    instrs += PushInstr(Seq(R8))
+    // Push pair pointer
+    instrs += PushInstr(Seq(R12))
   }
 
   private def storePairElem(elem: Expr)(implicit st: SymbolTable,
                                                  stateST: StateTable,
                                                  instrs: ListBuffer[Instruction]) = {
 
-    val _type = checkExpr(elem)(st, new ListBuffer[WACCError]())
+    val _type = checkExprType(elem)
     val size = sizeOfElem(_type)
 
     // If size == 0 -> pair elem is null, do not store
@@ -205,9 +194,9 @@ object StatTranslator {
                                        stateST: StateTable,
                                        instrs: ListBuffer[Instruction]): Unit = {
     pairValue.lvalue match {
-      case lvalue: Ident => translateExpr(lvalue)
+      case lvalue: Ident     => translateExpr(lvalue)
       case lvalue: ArrayElem => loadArrayElem(lvalue)
-      case lvalue: PairElem => declarePairElem(lvalue)
+      case lvalue: PairElem  => declarePairElem(lvalue)
     }
 
     // Pop result
@@ -236,14 +225,14 @@ object StatTranslator {
                                           stateST: StateTable,
                                           instrs: ListBuffer[Instruction]) = {
 
-    // Push array pointer
-    translateExpr(arrayValue.ident)
+    // find array pointer
+    var array_loc = findVarLoc(arrayValue.ident.name, stateST)
 
     // For each dimension
     for (i <- arrayValue.index) {
 
-      // Pop array pointer to R3
-      instrs += PopInstr(Seq(R3))
+      // Move array pointer to R3
+      instrs += MovInstr(R3, array_loc)
       
       // Pop index to R10
       translateExpr(i)
@@ -252,19 +241,16 @@ object StatTranslator {
       // branch to array load
       instrs += BranchLinkInstr(ArrayLoad)
 
-      // Push new array pointer
-      // May not need
-      instrs += PushInstr(Seq(R3))
+      // update array pointer
+      array_loc = R3
     }
-
-    // Array pointer already pushed
   }
 
   /* Special convention for arrStore
      R3: Array pointer
      R10: Index
      R8: value
-     R14: General purpose 
+     R14: General purpose
      Return to R3 */
   // Now only find example of 1 dimension array assign
   private def storeArrayElem(arrayValue: ArrayElem)(
@@ -272,30 +258,38 @@ object StatTranslator {
                                       stateST: StateTable,
                                       instrs: ListBuffer[Instruction]) = {
 
-    // Push array pointer
-    translateExpr(arrayValue.ident)
-
-    // Pop assign value to R9
-    instrs += PopInstr(Seq(R9))
+    // New value on stack
+    
+    // Find array pointer
+    var array_loc = findVarLoc(arrayValue.ident.name, stateST)
 
     // For each dimension
     for (i <- arrayValue.index) {
-      // Pop array pointer to R3
-      instrs += PushInstr(Seq(R3))
 
       translateExpr(i)
       // Pop index into R10
-      instrs += PushInstr(Seq(R10))
+      instrs += PopInstr(Seq(R10))
 
-      // Move assign value into R8
-      instrs += MovInstr(R8, R9)
+      // Pop assign value into R8
+      instrs += PopInstr(Seq(R8))
+
+      // Move array pointer to R3
+      instrs += MovInstr(R3, array_loc)
+
+      // arrayStore - 4 Byte; arrayStoreB - 1 Byte
+      val _type = checkLvalueType(arrayValue)
+      val storeBranchName = 
+      sizeOfElem(_type) match {
+        case 1 => ArrayStoreB
+        case 4 => ArrayStore
+      }
 
       // branch to array load
-      instrs += BranchLinkInstr(ArrayStore)
-      // when to use arrayStoreB ?
-    }
+      instrs += BranchLinkInstr(storeBranchName)
 
-    // Do it need to push?
+      // update array pointer
+      array_loc = R3
+    }
   }
 
   private def translateCall(callValue: Call)(
@@ -349,12 +343,14 @@ object StatTranslator {
                                        stateST: StateTable,
                                        instrs: ListBuffer[Instruction]) = {                                          
     newValue match {
-      case initValue: Expr => translateExpr(initValue)
+      case initValue: Expr     => translateExpr(initValue)
       case initValue: ArrayLit => declareArrayLit(initValue)
-      case initValue: NewPair => declareNewPair(initValue)
+      case initValue: NewPair  => declareNewPair(initValue)
       case initValue: PairElem => declarePairElem(initValue)
-      case initValue: Call => translateCall(initValue)
+      case initValue: Call     => translateCall(initValue)
     }
+
+    // New value on stack
     
     target match {
       case target: Ident => {
@@ -401,7 +397,7 @@ object StatTranslator {
     // Pop result to R0 for print
     instrs += PopInstr(Seq(R0))
 
-    val _type = checkExpr(expr)(st, new ListBuffer[WACCError]())
+    val _type = checkExprType(expr)
     val printType = _type match {
       case IntType()  => PrintInt
       case BoolType() => PrintBool
@@ -428,7 +424,7 @@ object StatTranslator {
                                                      stateST: StateTable,
                                                      instrs: ListBuffer[Instruction]) = {
 
-    val _type = checkLvalue(lvalue)(st, new ListBuffer[WACCError]())
+    val _type = checkLvalueType(lvalue)
     val readType = _type match {
       case IntType() => ReadInt
       case CharType() => ReadChar
@@ -480,7 +476,7 @@ object StatTranslator {
       case _ => null
     }
 
-    val _type = checkExpr(expr)(st, new ListBuffer[WACCError]())
+    val _type = checkExprType(expr)
     val freeType = _type match {
       case PairType(_, _) => FreePair
       case ArrayType(_) => FreeLabel
