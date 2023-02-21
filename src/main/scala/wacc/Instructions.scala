@@ -32,7 +32,9 @@ object Instructions {
   val LR = R14
   val PC = R15
 
-  sealed trait Instruction
+  sealed trait Instruction {
+    def assemble(): String = "not implemented yet"
+  }
 
   sealed trait ExprInstr extends Instruction
     case class AddInstr(destReg: Register, reg1: Register, opr: Operand) extends ExprInstr
@@ -72,7 +74,7 @@ object Instructions {
     case class PopInstr(registers: Seq[Register]) extends StackInstr
 
   sealed trait JumpInstr extends Instruction
-    case class BranchLinkInstr(label: BranchLinkName) extends JumpInstr  // bl exit
+    case class BranchLinkInstr(label: BranchLinkName) extends JumpInstr // bl exit
     case class BranchInstr(label: Label) extends JumpInstr      // b .L0
     case class CondBranchLinkInstr(cond: CondCode, label: BranchLinkName) extends JumpInstr
     case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr

@@ -34,14 +34,14 @@ object Main {
             val IR = Translator.translate(x)
             IR.foreach(ins => println(ins))
 
-            System.exit(SUCCESS)
+            //System.exit(SUCCESS)
           }
 
           /* Error detected, semantic error */
           case errors => {
             println(errorsMkString(errors, filename))
             println(s"Exiting with code $SEMANTIC_ERR...")
-            System.exit(SEMANTIC_ERR)
+            //System.exit(SEMANTIC_ERR)
           }
         }
       }
@@ -49,7 +49,7 @@ object Main {
       case Failure(err) => {
         println(errorsMkString(Seq(err), filename))
         println(s"Exiting with code $SYNTAX_ERR...")
-        System.exit(SYNTAX_ERR)
+        //System.exit(SYNTAX_ERR)
       }
     }
 
