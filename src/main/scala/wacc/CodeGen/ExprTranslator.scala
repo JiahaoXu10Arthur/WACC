@@ -35,7 +35,7 @@ object ExprTranslator {
       case Not(expr)           => translateNot(expr)
       case Neg(expr)           => translateNeg(expr)
       case Len(expr)           => translateLen(expr)
-      case Ord(expr)           => translateOrd(expr)
+      case Ord(expr)           => translateExpr(expr)
       case Chr(expr)           => translateChr(expr)
 
       case IntLit(value)       => translateInt(value)
@@ -96,7 +96,7 @@ object ExprTranslator {
   }
 
   /* Assume Move to R8 */
-  def translateIdent(name: String)(
+  private def translateIdent(name: String)(
                              implicit st: SymbolTable, 
                                       ins: ListBuffer[Instruction], 
                                       stateST: StateTable) = {
@@ -261,8 +261,7 @@ object ExprTranslator {
     ins += CondMovInstr(trueCode, R8, Immediate(1))
     ins += CondMovInstr(falseCode, R8, Immediate(0))
 
-    // Push result
-    ins += PushInstr(Seq(R8))
+    // Do not need to push for compare?
   }
 
 
@@ -271,36 +270,34 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ins: ListBuffer[Instruction]) = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
 
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
+    // Expr1 store in R8
+    translateExpr(expr1)
+    ins += PopInstr(Seq(R8))
     
     // Check if expr1 is true
-    ins += CmpInstr(loc1, Immediate(1))
+    ins += CmpInstr(R8, Immediate(1))
 
-    // If expr1 false, shortcut
+    // If expr1 false, shortcut to L0
     ins += CondBranchInstr(NeqCond, new Label(".L0"))
 
-    // Check if expr2 is true
-    ins += CmpInstr(loc2, Immediate(1))
+    // Expr2 store in R9
+    translateExpr(expr2)
+    ins += PopInstr(Seq(R9))
 
-    // .L0
+    // Check if expr2 is true
+    ins += CmpInstr(R9, Immediate(1))
+
+    // .L0:
     ins += BranchInstr(new Label(".L0"))
     
     // If both true, true
     ins += CondMovInstr(EqCond, R8, Immediate(1)) // R8 here should be loc2, but ref compiler used r8
     // If one of it false, false
     ins += CondMovInstr(NeqCond, R8, Immediate(0)) // R8 here should be loc2, but ref compiler used r8
+
+    // Push result
+    ins += PushInstr(Seq(R8))
   }
 
   private def translateOr(
@@ -308,35 +305,33 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ins: ListBuffer[Instruction]) = {
-    var loc1: Register = null
-    expr1 match {
-			case expr1: IntLit => loc1 = translateInt(expr1.value)
-			case expr1: Ident  => loc1 = findVarLoc(expr1.name, stateST)
-			case _ => translateExpr(expr1)
-		}
-
-		var loc2: Register = null
-		expr2 match {
-			case expr2: IntLit => loc2 = translateInt(expr2.value)
-			case expr2: Ident  => loc2 = findVarLoc(expr2.name, stateST)
-			case _ => translateExpr(expr2)
-		}
-
+    // Expr1 store in R8
+    translateExpr(expr1)
+    ins += PopInstr(Seq(R8))
+    
     // Check if expr1 is true
-		ins += CmpInstr(loc1, Immediate(1))
-    // If expr1 true, shortcut
+    ins += CmpInstr(R8, Immediate(1))
+
+    // If expr1 true, shortcut to L0
     ins += CondBranchInstr(EqCond, new Label(".L0"))
 
+    // Expr2 store in R9
+    translateExpr(expr2)
+    ins += PopInstr(Seq(R9))
+
     // Check if expr2 is true
-    ins += CmpInstr(loc2, Immediate(1))
+    ins += CmpInstr(R9, Immediate(1))
 
-    // .L0
+    // .L0:
     ins += BranchInstr(new Label(".L0"))
-
-    // If one of it true, true
+    
+    // If either true, true
     ins += CondMovInstr(EqCond, R8, Immediate(1)) // R8 here should be loc2, but ref compiler used r8
     // If both false, false
     ins += CondMovInstr(NeqCond, R8, Immediate(0)) // R8 here should be loc2, but ref compiler used r8
+
+    // Push result
+    ins += PushInstr(Seq(R8))
   }
 
   private def translateNot(
@@ -344,16 +339,17 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ins: ListBuffer[Instruction]) = {
-    var loc: Register = null
-    expr match {
-			case expr: IntLit => loc = translateInt(expr.value)
-			case expr: Ident  => loc = findVarLoc(expr.name, stateST)
-			case _ => translateExpr(expr)
-		}
+    // Expr store in R8
+    translateExpr(expr)
+    ins += PopInstr(Seq(R8))
 
-		ins += CmpInstr(loc, Immediate(1))
+    // Check expr true or false
+		ins += CmpInstr(R8, Immediate(1))
     ins += CondMovInstr(NeqCond, R8, Immediate(1))
     ins += CondMovInstr(EqCond, R8, Immediate(0))
+
+    // Push result
+    ins += PushInstr(Seq(R8))
   }
 
   private def translateNeg(
@@ -361,14 +357,16 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ins: ListBuffer[Instruction]) = {
-    val loc: Register = expr match {
-			case expr: IntLit => translateInt(expr.value)
-			case expr: Ident  => findVarLoc(expr.name, stateST)
-			case _ => translateExpr(expr)
-		}
 
-    ins += RsbsInstr(R8, loc, Immediate(0))
-    ins += BranchLinkInstr(CheckOverflow)
+    // Expr store in R8
+    translateExpr(expr)
+    ins += PopInstr(Seq(R8))
+
+    ins += RsbsInstr(R8, R8, Immediate(0))
+    ins += CondBranchLinkInstr(VsCond, CheckOverflow)
+
+    // Push result
+    ins += PushInstr(Seq(R8))
   }
 
   private def translateLen(
@@ -376,30 +374,14 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ins: ListBuffer[Instruction]) = {
-    var loc: Register = null
-    expr match {
-			case expr: IntLit => loc = translateInt(expr.value)
-			case expr: Ident  => loc = findVarLoc(expr.name, stateST)
-			case _ => translateExpr(expr)
-		}
+    // Expr store in R8
+    translateExpr(expr)
+    ins += PopInstr(Seq(R8))
 
-    ins += LoadInstr(R8, RegOffset(loc, -4))  // load from a[0] → len a
-  }
+    ins += LoadInstr(R8, RegOffset(R8, -4))  // load from a[0] → len a
 
-  private def translateOrd(
-			expr: Expr
-		)(implicit st: SymbolTable, 
-               stateST: StateTable,
-               ins: ListBuffer[Instruction]) = {
-    var loc: Register = null
-    expr match {
-			case expr: IntLit => loc = translateInt(expr.value)
-			case expr: Ident  => loc = findVarLoc(expr.name, stateST)
-			case _ => translateExpr(expr)
-		}
-
-    ins += MovInstr(R0, loc)
-    ins += BranchLinkInstr(PrintInt)
+    // Push result
+    ins += PushInstr(Seq(R8))
   }
 
   private def translateChr(
@@ -407,16 +389,15 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ins: ListBuffer[Instruction]) = {
-    var loc: Register = null
-    expr match {
-			case expr: IntLit => loc = translateInt(expr.value)
-			case expr: Ident  => loc = findVarLoc(expr.name, stateST)
-			case _ => translateExpr(expr)
-		}
+    // Expr store in R8
+    translateExpr(expr)
+    ins += PopInstr(Seq(R8))
 
-    ins += AndInstr(R8, loc, Immediate(127))
-    ins += MovInstr(R0, R8)
-    ins += BranchLinkInstr(PrintChar)
+    // Translate to char ASCII
+    ins += AndInstr(R8, R8, Immediate(127))
+
+    // Push result
+    ins += PushInstr(Seq(R8))
   }
 
 

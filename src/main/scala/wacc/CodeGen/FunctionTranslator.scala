@@ -1,7 +1,6 @@
 package wacc.CodeGen
 
 import wacc.Ast._
-import wacc.SemanticChecker.SymbolTable
 import wacc.Instructions._
 
 import StatTranslator._
