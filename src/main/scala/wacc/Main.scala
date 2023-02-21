@@ -31,7 +31,7 @@ object Main {
           case errors if errors.isEmpty => {
             println(s"Compile ${args.head} successful!")
 
-            val IR = Translator.translate(x)
+            val IR = Translator.translate(x, st)
             IR.foreach(ins => println(ins))
 
             //System.exit(SUCCESS)

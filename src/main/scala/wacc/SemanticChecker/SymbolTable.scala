@@ -29,6 +29,20 @@ class SymbolTable(st: SymbolTable) {
   def lookUp(name: String, objType: ObjectType): Option[SymbolObj] =
     dictionary.get((name, objType))
 
+  // Used for main and func translation
+  def findVarNum(): Int = {
+    var var_num = 0
+    
+    for (key_value <- dictionary) {
+      key_value._1 match {
+        case (_, VariableType()) => var_num += 1
+        case _ =>
+      }
+    }
+
+    var_num
+	}
+
   /* Look up a value according to key in this symbol table and all parent table*/
   def lookUpAll(name: String, objType: ObjectType): Option[SymbolObj] = {
     var s = this
