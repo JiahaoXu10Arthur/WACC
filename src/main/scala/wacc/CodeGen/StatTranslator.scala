@@ -48,9 +48,9 @@ object StatTranslator {
   }
 
   /* Find variable by name in stateTable to find its location */
-  def findVarLoc(identifier: String, stateST: StateTable): Register = {
+  def findVarLoc(identifier: String, stateST: StateTable): Location = {
     stateST.lookUpAll(identifier) match {
-      case Some(location: Register) => location
+      case Some(location) => location
       case _ => null
     }
   }
@@ -344,7 +344,12 @@ object StatTranslator {
 
         // Move assign value to target_loc
         val target_loc = findVarLoc(target.name, stateST)
-        ins += MovInstr(target_loc, R8)
+
+        target_loc match {
+          case target_loc: Register  => ins += MovInstr(target_loc, R8)
+          case target_loc: RegOffset => ins += StoreInstr(R8, target_loc)
+        }
+        
       }
       case target: ArrayElem => storeArrayElem(target)
       case target: PairElem => declarePairElem(target)
@@ -428,7 +433,11 @@ object StatTranslator {
 
         // Move read value from R0 back to target_loc
         val target_loc = findVarLoc(lvalue.name, stateST)
-        ins += MovInstr(target_loc, R0)
+
+         target_loc match {
+          case target_loc: Register  => ins += MovInstr(target_loc, R0)
+          case target_loc: RegOffset => ins += StoreInstr(R0, target_loc)
+        }
       }
       case lvalue: ArrayElem => {
 
@@ -455,11 +464,6 @@ object StatTranslator {
   private def translateFree(expr: Expr)(implicit st: SymbolTable,
                                                  stateST: StateTable,
                                                  ins: ListBuffer[Instruction]) = {
-    // can also be other?
-    val location = expr match {
-      case expr: Ident => findVarLoc(expr.name, stateST)
-      case _ => null
-    }
 
     val _type = checkExprType(expr)
     val freeType = _type match {
@@ -467,9 +471,11 @@ object StatTranslator {
       case ArrayType(_) => FreeLabel
       case _ => null
     }
+
+    translateExpr(expr)
     
-    /* Move pointer to r0 */
-    ins += MovInstr(R0, location)
+    /* Pop pointer to r0 */
+    ins += PopInstr(Seq(R0))
 
     /* Jump to free */
     ins += BranchLinkInstr(freeType)

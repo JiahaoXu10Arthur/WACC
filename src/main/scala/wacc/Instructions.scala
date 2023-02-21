@@ -4,14 +4,16 @@ object Instructions {
 
   sealed trait Operand
     case class Immediate(value: Int) extends Operand
-    case class RegOffset(reg: Register, offset: Int) extends Operand
+    case class RegOffset(reg: Register, offset: Int) extends Location
 
   // Need to discuss which pattern here
   sealed class Label(name: String) extends Operand
     case class StrLabel(name: String) extends Label(name)
     case class JumpLabel(name: String) extends Label(name)
+
+  sealed trait Location extends Operand
   
-  sealed trait Register extends Operand
+  sealed trait Register extends Location
     case object R0 extends Register
     case object R1 extends Register
     case object R2 extends Register
