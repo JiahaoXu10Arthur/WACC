@@ -4,7 +4,7 @@ object Instructions {
 
   sealed trait Operand
     case class Immediate(value: Int) extends Operand
-    case class RegOffset(reg: Register, offset: Int) extends Operand
+    case class RegOffset(reg: Register, offset: Int) extends Location
 
   // Need to discuss which pattern here
   sealed class Label(name: String) extends Operand {
@@ -12,27 +12,10 @@ object Instructions {
   }
     case class StrLabel(name: String) extends Label(name)
     case class JumpLabel(name: String) extends Label(name)
+
+  sealed trait Location extends Operand
   
-  sealed trait Register extends Operand {
-    def assemble(): String = this match {
-      case R0 => "r0"
-      case R1 => "r1"
-      case R2 => "r2"
-      case R3 => "r3"
-      case R4 => "r4"
-      case R5 => "r5"
-      case R6 => "r6"
-      case R7 => "r7"
-      case R8 => "r8"
-      case R9 => "r9"
-      case R10 => "r10"
-      case R11 => "fp"
-      case R12 => "r12"
-      case R13 => "sp"
-      case R14 => "lr"
-      case R15 => "pc"
-    }
-  }
+  sealed trait Register extends Location
     case object R0 extends Register
     case object R1 extends Register
     case object R2 extends Register
@@ -87,6 +70,8 @@ object Instructions {
     case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
     
   case class CreateLabel(label: Label) extends Instruction
+
+  
 
   sealed trait CondCode
     case object EqCond extends CondCode

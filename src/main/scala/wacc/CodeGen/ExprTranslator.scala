@@ -98,7 +98,12 @@ object ExprTranslator {
                              implicit st: SymbolTable, 
                                       ins: ListBuffer[Instruction], 
                                       stateST: StateTable) = {
-    ins += MovInstr(R8, findVarLoc(name, stateST))
+    val loc = findVarLoc(name, stateST)
+
+    loc match {
+      case loc: Register  => ins += MovInstr(R8, loc)
+      case loc: RegOffset => ins += LoadInstr(R8, loc)
+    }
 
     ins += PushInstr(Seq(R8))
   }

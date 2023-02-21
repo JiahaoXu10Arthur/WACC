@@ -5,11 +5,12 @@ import collection.mutable.Map
 import wacc.Instructions._
 
 class StateTable(st: StateTable) {
-  val dictionary = Map[String, Operand]()
+
+  val dictionary = Map[String, Location]()
   val encSymTable = st
 
   /* Add a key-value pair to dictionary */
-  def add(name: String, location: Operand) =
+  def add(name: String, location: Location) =
     dictionary += (name -> location)
 
   /* Remove a key-value pair specified by key from dictionary */
@@ -17,11 +18,11 @@ class StateTable(st: StateTable) {
     dictionary -= name
 
   /* Look up a value according to key in this symbol table */
-  def lookUp(name: String): Option[Operand] =
+  def lookUp(name: String): Option[Location] =
     dictionary.get(name)
 
   /* Look up a value according to key in this symbol table and all parent table*/
-  def lookUpAll(name: String): Option[Operand] = {
+  def lookUpAll(name: String): Option[Location] = {
     var s = this
     while (s != null) {
       val obj = s.lookUp(name)
