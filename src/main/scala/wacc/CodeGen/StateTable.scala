@@ -5,7 +5,6 @@ import collection.mutable.Map
 import wacc.Instructions._
 
 class StateTable(st: StateTable) {
-
   val dictionary = Map[String, Operand]()
   val encSymTable = st
 

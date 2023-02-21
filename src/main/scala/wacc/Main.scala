@@ -7,6 +7,7 @@ import java.nio.file.Paths
 import wacc.SyntaxChecker.Parser
 import wacc.SemanticChecker.SemanticChecker
 import wacc.CodeGen.Translator
+import wacc.CodeGen.CodeGenerator
 import wacc.Error.Errors.errorsMkString
 
 object Main {
@@ -33,6 +34,8 @@ object Main {
 
             val IR = Translator.translate(x)
             IR.foreach(ins => println(ins))
+            CodeGenerator.assemble(IR, "test")
+
 
             //System.exit(SUCCESS)
           }
