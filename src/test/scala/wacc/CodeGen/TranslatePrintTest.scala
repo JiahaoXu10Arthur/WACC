@@ -12,7 +12,8 @@ class TranslatePrintTest extends AnyFlatSpec {
     IR should matchPattern {
       case Seq(
         MovInstr(_, Immediate(102)), 
-        MovInstr(R0, _), 
+        PushInstr(_),
+        PopInstr(Seq(R0)), 
         BranchLinkInstr(PrintChar)) =>
     }
   }
@@ -23,7 +24,8 @@ class TranslatePrintTest extends AnyFlatSpec {
     IR should matchPattern {
       case Seq(
         MovInstr(_, Immediate(102)), 
-        MovInstr(R0, _), 
+        PushInstr(_),
+        PopInstr(Seq(R0)), 
         BranchLinkInstr(PrintChar),
         BranchLinkInstr(PrintLine)) =>
     }
@@ -35,7 +37,8 @@ class TranslatePrintTest extends AnyFlatSpec {
     IR should matchPattern {
       case Seq(
         MovInstr(_, Immediate(123)), 
-        MovInstr(R0, _), 
+        PushInstr(_),
+        PopInstr(Seq(R0)), 
         BranchLinkInstr(PrintInt)) =>
     }
   }
@@ -46,7 +49,8 @@ class TranslatePrintTest extends AnyFlatSpec {
     IR should matchPattern {
       case Seq(
         MovInstr(_, Immediate(1)), 
-        MovInstr(R0, _), 
+        PushInstr(_),
+        PopInstr(Seq(R0)), 
         BranchLinkInstr(PrintBool)) =>
     }
   }
@@ -57,7 +61,8 @@ class TranslatePrintTest extends AnyFlatSpec {
     IR should matchPattern {
       case Seq(
         MovInstr(_, Immediate(0)), 
-        MovInstr(R0, _), 
+        PushInstr(_),
+        PopInstr(Seq(R0)), 
         BranchLinkInstr(PrintBool)) =>
     }
   }

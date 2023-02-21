@@ -12,7 +12,8 @@ class TranslateBasicTest extends AnyFlatSpec {
     IR should matchPattern {
       case Seq(
         MovInstr(_, Immediate(0)), 
-        MovInstr(R0, _), 
+        PushInstr(_),
+        PopInstr(Seq(R0)), 
         BranchLinkInstr(ExitLabel)) =>
     }
   }
@@ -25,7 +26,8 @@ class TranslateBasicTest extends AnyFlatSpec {
     IR should matchPattern {
       case Seq(
         MovInstr(_, Immediate(0)), 
-        MovInstr(R0, _), 
+        PushInstr(_),
+        PopInstr(Seq(R0)), 
         BranchLinkInstr(ExitLabel)) =>
     }
   }
