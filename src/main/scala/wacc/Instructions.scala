@@ -1,12 +1,15 @@
 package wacc
 
 object Instructions {
+
   sealed trait Operand
     case class Immediate(value: Int) extends Operand
     case class RegOffset(reg: Register, offset: Int) extends Operand
-  
+
   // Need to discuss which pattern here
-  sealed class Label(name: String)
+  sealed class Label(name: String) extends Operand
+    case class StrLabel(name: String) extends Label(name)
+    case class JumpLabel(name: String) extends Label(name)
   
   sealed trait Register extends Operand {
     def assemble(): String = this match {
@@ -87,11 +90,11 @@ object Instructions {
 
   sealed trait JumpInstr extends Instruction
     case class BranchLinkInstr(label: BranchLinkName) extends JumpInstr // bl exit
-    case class BranchInstr(label: Label) extends JumpInstr      // b .L0
+    case class BranchInstr(label: Label) extends JumpInstr              // b .L0
     case class CondBranchLinkInstr(cond: CondCode, label: BranchLinkName) extends JumpInstr
     case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
-
-  case class JumpLabel(label: String) extends Instruction
+    
+  case class CreateLabel(label: Label) extends Instruction
 
   sealed trait CondCode
     case object EqCond extends CondCode

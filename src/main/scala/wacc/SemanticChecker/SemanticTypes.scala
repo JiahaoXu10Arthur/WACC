@@ -1,6 +1,8 @@
 package wacc.SemanticChecker
 
 import wacc.SyntaxChecker.Types
+import wacc.SemanticChecker.SymbolObjectType._
+import wacc.Ast._
 
 object SemanticTypes {
   sealed trait Type
@@ -75,4 +77,83 @@ object SemanticTypes {
     }
   }
 
+
+  def checkExprType(
+      expr: Expr
+    )(implicit st: SymbolTable): Type = {
+
+    expr match {
+      case Add(_, _)   => IntType()
+      case Sub(_, _)   => IntType()
+      case Mul(_, _)   => IntType()
+      case Div(_, _)   => IntType()
+      case Mod(_, _)   => IntType()
+
+      case Gt(_, _)    => BoolType()
+      case Gte(_, _)   => BoolType()
+      case Lt(_, _)    => BoolType()
+      case Lte(_, _)   => BoolType()
+      case Eq(_, _)    => BoolType()
+      case Neq(_, _)   => BoolType()
+
+      case And(_, _)   => BoolType()
+      case Or(_, _)    => BoolType()
+      case Not(_)           => BoolType()
+      case Neg(_)           => IntType()
+      case Len(_)           => IntType()
+      case Ord(_)           => IntType()
+      case Chr(_)           => CharType()
+
+      case IntLit(_)       => IntType()
+      case BoolLit(_)      => BoolType()
+      case CharLit(_)      => CharType()
+      case StrLit(_)       => StrType()
+      case PairLit()           => AnyType()
+      case Ident(name)         => {
+        /* Search for identifier in all scope */
+        st.lookUpAll(name, VariableType()) match {
+          case Some(symObj) => symObj.getType()
+          case None => AnyType()
+        }
+      }
+      case ArrayElem(ident, indexes) => {
+        var returnType = checkExprType(ident)
+        
+        /* Check correct dimension */
+        for (index <- 0 until indexes.length) {
+          returnType match {
+            case AnyType() =>
+            case ArrayType(elemType) => {
+              returnType = elemType
+            }
+            case other => AnyType()
+          }
+        } 
+        returnType
+      } 
+    }
+  }
+
+  def checkLvalueType(
+      lvalue: Lvalue
+    )(implicit st: SymbolTable): Type = {
+    lvalue match {
+      case lvalue: Ident     => checkExprType(lvalue)
+      case lvalue: ArrayElem => checkExprType(lvalue)
+      case PairElem(index, lvalue) => {
+        var returnType: Type = null
+        val lType = checkLvalueType(lvalue)
+        lType match {
+          case PairType(t1, t2) =>
+            index match {
+              case "fst" => returnType = t1
+              case "snd" => returnType = t2
+          }
+          case _ => AnyType()
+        }
+
+        returnType
+      }
+    }
+  }
 }
