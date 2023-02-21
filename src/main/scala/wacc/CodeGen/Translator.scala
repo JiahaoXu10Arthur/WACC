@@ -13,10 +13,11 @@ object Translator {
     implicit val stateST = new StateTable(null)
     implicit val instrs = new ListBuffer[Instruction]()
 
+    // Translate Main
+    p.stats.foreach { s => translateStatement(s)(s.symb, stateST, instrs) }
+
     // Firstly reading the headeres of the functions
     p.funcs.foreach { f => translateFunction(f) }
-    // Checking the validity of the statements followed
-    p.stats.foreach { s => translateStatement(s)(s.symb, stateST, instrs) }
 
     instrs.toList
   }

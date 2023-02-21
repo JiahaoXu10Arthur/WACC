@@ -13,8 +13,16 @@ object FunctionTranslator {
 	)(implicit stateST: StateTable,
 						 instrs: ListBuffer[Instruction]): Unit = {
 
+		// Create function label
+
+		// Push register
+		
+
+		// Translate function body
 		val new_stateST = new StateTable(stateST)
 		func.stats.foreach(s => translateStatement(s)(s.symb, new_stateST, instrs))
+		
+		// Pop register
 	
 	}
 }

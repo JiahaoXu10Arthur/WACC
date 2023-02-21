@@ -9,7 +9,6 @@ import StatTranslator._
 
 import scala.collection.mutable.ListBuffer
 
-
 object ExprTranslator {
   def translateExpr(
       expr: Expr
@@ -54,7 +53,7 @@ object ExprTranslator {
                                                 ins: ListBuffer[Instruction], 
                                                 stateST: StateTable) = {
     if (value >= 0) {
-      moveToR8(Immediate(value))
+      ins += MovInstr(R8, Immediate(value))
     } else {
       // use load for negative value
       ins += LoadInstr(R8, Immediate(value))
@@ -68,8 +67,8 @@ object ExprTranslator {
                                                      ins: ListBuffer[Instruction], 
                                                      stateST: StateTable) = {
     value match {
-      case true  => moveToR8(Immediate(1))
-      case false => moveToR8(Immediate(0))
+      case true  => ins += MovInstr(R8, Immediate(1))
+      case false => ins += MovInstr(R8, Immediate(0))
     }
 
     ins += PushInstr(Seq(R8))
@@ -79,7 +78,7 @@ object ExprTranslator {
   private def translateChar(value: Char)(implicit st: SymbolTable, 
                                                      ins: ListBuffer[Instruction], 
                                                      stateST: StateTable) = {
-    moveToR8(Immediate(value.toInt))
+    ins += MovInstr(R8, Immediate(value.toInt))
     
     ins += PushInstr(Seq(R8))
   }
@@ -89,7 +88,7 @@ object ExprTranslator {
                                           ins: ListBuffer[Instruction], 
                                           stateST: StateTable) = {
     // null --> #0
-    moveToR8(Immediate(0))
+    ins += MovInstr(R8, Immediate(0))
 
     ins += PushInstr(Seq(R8))
   }
@@ -99,7 +98,7 @@ object ExprTranslator {
                              implicit st: SymbolTable, 
                                       ins: ListBuffer[Instruction], 
                                       stateST: StateTable) = {
-    moveToR8(findVarLoc(name, stateST))
+    ins += MovInstr(R8, findVarLoc(name, stateST))
 
     ins += PushInstr(Seq(R8))
   }
@@ -109,7 +108,7 @@ object ExprTranslator {
                                           ins: ListBuffer[Instruction], 
                                           stateST: StateTable) = {
     // val strLabel = findLabelByString(value)
-    // LoadInstr(R8, strLabel)
+    LoadInstr(R8, StrLabel(value))
 
     ins += PushInstr(Seq(R8))
   }
@@ -278,8 +277,12 @@ object ExprTranslator {
     // Check if expr1 is true
     ins += CmpInstr(R8, Immediate(1))
 
+    // Allocate new branch name
+    val branch_0 = JumpLabel(".L" + branchCounter)
+    branchCounter += 1
+
     // If expr1 false, shortcut to L0
-    ins += CondBranchInstr(NeqCond, new Label(".L0"))
+    ins += CondBranchInstr(NeqCond, branch_0)
 
     // Expr2 store in R9
     translateExpr(expr2)
@@ -289,7 +292,7 @@ object ExprTranslator {
     ins += CmpInstr(R9, Immediate(1))
 
     // .L0:
-    ins += BranchInstr(new Label(".L0"))
+    ins += CreateLabel(branch_0)
     
     // If both true, true
     ins += CondMovInstr(EqCond, R8, Immediate(1)) // R8 here should be loc2, but ref compiler used r8
@@ -312,8 +315,12 @@ object ExprTranslator {
     // Check if expr1 is true
     ins += CmpInstr(R8, Immediate(1))
 
+    // Allocate new branch name
+    val branch_0 = JumpLabel(".L" + branchCounter)
+    branchCounter += 1
+
     // If expr1 true, shortcut to L0
-    ins += CondBranchInstr(EqCond, new Label(".L0"))
+    ins += CondBranchInstr(EqCond, branch_0)
 
     // Expr2 store in R9
     translateExpr(expr2)
@@ -323,7 +330,8 @@ object ExprTranslator {
     ins += CmpInstr(R9, Immediate(1))
 
     // .L0:
-    ins += BranchInstr(new Label(".L0"))
+    ins += CreateLabel(branch_0)
+
     
     // If either true, true
     ins += CondMovInstr(EqCond, R8, Immediate(1)) // R8 here should be loc2, but ref compiler used r8

@@ -2,12 +2,14 @@ package wacc
 
 object Instructions {
 
-  // Need to discuss which pattern here
-  sealed class Label(name: String)
-
   sealed trait Operand
     case class Immediate(value: Int) extends Operand
     case class RegOffset(reg: Register, offset: Int) extends Operand
+
+  // Need to discuss which pattern here
+  sealed class Label(name: String) extends Operand
+    case class StrLabel(name: String) extends Label(name)
+    case class JumpLabel(name: String) extends Label(name)
   
   sealed trait Register extends Operand
     case object R0 extends Register
@@ -45,7 +47,6 @@ object Instructions {
     case class ModInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr // may be unused
 
     case class AndInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr // unused in and, but used in chr
-    case class OrInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr // may be unused
 
     case class CmpInstr(srcReg: Register, opr: Operand) extends ExprInstr
 
@@ -62,11 +63,6 @@ object Instructions {
     case class LoadInstr(dest: Register, srcLoc: Operand) extends MemoryInstr
 
   sealed trait StatInstr extends Instruction
-		case class SkipInstr() extends StatInstr
-		case class DeclareInstr() extends StatInstr
-		case class AssignInstr() extends StatInstr
-		case class IfInstr() extends StatInstr
-		case class WhileInstr() extends StatInstr
     case class MovInstr (destReg: Register, opr: Operand) extends StatInstr
     case class CondMovInstr (cond: CondCode, destReg: Register, opr: Operand) extends StatInstr
 
@@ -76,11 +72,11 @@ object Instructions {
 
   sealed trait JumpInstr extends Instruction
     case class BranchLinkInstr(label: BranchLinkName) extends JumpInstr // bl exit
-    case class BranchInstr(label: Label) extends JumpInstr      // b .L0
+    case class BranchInstr(label: Label) extends JumpInstr              // b .L0
     case class CondBranchLinkInstr(cond: CondCode, label: BranchLinkName) extends JumpInstr
     case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
     
-  case class JumpLabel(label: String) extends Instruction
+  case class CreateLabel(label: Label) extends Instruction
 
   sealed trait CondCode
     case object EqCond extends CondCode
