@@ -7,7 +7,9 @@ object Instructions {
     case class RegOffset(reg: Register, offset: Int) extends Location
 
   // Need to discuss which pattern here
-  sealed class Label(name: String) extends Operand
+  sealed class Label(name: String) extends Operand {
+    def getName: String = name
+  }
     case class StrLabel(name: String) extends Label(name)
     case class JumpLabel(name: String) extends Label(name)
 
@@ -45,20 +47,9 @@ object Instructions {
     case class AddInstr(destReg: Register, reg1: Register, opr: Operand) extends ExprInstr
     case class SubInstr(destReg: Register, reg1: Register, opr: Operand) extends ExprInstr
     case class MulInstr(destRegLo: Register, destRegHi: Register, reg1: Register, reg2: Register) extends ExprInstr
-    case class DivInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr // may be unused
-    case class ModInstr(destReg: Register, reg1: Register, reg2: Register) extends ExprInstr // may be unused
-
-    case class AndInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr // unused in and, but used in chr
-
-    case class CmpInstr(srcReg: Register, opr: Operand) extends ExprInstr
-
-    case class NotInstr(destReg: Register, srcReg: Register) extends ExprInstr
-    case class NegInstr(destReg: Register, srcReg: Register) extends ExprInstr
-    case class LenInstr(destReg: Register, str: Label) extends ExprInstr
-    case class OrdInstr(destReg: Register, imm: Immediate) extends ExprInstr
-    case class ChrInstr(destReg: Register, imm: Immediate) extends ExprInstr
-
     case class RsbsInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr
+    case class AndInstr(destReg: Register, srcReg: Register, opr: Operand) extends ExprInstr // bitwise and instruction
+    case class CmpInstr(srcReg: Register, opr: Operand) extends ExprInstr
   
   sealed trait MemoryInstr extends Instruction
     case class StoreInstr(srcReg: Register, destLoc: Operand) extends MemoryInstr
