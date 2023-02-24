@@ -4,7 +4,7 @@ import java.io._
 import wacc.Instructions._
 
 object CodeGenerator {
-  def assemble(instrs: Seq[Instruction], fileName: String): Unit = {
+  def assemble(instrs: Seq[Instruction], fileName: String): String = {
     val asmFile = new File(s"$fileName.s")
     val writer = new PrintWriter(asmFile)
     writer.println(".data")
@@ -16,6 +16,7 @@ object CodeGenerator {
     }
     writer.close()
     asmFile.createNewFile()
+    asmFile.getAbsolutePath()
   }
 
   def assembleInstr(instr: Instruction): String = {
