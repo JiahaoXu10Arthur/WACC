@@ -7,16 +7,17 @@ import wacc.SemanticChecker.ImmutableSymbolTable
 
 import StatTranslator._
 import FunctionTranslator._
+import IR._
 
 
 object Translator {
 
-  def translate(p: Program, mainST: ImmutableSymbolTable): List[Instruction] = {
+  def translate(p: Program, mainST: ImmutableSymbolTable): IR = {
 
     implicit val stateST = new StateTable(null)
-    implicit val ins = new ListBuffer[Instruction]()
+    implicit val ir = new IR()
 
-    ins += CreateLabel(JumpLabel("main"))
+    addInstr(CreateLabel(JumpLabel("main:")))
 
 		val regsForUse = new ListBuffer[Register]()
 		val regsAvailable = Seq(R4, R5, R6, R7)
@@ -31,22 +32,22 @@ object Translator {
 		val pushRegs = regsForUse.toSeq ++ reservedRegs
 
     // Push register
-		ins += PushInstr(Seq(FP, LR))
-		ins += PushInstr(pushRegs)
+    addInstr(PushInstr(Seq(FP, LR)))
+		addInstr(PushInstr(pushRegs))
 
     // Translate Main
-    p.stats.foreach { s => translateStatement(s)(s.symb, stateST, ins) }
+    p.stats.foreach { s => translateStatement(s)(s.symb, stateST, ir) }
 
     // Mov return code 0
-    ins += MovInstr(R0, Immediate(0))
+    addInstr(MovInstr(R0, Immediate(0)))
 
     // Pop register
-    ins += PopInstr(pushRegs)
-    ins += PopInstr(Seq(FP, PC))
+    addInstr(PopInstr(pushRegs))
+    addInstr(PopInstr(Seq(FP, PC)))
 
     // Firstly reading the headeres of the functions
     p.funcs.foreach { f => translateFunction(f) }
 
-    ins.toList
+    returnIR()
   }
 }
