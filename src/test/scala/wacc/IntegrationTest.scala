@@ -11,6 +11,8 @@
  import wacc.SemanticChecker.SemanticChecker
  import wacc.CodeGen.Translator
  import wacc.CodeGen.CodeGenerator
+ import wacc.Utils.BackEndUtils._
+ import wacc.Utils.BackEndUtils
  
  class FrontIntegrationTest extends AnyWordSpec {
 
@@ -62,6 +64,10 @@
                 val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
                 CodeGenerator.assemble(ir.instrs, waccName)
                 //TODO: test output of assemble
+                val (_output, _exit) = getExpects(waccName)
+                val (output, exit) = getOutputAndExit(waccName)
+                output shouldBe _output
+                exit shouldBe _exit
                 true
                }
                case Failure(msg) => {
