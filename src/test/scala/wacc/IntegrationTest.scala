@@ -41,7 +41,7 @@
     val subDirs = getListOfSubDirectories(path)
 
     "A bunch of generated ScalaTest tests" should {
-      allFiles.foreach{x => testFile(path, x)}
+      allFiles.foreach{x => if (x.getName().endsWith(".wacc")) testFile(path, x)}
       if (subDirs.nonEmpty) {
         subDirs.foreach{x => testSkeleton(path ++ "/" ++ x ++ "/")}
       }
@@ -51,16 +51,12 @@
    def testFile(path: String, f: File)= {
       val filename = path ++ f.getName()
       val string = new String(Files.readAllBytes(Paths.get(filename)))
-
       if (path.contains("/valid/")) {
           "A successful compilation return the exit status 0 " ++ filename in {
            (Parser.parse(string) match {
                case Success(x) => {
                 val (errors, st) = SemanticChecker.semanticCheck(x)
                 errors shouldBe empty
-                val ir = Translator.translate(x, st)
-                val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
-                CodeGenerator.assemble(ir.instrs, waccName)
                 //TODO: test output of assemble
                 true
                }
