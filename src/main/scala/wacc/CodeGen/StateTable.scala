@@ -1,0 +1,92 @@
+package wacc.CodeGen
+
+import scala.collection.mutable
+import wacc.Instructions._
+
+class StateTable(st: Option[StateTable]) {
+
+  val encStateTable = st
+  val dictionary = mutable.Map[String, Location]()
+  val usedReg: mutable.ListBuffer[Register] =
+    st match {
+      case Some(stTable) => stTable.usedReg
+      // First state table
+      case None => mutable.ListBuffer[Register]()
+    }
+
+  /* Add a key-value pair to dictionary */
+  def add(name: String, location: Location) = {
+    dictionary += (name -> location)
+
+    // add used register
+    location match {
+      case loc: Register => usedReg += loc
+      case _ =>
+    }
+  }
+    
+
+  /* Remove a key-value pair specified by key from dictionary */
+  def remove(name: String) = {
+    val location = lookUpAll(name)
+    
+    // delete used register
+    location match {
+      case Some(loc) => loc match {
+        case loc: Register => usedReg -= loc
+        case _ =>
+      }
+      case _ =>
+    }
+
+    dictionary -= name
+  }
+
+  /* Look up a value according to key in this symbol table */
+  def lookUp(name: String): Option[Location] =
+    dictionary.get(name)
+
+  /* Recursive look up all */
+  def lookUpAllHelper(name: String, st: Option[StateTable]): Option[Location] = {
+
+    // Check stateTable not null
+    st match {
+      case Some(stateTable) => {
+        // lookUp in this stateTable
+        val returnLoc = stateTable.lookUp(name)
+        returnLoc match {
+          // If found, return
+          case Some(loc) => returnLoc
+          // If not found, recursive find
+          case None => lookUpAllHelper(name, stateTable.encStateTable)
+        }
+      }
+      // if cannot find in all stateTable, None
+      case None => None
+    }
+
+  }
+
+  /* Look up a value according to key in this symbol table and all parent table*/
+  def lookUpAll(name: String): Option[Location] = {
+    lookUpAllHelper(name, Some(this))
+  }
+
+  /* Return the next location for variable storage */
+  def nextStoreLocation(stateTable: StateTable): Location = {
+    val returnLoc: Option[Location] = None
+
+    // Find available register first
+    for (r <- variableReg) {
+      returnLoc match {
+        case Some(_) =>
+        case None => {
+          
+        }
+      }
+    }
+
+    R4
+  }
+
+}

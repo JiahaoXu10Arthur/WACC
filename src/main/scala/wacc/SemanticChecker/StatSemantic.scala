@@ -33,6 +33,9 @@ object StatSemantic {
       case While(expr, stat)        => whileCheck(expr, stat)
       case Begin(stat)              => beginCheck(stat)
     }
+
+    /* Record the symbol table to AST node */
+    stat.symb = st
     true
   }
 
@@ -289,11 +292,11 @@ object StatSemantic {
     }
 
     /* Create new scope for each if body */
-    val new_st1 = new SymbolTable(st)
+    val new_st1 = new SymbolTable(st, VariableType())
     /* Check statement in body */
     stat1.foreach { s => checkStat(s)(new_st1, semErr) }
 
-    val new_st2 = new SymbolTable(st)
+    val new_st2 = new SymbolTable(st, VariableType())
     stat2.foreach { s => checkStat(s)(new_st2, semErr) }
 
     /* Add new symbol table to st's subSymbolTable */
@@ -320,7 +323,7 @@ object StatSemantic {
     }
 
     /* Create new scope for each if body */
-    val new_st = new SymbolTable(st)
+    val new_st = new SymbolTable(st, VariableType())
     /* Check statement in body */
     stat.foreach { s => checkStat(s)(new_st, semErr) }
 
@@ -335,7 +338,7 @@ object StatSemantic {
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
 
     /* Create new scope for each if body */
-    val new_st = new SymbolTable(st)
+    val new_st = new SymbolTable(st, VariableType())
     /* Check statement in body */
     stat.foreach { s => checkStat(s)(new_st, semErr) }
 

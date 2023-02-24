@@ -6,16 +6,20 @@ import java.nio.file.Paths
 
 import wacc.SyntaxChecker.Parser
 import wacc.SemanticChecker.SemanticChecker
+import wacc.CodeGen.Translator
+import wacc.CodeGen.CodeGenerator
 import wacc.Error.Errors.errorsMkString
 
 object Main {
   private final val SUCCESS = 0
   private final val SYNTAX_ERR = 100
   private final val SEMANTIC_ERR = 200
+  private final val WACC_FILE_DROP_LEN = 5
 
   def main(args: Array[String]): Unit = {
     val filename = args.head
     val string = new String(Files.readAllBytes(Paths.get(filename)))
+    //val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
 
     println("===== COMPILING =====")
 
@@ -29,14 +33,21 @@ object Main {
           /* Semantic check success */
           case errors if errors.isEmpty => {
             println(s"Compile ${args.head} successful!")
-            System.exit(SUCCESS)
+
+            val ir = Translator.translate(x, st)
+            ir.instrs.foreach(ins => println(ins))
+            ir.strConsts.foreach(str => println(str))
+
+            println(CodeGenerator.assemble(ir, "test"))
+
+            //System.exit(SUCCESS)
           }
 
           /* Error detected, semantic error */
           case errors => {
             println(errorsMkString(errors, filename))
             println(s"Exiting with code $SEMANTIC_ERR...")
-            System.exit(SEMANTIC_ERR)
+            //System.exit(SEMANTIC_ERR)
           }
         }
       }
@@ -44,7 +55,7 @@ object Main {
       case Failure(err) => {
         println(errorsMkString(Seq(err), filename))
         println(s"Exiting with code $SYNTAX_ERR...")
-        System.exit(SYNTAX_ERR)
+        //System.exit(SYNTAX_ERR)
       }
     }
 

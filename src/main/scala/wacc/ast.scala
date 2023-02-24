@@ -8,6 +8,7 @@ import wacc.SyntaxChecker.ParserPositionBridge.{
   ParserBridgePos4
 }
 import wacc.SyntaxChecker.Types._
+import wacc.SemanticChecker.SymbolTable
 
 object Ast {
   /* Program */
@@ -133,7 +134,9 @@ object Ast {
   object ArgList extends ParserBridgePos1[List[Expr], ArgList]
 
   /* Statements */
-  sealed trait Stat
+  sealed trait Stat{
+    var symb: SymbolTable = null
+  }
   case class Skip()(val pos: (Int, Int)) extends Stat
   object Skip extends ParserSingletonBridgePos[Skip] {
     override def con(pos: (Int, Int)) = this()(pos)
@@ -187,8 +190,10 @@ object Ast {
       ident: Ident,
       params: List[Param],
       stats: List[Stat]
-  )(val pos: (Int, Int))
+  )(val pos: (Int, Int)) {
+    var symb: SymbolTable = null
+  }
   object Func
-      extends ParserBridgePos4[Type, Ident, List[Param], List[Stat], Func]
+      extends ParserBridgePos4[Type, Ident, List[Param], List[Stat], Func] 
 
 }
