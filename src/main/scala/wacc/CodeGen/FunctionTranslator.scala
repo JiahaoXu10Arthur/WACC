@@ -13,7 +13,7 @@ object FunctionTranslator {
 	def translateFunction(
 		func: Func
 	)(implicit stateST: StateTable,
-						 ir: IR): Unit = {
+			   ir: IR): Unit = {
 
 		val funcRegs = Seq(FP, LR)
 		val regsForUse = new mutable.ListBuffer[Register]()
@@ -34,7 +34,7 @@ object FunctionTranslator {
 		addInstr(PushInstr(regsForUse.toSeq))
 
 		// Translate function body
-		val new_stateST = new StateTable(stateST)
+		val new_stateST = new StateTable(Some(stateST))
 		func.stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
 		
 		// Pop register

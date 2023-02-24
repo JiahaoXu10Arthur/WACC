@@ -14,7 +14,7 @@ object Translator {
 
   def translate(p: Program, mainST: ImmutableSymbolTable): IR = {
 
-    implicit val stateST = new StateTable(null)
+    implicit val stateST = new StateTable(None)
     implicit val ir = new IR()
 
     addInstr(CreateLabel(JumpLabel("main:")))

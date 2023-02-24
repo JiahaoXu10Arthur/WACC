@@ -567,7 +567,7 @@ object StatTranslator {
 
     // if false, continue executing stat2 (else branch)
     /* Create new state table */
-    val new_stateST2 = new StateTable(stateST)
+    val new_stateST2 = new StateTable(Some(stateST))
     stats2.foreach(s => translateStatement(s)(s.symb, new_stateST2, ir))
 
     // As Branch1 will be below, when false, skip to Branch 2 (will be the rest of code)
@@ -578,7 +578,7 @@ object StatTranslator {
     addInstr(CreateLabel(branch_0))
 
     // Execute stat1
-    val new_stateST1 = new StateTable(stateST)
+    val new_stateST1 = new StateTable(Some(stateST))
     stats2.foreach(s => translateStatement(s)(s.symb, new_stateST1, ir))
 
     // The rest of code needs to be in branch2
@@ -605,7 +605,7 @@ object StatTranslator {
     // Translate Branch 2 here
     // .L1:
     addInstr(CreateLabel(branch_1))
-    val new_stateST = new StateTable(stateST)
+    val new_stateST = new StateTable(Some(stateST))
     stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
 
     // .L0:
@@ -641,7 +641,7 @@ object StatTranslator {
   private def translateBegin(stats: List[Stat])(implicit stateST: StateTable,
                                                          ir: IR) = {
     /* Create new state table */
-    val new_stateST = new StateTable(stateST)
+    val new_stateST = new StateTable(Some(stateST))
     stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
   }
 }
