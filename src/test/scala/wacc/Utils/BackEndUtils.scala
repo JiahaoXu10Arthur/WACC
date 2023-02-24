@@ -71,13 +71,20 @@ object BackEndUtils {
     def getExpects(filename: String): (String, String) = {
         val expects = getExpectStrings(filename ++ ".wacc")
 
-        (expects.output, expects.exit)
+        val output = expects.output
+        var exit = expects.exit
+
+        if (exit.isEmpty()) {
+            exit = "0"
+        }
+
+        (output, exit)
     }
 
     def getOutputAndExit(filename: String): (String, String) = {
         val input = getExpectStrings(filename ++ ".wacc").input
 
-        ("arm-linux-gnueabi-gcc -o EXEName -mcpu=arm1176jzf-s -mtune=arm1176jzf-s " ++ filename ++ ".s").!
+        ("arm-linux-gnueabi-gcc -o " ++ filename ++ " -mcpu=arm1176jzf-s -mtune=arm1176jzf-s " ++ filename ++ ".s").!
         val inputStream = new ByteArrayInputStream(input.getBytes())
         val a = Seq(
             "qemu-arm" ,"-L", "/usr/arm-linux-gnueabi/", filename
