@@ -13,7 +13,7 @@ import SymbolObjectType._
 import ExprSemantic._
 
 class SemanticExprTest extends AnyFlatSpec {
-	implicit val st = new SymbolTable(null)
+	implicit val st = new SymbolTable(null, VariableType())
 	implicit val semErr = new ListBuffer[WACCError]()
 
 	"Expr: int liter" should "be IntType" in {
@@ -50,7 +50,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Array Elem" should "refer type in symbolTable" in {
-		implicit val st = new SymbolTable(null)
+		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
 		/* array[1][5] */
 		val testArray1 = ArrayElem(Ident("array")(0,0), List(IntLit(1)(0, 0), 
@@ -78,7 +78,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Unary Op: Not" should "return BoolType" in {
-		implicit val st = new SymbolTable(null)
+		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
 		
 		/* !true */
@@ -98,7 +98,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Unary Op: Neg" should "return IntType" in {
-		implicit val st = new SymbolTable(null)
+		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
 		
 		/* -2 */
@@ -112,7 +112,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Unary Op: Len" should "return IntType" in {
-		implicit val st = new SymbolTable(null)
+		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
 		
 		/* len(array1) */
@@ -134,7 +134,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Unary Op: Ord" should "return IntType" in {
-		implicit val st = new SymbolTable(null)
+		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
 		
 		/* ord(c) */
@@ -148,7 +148,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Unary Op: Chr" should "return CharType" in {
-		implicit val st = new SymbolTable(null)
+		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
 		
 		/* chr(97) */
@@ -162,7 +162,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Binary Op: Arithmetic" should "return IntType" in {
-		implicit val st = new SymbolTable(null)
+		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
 		
 		/* 1*2 */
@@ -180,7 +180,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Binary Op: Compare" should "return BoolType" in {
-		implicit val st = new SymbolTable(null)
+		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
 		
 		/* 1 > 2 */
@@ -201,7 +201,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Binary Op: Eq" should "return BoolType" in {
-		implicit val st = new SymbolTable(null)
+		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
 		
 		/* 1 == 2 */
@@ -226,7 +226,7 @@ class SemanticExprTest extends AnyFlatSpec {
 	}
 
 	"Expr: Binary Op: Logic" should "return BoolType" in {
-		implicit val st = new SymbolTable(null)
+		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
 		/* true && false */
 		val testlog1 = And(BoolLit(true)(0,0), BoolLit(false)(0,0))(0,0)

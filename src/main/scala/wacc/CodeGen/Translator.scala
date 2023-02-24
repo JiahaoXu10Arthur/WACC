@@ -3,30 +3,39 @@ package wacc.CodeGen
 import scala.collection.mutable.ListBuffer
 import wacc.Instructions._
 import wacc.Ast._
-import wacc.SemanticChecker.ImmutableSymbolTable
+import wacc.SemanticChecker.SymbolTable
 
 import StatTranslator._
 import FunctionTranslator._
 import IR._
 
 
+
 object Translator {
 
-  def translate(p: Program, mainST: ImmutableSymbolTable): IR = {
-
+  def translate(p: Program, mainST: SymbolTable): IR = {
+    
     implicit val stateST = new StateTable(None)
     implicit val ir = new IR()
 
     addInstr(CreateLabel(JumpLabel("main")))
 
 		val regsForUse = new ListBuffer[Register]()
-		val regsAvailable = Seq(R4, R5, R6, R7)
 		val reservedRegs = Seq(R8, R10, R12)
+    var stackInUse = false
 
-		val regNum = mainST.findVarNum()
+		val varNum = mainST.findAllVarNum()
+    
 		// Adding registers to regsForUse
-		for (i <- 1 to regNum) {
-			regsForUse += regsAvailable(i)
+		if (varNum <= 4) {
+			// Adding registers to regsForUse if the registers are enough
+			for (i <- 0 until varNum) {
+				regsForUse += variableReg(i)
+			}
+		} else {
+			// Adding the first four variables to registers and push others to stack
+			regsForUse ++= variableReg
+			stackInUse = true
 		}
 		
 		val pushRegs = regsForUse.toSeq ++ reservedRegs
@@ -34,6 +43,12 @@ object Translator {
     // Push register
     addInstr(PushInstr(Seq(FP, LR)))
 		addInstr(PushInstr(pushRegs))
+
+    // Add stack space if too many variables
+		if (stackInUse) {
+			val stackSpace = (varNum - 4) * 4
+			addInstr(SubInstr(SP, SP, Immediate(stackSpace)))
+		}
 
     // Translate Main
     p.stats.foreach { s => translateStatement(s)(s.symb, stateST, ir) }

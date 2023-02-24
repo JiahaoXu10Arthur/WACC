@@ -103,5 +103,9 @@ object FunctionSemantic {
 
     /* Add new symbol table to st's subSt */
     st.addSubSt(new_st)
+
+
+    /* Add symbol table to func */
+    func.symb = st
   }
 }

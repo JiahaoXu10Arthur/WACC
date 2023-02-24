@@ -129,7 +129,7 @@ object StatTranslator {
     addInstr(StoreInstr(R8, RegOffset(R12, -4)))
 
     // For loop to store each element
-    for (i <- 0 until arr_size by 4){
+    for (i <- 0 until arr_len){
       // Load elem into R8
       translateExpr(arrayValue.values(i))
 
@@ -137,7 +137,7 @@ object StatTranslator {
       addInstr(PopInstr(Seq(R8)))
 
       // Store elem to a[i]
-      addInstr(StoreInstr(R8, RegOffset(R12, i)))
+      addInstr(StoreInstr(R8, RegOffset(R12, i * 4)))
     }
 
     // Push Array pointer
@@ -441,9 +441,7 @@ object StatTranslator {
       case BoolType() => PrintBool
       case CharType() => PrintChar
       case StrType()  => PrintStr
-      case PairType(_, _) => PrintPointer
-      case ArrayType(_) => PrintPointer
-      case _ => null
+      case _ => PrintPointer
     }
 
     translateBLink(printType)
@@ -626,14 +624,13 @@ object StatTranslator {
 
   private def checkCondCode(cond: Expr): CondCode = {
     cond match {
-      case BoolLit(_) => EqCond
       case Eq(_, _) => EqCond
       case Neq(_, _) => NeqCond
       case Gt(_, _) => GtCond
       case Gte(_, _) => GteCond
       case Lt(_, _) => LtCond
       case Lte(_, _) => LteCond
-      case _ => null
+      case _ => EqCond
     }
   }
 

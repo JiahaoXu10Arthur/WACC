@@ -41,7 +41,7 @@
     val subDirs = getListOfSubDirectories(path)
 
     "A bunch of generated ScalaTest tests" should {
-      allFiles.foreach{x => testFile(path, x)}
+      allFiles.foreach{x => if(x.getName().endsWith(".wacc")) testFile(path, x)}
       if (subDirs.nonEmpty) {
         subDirs.foreach{x => testSkeleton(path ++ "/" ++ x ++ "/")}
       }

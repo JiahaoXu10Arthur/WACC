@@ -1,17 +1,18 @@
 package wacc.SemanticChecker
 
-import collection.mutable.Map
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 
 import SymbolObject._
 import SymbolObjectType._
 
 class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
-  val dictionary = Map[(String, ObjectType), SymbolObj]()
+  val dictionary = mutable.Map[(String, ObjectType), SymbolObj]()
+  val subSts = mutable.ListBuffer[SymbolTable]()
   val encSymTable = st
-  val subSts = ListBuffer[SymbolTable]()
-  // Within the same function
+  // SymbolTable has 2 type - 
+  // Variable type -> new scope within same function
+  // Function type -> new function scope
   val stType = tableType
 
   /* Add sub symbol table to child list */
@@ -31,8 +32,8 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
   def lookUp(name: String, objType: ObjectType): Option[SymbolObj] =
     dictionary.get((name, objType))
 
-  // Used for main and func translation
-  def findVarNum(): Int = {
+  // find variable number in this scope
+  private def findVarNum(): Int = {
     var var_num = 0
     
     for (key_value <- dictionary) {
@@ -44,6 +45,26 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
     var_num
 	}
+
+	private def findAllVarNumHelper(st: SymbolTable) : Int = {
+		var num = st.findVarNum()
+
+		st.subSts.foreach{subST => 
+			subST.stType match {
+				case VariableType() => {
+					num += findAllVarNumHelper(subST)
+				}
+				case _ =>
+		}}
+
+		num
+	}
+		
+
+	// find variable number in all scope within function
+  def findAllVarNum(): Int = {
+    findAllVarNumHelper(this)
+  }
 
   /* Look up a value according to key in this symbol table and all parent table*/
   def lookUpAll(name: String, objType: ObjectType): Option[SymbolObj] = {
@@ -65,7 +86,7 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
       typeIn: String,
       objType: ObjectType
   ): Set[(String, (Int, Int))] = {
-    val similar = new ListBuffer[(String, (Int, Int))]()
+    val similar = new mutable.ListBuffer[(String, (Int, Int))]()
 
     /* If names are the same without case sensitive, they are similar */
     dictionary.foreach { x =>
@@ -85,7 +106,7 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
       typeIn: String,
       objType: ObjectType
   ): Set[(String, (Int, Int))] = {
-    val similar = new ListBuffer[(String, (Int, Int))]()
+    val similar = new mutable.ListBuffer[(String, (Int, Int))]()
 
     /* Recursively find similar set until the top parent st */
     var s = this
@@ -101,7 +122,8 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
   }
 
   /* Get an immutable symbol table based on the current one */
-  def getImmutableTable(): ImmutableSymbolTable = {
-    return new ImmutableSymbolTable(dictionary.toMap, subSts.toList)
+  def getImmutableTable(): (Map[(String, ObjectType), SymbolObj], 
+                            List[SymbolTable]) = {
+    (dictionary.toMap, subSts.toList)
   }
 }
