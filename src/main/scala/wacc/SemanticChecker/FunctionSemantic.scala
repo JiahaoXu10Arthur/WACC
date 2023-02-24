@@ -59,7 +59,7 @@ object FunctionSemantic {
       func: Func
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
     /* Create new symbol table */
-    val new_st = new SymbolTable(st)
+    val new_st = new SymbolTable(st, FunctionType())
     val args = new ListBuffer[ParamObj]()
 
     /* Check for parameter redefinition */
@@ -103,5 +103,9 @@ object FunctionSemantic {
 
     /* Add new symbol table to st's subSt */
     st.addSubSt(new_st)
+
+
+    /* Add symbol table to func */
+    func.symb = st
   }
 }

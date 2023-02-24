@@ -3,7 +3,7 @@ package wacc
 import parsley.{Success, Failure}
 import wacc.SyntaxChecker.Parser
 import wacc.SemanticChecker.SemanticChecker
-import wacc.SemanticChecker.ImmutableSymbolTable
+import wacc.SemanticChecker.SymbolTable
 import wacc.Ast.Program
 
 object WACC_Builder {
@@ -13,7 +13,7 @@ object WACC_Builder {
     end
   """
 
-  private def buildProgram(input: String): (Program, ImmutableSymbolTable) = {
+  private def buildProgram(input: String): (Program, SymbolTable) = {
     Parser.parse(input) match {
       case Success(x) => {
         val (errors, st) = SemanticChecker.semanticCheck(x)
@@ -26,31 +26,31 @@ object WACC_Builder {
     }
   }
 
-  def buildProgramWithBody(body: Seq[String]): (Program, ImmutableSymbolTable) = {
+  def buildProgramWithBody(body: Seq[String]): (Program, SymbolTable) = {
     val bodyStr = body.mkString(";\n")
     println(programCode(bodyStr))
     buildProgram(programCode(bodyStr))
   }
 
-  def buildExitProgram(expr: String): (Program, ImmutableSymbolTable) = {
+  def buildExitProgram(expr: String): (Program, SymbolTable) = {
     buildProgram(programCode(s"""
       exit $expr
     """))
   }
 
-  def buildSkipProgram(): (Program, ImmutableSymbolTable) = {
+  def buildSkipProgram(): (Program, SymbolTable) = {
     buildProgram(programCode(s"""
       skip
     """))
   }
 
-  def buildPrintProgram(expr: String): (Program, ImmutableSymbolTable) = {
+  def buildPrintProgram(expr: String): (Program, SymbolTable) = {
     buildProgram(programCode(s"""
       print $expr
     """))
   }
 
-  def buildPrintlnProgram(expr: String): (Program, ImmutableSymbolTable) = {
+  def buildPrintlnProgram(expr: String): (Program, SymbolTable) = {
     buildProgram(programCode(s"""
       println $expr
     """))

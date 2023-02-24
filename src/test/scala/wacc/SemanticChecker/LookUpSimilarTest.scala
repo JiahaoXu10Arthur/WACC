@@ -10,7 +10,7 @@ import SymbolObjectType._
 class LookUpSimilarTest extends AnyFlatSpec {
 
 	"LookUpSimilar" should "Look up every similar names in scope" in {
-	val st = new SymbolTable(null)
+	val st = new SymbolTable(null, VariableType())
 
 	st.add("array", VariableType(), VariableObj(IntType(), (0, 0)))
 	st.add("arrAy", VariableType(), VariableObj(IntType(), (2, 3)))
@@ -19,11 +19,11 @@ class LookUpSimilarTest extends AnyFlatSpec {
 	}
 
 	"LookUpAllSimilar" should "Look up every similar names in all scope" in {
-	val st = new SymbolTable(null)
+	val st = new SymbolTable(null, VariableType())
 
 	st.add("array", VariableType(), VariableObj(IntType(), (0, 0)))
 
-	val new_st = new SymbolTable(st)
+	val new_st = new SymbolTable(st, VariableType())
 	new_st.add("arrAy", VariableType(), VariableObj(IntType(), (2, 3)))
 
 	new_st.lookUpAllSimilar("aRRay", VariableType()) should contain theSameElementsAs Seq(("array", (0, 0)), ("arrAy", (2, 3)))
