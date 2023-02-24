@@ -19,7 +19,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     val filename = args.head
     val string = new String(Files.readAllBytes(Paths.get(filename)))
-    val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
+    //val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
 
     println("===== COMPILING =====")
 
@@ -36,7 +36,9 @@ object Main {
 
             val ir = Translator.translate(x, st)
             ir.instrs.foreach(ins => println(ins))
-            println(CodeGenerator.assemble(ir.instrs, waccName))
+            ir.strConsts.foreach(str => println(str))
+
+            println(CodeGenerator.assemble(ir, "test"))
 
             //System.exit(SUCCESS)
           }

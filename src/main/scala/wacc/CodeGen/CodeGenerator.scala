@@ -2,15 +2,24 @@ package wacc.CodeGen
 
 import java.io._
 import wacc.Instructions._
+import wacc.CodeGen.IR
 
 object CodeGenerator {
-  def assemble(instrs: Seq[Instruction], fileName: String): String = {
+  def assemble(ir: IR, fileName: String): String = {
     val asmFile = new File(s"$fileName.s")
     val writer = new PrintWriter(asmFile)
+    /* String constant pool generation */
     writer.println(".data")
+    for ((str, i) <- ir.strConsts.zipWithIndex) {
+      writer.println(s"@ length of .L.str$i")
+      writer.println(s".word ${str.length}")
+      writer.println(s".L.str$i:")
+      writer.println(s".asciz \"${str}\"")
+    }
     writer.println(".text")
+    /* Translate instructions */
     writer.println(".global main")
-    for (instr <- instrs) {
+    for (instr <- ir.instrs) {
       val asm = assembleInstr(instr)
       writer.println(asm)
     }
@@ -26,7 +35,7 @@ object CodeGenerator {
       case instr: MemoryInstr => assembleMemory(instr)
       case instr: StackInstr  => assembleStack(instr)
       case instr: StatInstr   => assembleStat(instr)
-      case CreateLabel(label)  => s"${label.getName}:"
+      case CreateLabel(label) => s"${label.getName}:"
       case _                  => "not implemented yet"
     }
   }
