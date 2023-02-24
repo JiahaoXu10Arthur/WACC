@@ -9,8 +9,12 @@
  import org.scalatest.wordspec.AnyWordSpec
  import wacc.SyntaxChecker.Parser
  import wacc.SemanticChecker.SemanticChecker
+ import wacc.CodeGen.Translator
+ import wacc.CodeGen.CodeGenerator
  
  class FrontIntegrationTest extends AnyWordSpec {
+
+  private final val WACC_FILE_DROP_LEN = 5
 
    def getListOfFiles(dir: String):List[File] = {
      val d = new File(dir)
@@ -52,7 +56,12 @@
           "A successful compilation return the exit status 0 " ++ filename in {
            (Parser.parse(string) match {
                case Success(x) => {
-                SemanticChecker.semanticCheck(x)._1 shouldBe empty
+                val (errors, st) = SemanticChecker.semanticCheck(x)
+                errors shouldBe empty
+                val ir = Translator.translate(x, st)
+                val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
+                CodeGenerator.assemble(ir.instrs, waccName)
+                //TODO: test output of assemble
                 true
                }
                case Failure(msg) => {

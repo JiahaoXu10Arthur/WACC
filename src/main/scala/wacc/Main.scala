@@ -14,10 +14,12 @@ object Main {
   private final val SUCCESS = 0
   private final val SYNTAX_ERR = 100
   private final val SEMANTIC_ERR = 200
+  private final val WACC_FILE_DROP_LEN = 5
 
   def main(args: Array[String]): Unit = {
     val filename = args.head
     val string = new String(Files.readAllBytes(Paths.get(filename)))
+    val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
 
     println("===== COMPILING =====")
 
@@ -34,7 +36,7 @@ object Main {
 
             val ir = Translator.translate(x, st)
             ir.instrs.foreach(ins => println(ins))
-            CodeGenerator.assemble(ir.instrs, "test")
+            println(CodeGenerator.assemble(ir.instrs, waccName))
 
             //System.exit(SUCCESS)
           }

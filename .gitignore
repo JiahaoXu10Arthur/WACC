@@ -63,5 +63,5 @@ project/**/metals.sbt
 # jarfile
 wacc-17-compiler.jar
 
-# ignores test.s test assembly file
-test.s
+# ignores assembly files
+*.s
