@@ -129,7 +129,7 @@ object StatTranslator {
     addInstr(StoreInstr(R8, RegOffset(R12, -4)))
 
     // For loop to store each element
-    for (i <- 0 until arr_size by 4){
+    for (i <- 0 until arr_len){
       // Load elem into R8
       translateExpr(arrayValue.values(i))
 
@@ -137,7 +137,7 @@ object StatTranslator {
       addInstr(PopInstr(Seq(R8)))
 
       // Store elem to a[i]
-      addInstr(StoreInstr(R8, RegOffset(R12, i)))
+      addInstr(StoreInstr(R8, RegOffset(R12, i * 4)))
     }
 
     // Push Array pointer
@@ -441,9 +441,7 @@ object StatTranslator {
       case BoolType() => PrintBool
       case CharType() => PrintChar
       case StrType()  => PrintStr
-      case PairType(_, _) => PrintPointer
-      case ArrayType(_) => PrintPointer
-      case _ => null
+      case _ => PrintPointer
     }
 
     translateBLink(printType)
@@ -567,7 +565,7 @@ object StatTranslator {
 
     // if false, continue executing stat2 (else branch)
     /* Create new state table */
-    val new_stateST2 = new StateTable(stateST)
+    val new_stateST2 = new StateTable(Some(stateST))
     stats2.foreach(s => translateStatement(s)(s.symb, new_stateST2, ir))
 
     // As Branch1 will be below, when false, skip to Branch 2 (will be the rest of code)
@@ -578,7 +576,7 @@ object StatTranslator {
     addInstr(CreateLabel(branch_0))
 
     // Execute stat1
-    val new_stateST1 = new StateTable(stateST)
+    val new_stateST1 = new StateTable(Some(stateST))
     stats2.foreach(s => translateStatement(s)(s.symb, new_stateST1, ir))
 
     // The rest of code needs to be in branch2
@@ -605,7 +603,7 @@ object StatTranslator {
     // Translate Branch 2 here
     // .L1:
     addInstr(CreateLabel(branch_1))
-    val new_stateST = new StateTable(stateST)
+    val new_stateST = new StateTable(Some(stateST))
     stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
 
     // .L0:
@@ -626,14 +624,13 @@ object StatTranslator {
 
   private def checkCondCode(cond: Expr): CondCode = {
     cond match {
-      case BoolLit(_) => EqCond
       case Eq(_, _) => EqCond
       case Neq(_, _) => NeqCond
       case Gt(_, _) => GtCond
       case Gte(_, _) => GteCond
       case Lt(_, _) => LtCond
       case Lte(_, _) => LteCond
-      case _ => null
+      case _ => EqCond
     }
   }
 
@@ -641,7 +638,7 @@ object StatTranslator {
   private def translateBegin(stats: List[Stat])(implicit stateST: StateTable,
                                                          ir: IR) = {
     /* Create new state table */
-    val new_stateST = new StateTable(stateST)
+    val new_stateST = new StateTable(Some(stateST))
     stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
   }
 }

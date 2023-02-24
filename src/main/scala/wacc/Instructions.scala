@@ -40,6 +40,8 @@ object Instructions {
   val LR = R14
   val PC = R15
 
+  val variableReg = List(R4, R5, R6, R7)
+
   sealed trait Instruction {
     def assemble(): String = "not implemented yet"
   }
