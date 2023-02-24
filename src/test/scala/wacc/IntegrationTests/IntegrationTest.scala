@@ -1,4 +1,4 @@
- package wacc
+package wacc.IntegrationTests
 
  import java.nio.file.Files
  import java.nio.file.Paths
@@ -14,7 +14,7 @@
  import wacc.Utils.BackEndUtils._
  import wacc.Utils.BackEndUtils
  
- class FrontIntegrationTest extends AnyWordSpec {
+ class IntegrationTest extends AnyWordSpec {
 
   private final val WACC_FILE_DROP_LEN = 5
 
@@ -34,9 +34,9 @@
         .map(_.getName).toList
   }
 
-  println("Running all tests")
+  //println("Running all tests")
   // testFile("wacc_example/valid/pairs/", new File("nestedPairRightExtract.wacc"))
-  testSkeleton("wacc_example/")
+  //testSkeleton("wacc_example/")
 
   def testSkeleton(path: String) :Unit = {
     val allFiles = getListOfFiles(path)
@@ -59,11 +59,14 @@
                case Success(x) => {
                 val (errors, st) = SemanticChecker.semanticCheck(x)
                 errors shouldBe empty
+                val ir = Translator.translate(x, st)
+                val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
+                CodeGenerator.assemble(ir, waccName)
                 //TODO: test output of assemble
-                //val (_output, _exit) = getExpects(waccName)
-                //val (output, exit) = getOutputAndExit(waccName)
-                //output shouldBe _output
-                //exit shouldBe _exit
+                val (_output, _exit) = getExpects(waccName)
+                val (output, exit) = getOutputAndExit(waccName)
+                output shouldBe _output
+                exit shouldBe _exit
                 true
                }
                case Failure(msg) => {
