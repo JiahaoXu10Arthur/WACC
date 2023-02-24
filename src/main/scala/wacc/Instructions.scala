@@ -28,13 +28,14 @@ object Instructions {
     case object R9 extends Register
     case object R10 extends Register
     case object R11 extends Register // Frame Pointer
-    case object R12 extends Register
+    case object R12 extends Register // Intra-Procedure Call Scratch Register
     case object R13 extends Register // Stack Pointer
     case object R14 extends Register // Link Register
     case object R15 extends Register // Program Counter
 
   /* Aliases for special registers */
   val FP = R11
+  val IP = R12
   val SP = R13
   val LR = R14
   val PC = R15

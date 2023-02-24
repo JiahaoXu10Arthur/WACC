@@ -17,7 +17,7 @@ object Translator {
     implicit val stateST = new StateTable(None)
     implicit val ir = new IR()
 
-    addInstr(CreateLabel(JumpLabel("main:")))
+    addInstr(CreateLabel(JumpLabel("main")))
 
 		val regsForUse = new ListBuffer[Register]()
 		val regsAvailable = Seq(R4, R5, R6, R7)
