@@ -74,7 +74,7 @@ object BackEndUtils {
         (expects.output, expects.exit)
     }
 
-    def getOutputAndExit(filename: String): (Int, String) = {
+    def getOutputAndExit(filename: String): (String, String) = {
         val input = getExpectStrings(filename ++ ".wacc").input
 
         ("arm-linux-gnueabi-gcc -o EXEName -mcpu=arm1176jzf-s -mtune=arm1176jzf-s " ++ filename ++ ".s").!
@@ -84,7 +84,7 @@ object BackEndUtils {
         ) #< inputStream
         val res@(exitCode, output, _) = runCommand(a)
 
-        (exitCode, output)
+        (output, exitCode.toString())
     }
 
      def main(args: Array[String]): Unit = {
