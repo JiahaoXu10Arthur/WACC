@@ -6,11 +6,13 @@ import scala.collection.mutable.ListBuffer
 import SymbolObject._
 import SymbolObjectType._
 
-class SymbolTable(st: SymbolTable) {
+class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
   val dictionary = Map[(String, ObjectType), SymbolObj]()
   val encSymTable = st
   val subSts = ListBuffer[SymbolTable]()
+  // Within the same function
+  val stType = tableType
 
   /* Add sub symbol table to child list */
   def addSubSt(subSt: SymbolTable) = {

@@ -9,7 +9,7 @@ import FunctionSemantic._
 object SemanticChecker {
 
   def semanticCheck(p: Program): (Seq[WACCError], ImmutableSymbolTable) = {
-    implicit val st: SymbolTable = new SymbolTable(null)
+    implicit val st: SymbolTable = new SymbolTable(null, null)
     implicit val semErr = new ListBuffer[WACCError]()
 
     // Firstly reading the headeres of the functions
