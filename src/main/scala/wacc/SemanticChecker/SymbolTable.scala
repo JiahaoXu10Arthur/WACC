@@ -60,7 +60,6 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 		num
 	}
 		
-
 	// find variable number in all scope within function
   def findAllVarNum(): Int = {
     findAllVarNumHelper(this)

@@ -8,11 +8,18 @@ class StateTable(st: Option[StateTable]) {
   val encStateTable = st
   val dictionary = mutable.Map[String, Location]()
   val usedReg: mutable.ListBuffer[Register] =
-    st match {
-      case Some(stTable) => stTable.usedReg
+    encStateTable match {
+      case Some(upSt) => mutable.ListBuffer[Register]() ++= upSt.usedReg
       // First state table
       case None => mutable.ListBuffer[Register]()
     }
+
+  var fpPtr: Int =
+    encStateTable match {
+      case Some(upSt) => upSt.fpPtr
+      // First state table
+      case None => 0
+  }
 
   /* Add a key-value pair to dictionary */
   def add(name: String, location: Location) = {
@@ -20,8 +27,8 @@ class StateTable(st: Option[StateTable]) {
 
     // add used register
     location match {
-      case loc: Register => usedReg += loc
-      case _ =>
+      case loc: Register  => usedReg += loc
+      case loc: RegOffset => updateFPPtr(nextFPPtr())
     }
   }
     
@@ -72,21 +79,26 @@ class StateTable(st: Option[StateTable]) {
     lookUpAllHelper(name, Some(this))
   }
 
+  def updateFPPtr(num: Int) = 
+    fpPtr = num
+  
+  private def nextFPPtr() = fpPtr + 4
+
   /* Return the next location for variable storage */
-  def nextStoreLocation(stateTable: StateTable): Location = {
-    val returnLoc: Option[Location] = None
+  def nextStoreLocation(): Location = {
 
     // Find available register first
-    for (r <- variableReg) {
-      returnLoc match {
-        case Some(_) =>
-        case None => {
-          
-        }
-      }
+    val unUsedReg = variableReg.filterNot(usedReg.toSet)
+
+    // If has unused reg
+    if (!unUsedReg.isEmpty) {
+      unUsedReg.head
+    } else {
+      // Go to storage
+      val returnLoc = RegOffset(FP, nextFPPtr())
+      returnLoc
     }
 
-    R4
   }
 
 }

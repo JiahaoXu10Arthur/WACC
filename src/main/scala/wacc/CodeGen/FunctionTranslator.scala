@@ -38,9 +38,9 @@ object FunctionTranslator {
 		addInstr(PushInstr(regsForUse.toSeq))
 		addInstr(MovInstr(FP, SP))
 		
+		val stackSpace = (regNum - 4) * 4
 		// Add stack space if too many variables
 		if (stackInUse) {
-			val stackSpace = (regNum - 4) * 4
 			addInstr(SubInstr(SP, SP, Immediate(stackSpace)))
 		}
 
@@ -79,6 +79,9 @@ object FunctionTranslator {
 
 		// Translate function body
 		val new_stateST = new StateTable(Some(stateST))
+		// Update stateTable fp pointer
+		new_stateST.updateFPPtr(stackSpace * -1)
+
 		func.stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
 		
 		// Pop register

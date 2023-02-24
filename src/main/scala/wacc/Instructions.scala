@@ -41,6 +41,7 @@ object Instructions {
   val PC = R15
 
   val variableReg = List(R4, R5, R6, R7)
+  val reservedReg = List(R8, R10, R12)
 
   sealed trait Instruction {
     def assemble(): String = "not implemented yet"

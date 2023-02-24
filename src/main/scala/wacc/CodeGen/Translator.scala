@@ -9,8 +9,6 @@ import StatTranslator._
 import FunctionTranslator._
 import IR._
 
-
-
 object Translator {
 
   def translate(p: Program, mainST: SymbolTable): IR = {
@@ -21,7 +19,6 @@ object Translator {
     addInstr(CreateLabel(JumpLabel("main")))
 
 		val regsForUse = new ListBuffer[Register]()
-		val reservedRegs = Seq(R8, R10, R12)
     var stackInUse = false
 
 		val varNum = mainST.findAllVarNum()
@@ -38,15 +35,15 @@ object Translator {
 			stackInUse = true
 		}
 		
-		val pushRegs = regsForUse.toSeq ++ reservedRegs
+		val pushRegs = regsForUse.toSeq ++ reservedReg
 
     // Push register
     addInstr(PushInstr(Seq(FP, LR)))
 		addInstr(PushInstr(pushRegs))
 
+		val stackSpace = (varNum - 4) * 4
     // Add stack space if too many variables
 		if (stackInUse) {
-			val stackSpace = (varNum - 4) * 4
 			addInstr(SubInstr(SP, SP, Immediate(stackSpace)))
 		}
 
@@ -60,6 +57,8 @@ object Translator {
     addInstr(PopInstr(pushRegs))
     addInstr(PopInstr(Seq(FP, PC)))
 
+		// Update stateTable fp pointer
+		stateST.updateFPPtr(stackSpace * -1)
     // Firstly reading the headeres of the functions
     p.funcs.foreach { f => translateFunction(f) }
 

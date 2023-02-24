@@ -100,12 +100,15 @@ object StatTranslator {
     // Pop result
     addInstr(PopInstr(Seq(R8)))
     
-    // Move to the first available register
-    // Assume R4 for now
-    addInstr(MovInstr(R4, R8))
-
+    // Move to the first available location
+    val loc = stateST.nextStoreLocation()
+    loc match {
+      case loc: Register  => addInstr(MovInstr(loc, R8))
+      case loc: RegOffset => addInstr(StoreInstr(R8, loc))
+    }
+    
     // Add the location of variable to stateTable
-    stateST.add(ident.name, R4)
+    stateST.add(ident.name, loc)
   }
 
   private def declareArrayLit(arrayValue: ArrayLit)(
