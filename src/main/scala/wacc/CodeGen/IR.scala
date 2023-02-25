@@ -31,10 +31,10 @@ object IR {
 		}
 	}
 
-	def addBranchLink(branchLink: BranchLinkName)(implicit ir: IR) = {
-		if (!ir.bLNamesBuffer.contains(branchLink)){
-			ir.bLNamesBuffer += branchLink
-			ir.bLInstrsBuffer += translateBranchLink(branchLink)
+	def addBranchLink(bLname: BranchLinkName)(implicit ir: IR) = {
+		if (!ir.bLNamesBuffer.contains(bLname)){
+			ir.bLNamesBuffer += bLname
+			ir.bLInstrsBuffer += translateBranchLink(bLname)
 		}
 	}
 
