@@ -2,14 +2,17 @@ package wacc.CodeGen
 
 import scala.collection.mutable
 import wacc.Instructions._
+import BranchLinkTranslator._
 
 class IR (
   val instrs: List[Instruction] = List[Instruction](),
   val strConsts: List[String]  = List[String](),
-  val bLNames: List[BranchLinkName] = List[BranchLinkName]()
+  val bLInstrs: List[List[Instruction]] = List[List[Instruction]]()
 ) {
 	private val instrsBuffer = mutable.ListBuffer[Instruction]()
 	private val strConstsBuffer = mutable.ListBuffer[String]()
+	private val bLInstrsBuffer = mutable.ListBuffer[List[Instruction]]()
+	
 	private val bLNamesBuffer = mutable.ListBuffer[BranchLinkName]()
 
 	def findStrConstIndex(str: String): Int =
@@ -28,15 +31,16 @@ object IR {
 		}
 	}
 
-	def addBLName(branchLink: BranchLinkName)(implicit ir: IR) = {
+	def addBranchLink(branchLink: BranchLinkName)(implicit ir: IR) = {
 		if (!ir.bLNamesBuffer.contains(branchLink)){
 			ir.bLNamesBuffer += branchLink
+			ir.bLInstrsBuffer += translateBranchLink(branchLink)
 		}
 	}
 
 	def returnIR()(implicit ir: IR): IR = 
 		new IR(ir.instrsBuffer.toList, 
 					 ir.strConstsBuffer.toList, 
-					 ir.bLNamesBuffer.toList)
+					 ir.bLInstrsBuffer.toList)
 
 }

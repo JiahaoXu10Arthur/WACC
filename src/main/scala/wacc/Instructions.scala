@@ -75,8 +75,6 @@ object Instructions {
     
   case class CreateLabel(label: Label) extends Instruction
 
-  
-
   sealed trait CondCode
     case object EqCond extends CondCode
     case object NeqCond extends CondCode
