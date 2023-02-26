@@ -1,10 +1,11 @@
+package wacc.Utils
 import java.io._
 import scala.sys.process._
 import scala.io._
 import scala.util.control.Breaks._
 import scala.collection.mutable.ListBuffer
 
-object Test {
+object BackEndUtils {
 
     private final val WACCLENGTH = 5
     private final val INPUTLENGTH = 9
@@ -68,28 +69,33 @@ object Test {
     }
 
     def getExpects(filename: String): (String, String) = {
-        val expects = getExpectStrings(filename)
+        val expects = getExpectStrings(filename ++ ".wacc")
 
-        (expects.output, expects.exit)
+        val output = expects.output
+        var exit = expects.exit
+
+        if (exit.isEmpty()) {
+            exit = "0"
+        }
+
+        (output, exit)
     }
 
-    def getOutputAndExit(filename: String): (Int, String) = {
-        val input = getExpectStrings(filename).input
+    def getOutputAndExit(filename: String): (String, String) = {
+        val input = getExpectStrings(filename ++ ".wacc").input
 
-        val name = filename.dropRight(WACCLENGTH)
-
-        ("arm-linux-gnueabi-gcc -o EXEName -mcpu=arm1176jzf-s -mtune=arm1176jzf-s" ++ name ++ ".s").!
+        ("arm-linux-gnueabi-gcc -o " ++ filename ++ " -mcpu=arm1176jzf-s -mtune=arm1176jzf-s " ++ filename ++ ".s").!
         val inputStream = new ByteArrayInputStream(input.getBytes())
         val a = Seq(
-            "qemu-arm" ,"-L", "/usr/arm-linux-gnueabi/", name
+            "qemu-arm" ,"-L", "/usr/arm-linux-gnueabi/", filename
         ) #< inputStream
         val res@(exitCode, output, _) = runCommand(a)
 
-        (exitCode, output)
+        (output, exitCode.toString())
     }
 
      def main(args: Array[String]): Unit = {
-        val filename = "echoChar.wacc"
+        val filename = "/Users/paulodybala/Desktop/WACC_17/wacc_example/valid/basic/exit/exitBasic.wacc"
         val (_output, _exit) = getExpects(filename)
         val (output, exit) = getOutputAndExit(filename)
 

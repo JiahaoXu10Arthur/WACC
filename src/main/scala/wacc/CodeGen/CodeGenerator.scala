@@ -63,7 +63,9 @@ object CodeGenerator {
     case op: Register           => asmReg(op)
     case op: Label              => op.getName
     case RegIntOffset(reg, offset) => s"[${asmReg(reg)}, #$offset]"
-    case Immediate(value)       => s"#$value"
+    case Immediate(value) if value < 0       => s"=$value"
+    case Immediate(value) if value >= 0      => s"#$value"
+    case _ => "@not implemented yet"
   }
 
   private def asmCond(cond: CondCode): String = cond match {
