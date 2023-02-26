@@ -12,7 +12,6 @@ package wacc.IntegrationTests
  import wacc.CodeGen.Translator
  import wacc.CodeGen.CodeGenerator
  import wacc.Utils.BackEndUtils._
- import wacc.Utils.BackEndUtils
  
  class IntegrationTest extends AnyWordSpec {
 
@@ -62,7 +61,6 @@ package wacc.IntegrationTests
                 val ir = Translator.translate(x, st)
                 val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
                 CodeGenerator.assemble(ir, waccName)
-                //TODO: test output of assemble
                 val (_output, _exit) = getExpects(waccName)
                 val (output, exit) = getOutputAndExit(waccName)
                 output shouldBe _output

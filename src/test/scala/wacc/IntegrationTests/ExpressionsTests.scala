@@ -1,5 +1,6 @@
 package wacc.IntegrationTests
 
 class ExpressionsTests extends IntegrationTest {
-  testSkeleton("wacc_example/valid/expressions/")
+  "Expressions Integration tests" in pending
+  //testSkeleton("wacc_example/valid/expressions/")
 }

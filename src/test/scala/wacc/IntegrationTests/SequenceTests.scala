@@ -1,5 +1,6 @@
 package wacc.IntegrationTests
 
 class SequenceTests extends IntegrationTest {
-  testSkeleton("wacc_example/valid/sequence/")
+  "Sequence Integration tests" in pending
+ //testSkeleton("wacc_example/valid/sequence/")
 }

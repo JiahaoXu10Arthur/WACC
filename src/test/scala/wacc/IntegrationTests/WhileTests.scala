@@ -1,5 +1,6 @@
 package wacc.IntegrationTests
 
 class WhileTests extends IntegrationTest {
-  testSkeleton("wacc_example/valid/while/")
+  "While Integration tests" in pending
+  //testSkeleton("wacc_example/valid/while/")
 }

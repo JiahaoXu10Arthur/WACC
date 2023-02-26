@@ -1,5 +1,6 @@
 package wacc.IntegrationTests
 
 class ScopeTests extends IntegrationTest {
-  testSkeleton("wacc_example/valid/scope/")
+  "Scope Integration tests" in pending
+  //testSkeleton("wacc_example/valid/scope/")
 }

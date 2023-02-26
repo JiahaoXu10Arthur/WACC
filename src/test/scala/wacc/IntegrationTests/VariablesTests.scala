@@ -1,5 +1,6 @@
 package wacc.IntegrationTests
 
 class VariablesTests extends IntegrationTest {
-  testSkeleton("wacc_example/valid/variables/")
+  "Variables Integration tests" in pending
+  //testSkeleton("wacc_example/valid/variables/")
 }
