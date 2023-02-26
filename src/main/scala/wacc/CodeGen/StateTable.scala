@@ -28,7 +28,7 @@ class StateTable(st: Option[StateTable]) {
     // add used register
     location match {
       case loc: Register  => usedReg += loc
-      case loc: RegOffset => updateFPPtr(nextFPPtr())
+      case loc: RegIntOffset => updateFPPtr(nextFPPtr())
     }
   }
     
@@ -95,7 +95,7 @@ class StateTable(st: Option[StateTable]) {
       unUsedReg.head
     } else {
       // Go to storage
-      val returnLoc = RegOffset(FP, nextFPPtr())
+      val returnLoc = RegIntOffset(FP, nextFPPtr())
       returnLoc
     }
 

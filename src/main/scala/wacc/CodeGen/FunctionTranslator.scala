@@ -68,7 +68,7 @@ object FunctionTranslator {
 			} else {
 
 				// may need to check, does not need to specify where it is?
-				stateST.add(func.params(index).ident.name, RegOffset(SP, -4))
+				stateST.add(func.params(index).ident.name, RegIntOffset(SP, -4))
 			}
 
 			index += 1

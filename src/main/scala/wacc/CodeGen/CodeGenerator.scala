@@ -36,7 +36,7 @@ object CodeGenerator {
       case instr: StackInstr  => assembleStack(instr)
       case instr: StatInstr   => assembleStat(instr)
       case CreateLabel(label) => s"${label.getName}:"
-      case _                  => "not implemented yet"
+      case _                  => "not implemented yet!"
     }
   }
 
@@ -62,7 +62,7 @@ object CodeGenerator {
   private def asmOp(op: Operand): String = op match {
     case op: Register           => asmReg(op)
     case op: Label              => op.getName
-    case RegOffset(reg, offset) => s"[${asmReg(reg)}, #$offset]"
+    case RegIntOffset(reg, offset) => s"[${asmReg(reg)}, #$offset]"
     case Immediate(value)       => s"#$value"
   }
 
@@ -124,13 +124,20 @@ object CodeGenerator {
   }
 
   private def assembleMemory(instr: MemoryInstr): String = instr match {
-    case StoreInstr(srcReg, destLoc) => s"str ${asmReg(srcReg)}, ${asmOp(destLoc)}"
-    case LoadInstr(dest, srcLoc)     => s"ldr ${asmReg(dest)}, ${asmOp(srcLoc)}"
+    case StoreInstr(srcReg, destLoc, wb) => {
+      val wbStr = if (wb) "!" else ""
+      s"str ${asmReg(srcReg)}, ${asmOp(destLoc)}$wbStr"
+    }
+    case LoadInstr(dest, srcLoc, wb) => {
+      val wbStr = if (wb) "!" else ""
+      s"ldr ${asmReg(dest)}, ${asmOp(srcLoc)}$wbStr"
+    }
   }
 
   private def assembleStat(instr: StatInstr): String = instr match {
-    case MovInstr(destReg, opr)           => s"mov ${asmReg(destReg)}, ${asmOp(opr)}"
-    case CondMovInstr(cond, destReg, opr) => s"mov${asmCond(cond)}, ${asmReg(destReg)}, ${asmOp(opr)}"
+    case MovInstr(destReg, opr) => s"mov ${asmReg(destReg)}, ${asmOp(opr)}"
+    case CondMovInstr(cond, destReg, opr) =>
+      s"mov${asmCond(cond)}, ${asmReg(destReg)}, ${asmOp(opr)}"
   }
 
   private def assembleStack(instr: StackInstr): String = instr match {

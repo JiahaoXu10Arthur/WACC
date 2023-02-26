@@ -4,16 +4,31 @@ object Instructions {
 
   sealed trait Operand
     case class Immediate(value: Int) extends Operand
-    case class RegOffset(reg: Register, offset: Int) extends Location
 
   // Need to discuss which pattern here
   sealed class Label(name: String) extends Operand {
     def getName: String = name
   }
-    case class StrLabel(name: String) extends Label(name)
-    case class JumpLabel(name: String) extends Label(name)
+    case class StrLabel(name: String, value: String) extends Label(name) {
+      override def getName: String = s".L.$name"
+    }
+    case class JumpLabel(name: String) extends Label(name) {
+      override def getName: String = s".$name"
+    }
+    case class FuncLabel(name: String) extends Label(name) {
+      override def getName: String = s"$name:"
+    }
+    case class WACCFuncLabel(name: String) extends Label(name) {
+      override def getName: String = s"wacc_$name:"
+    }
 
   sealed trait Location extends Operand
+    case class RegIntOffset(reg: Register, offset: Int) extends Location
+    case class RegRegOffset(reg: Register, offset: Register) extends Location
+    case class RegShiftOffset(reg: Register, offReg: Register, shift: Shifter) extends Location
+  
+  sealed trait Shifter
+    case class LSL(shift: Int) extends Shifter
   
   sealed trait Register extends Location
     case object R0 extends Register
@@ -56,8 +71,10 @@ object Instructions {
     case class CmpInstr(srcReg: Register, opr: Operand) extends ExprInstr
   
   sealed trait MemoryInstr extends Instruction
-    case class StoreInstr(srcReg: Register, destLoc: Operand) extends MemoryInstr
-    case class LoadInstr(dest: Register, srcLoc: Operand) extends MemoryInstr
+    case class StoreInstr(srcReg: Register, destLoc: Operand, writeBack: Boolean = false) extends MemoryInstr
+    case class StoreByteInstr(srcReg: Register, destLoc: Operand, writeBack: Boolean = false) extends MemoryInstr
+    case class LoadInstr(dest: Register, srcLoc: Operand, writeBack: Boolean = false) extends MemoryInstr
+    case class LoadSignedByteInstr(dest: Register, srcLoc: Operand, writeBack: Boolean = false) extends MemoryInstr
 
   sealed trait StatInstr extends Instruction
     case class MovInstr (destReg: Register, opr: Operand) extends StatInstr
@@ -85,11 +102,6 @@ object Instructions {
     case object VsCond extends CondCode
     
   sealed trait BranchLinkName extends Label
-    case object DivisionLabel extends Label("__aeabi_idivmod") with BranchLinkName
-    case object MallocLabel extends Label("malloc") with BranchLinkName
-    case object ExitLabel extends Label("exit") with BranchLinkName
-    case object FreeLabel extends Label("free") with BranchLinkName
-
     case object PrintLine extends Label("_println") with BranchLinkName
     case object PrintInt  extends Label("_printi") with BranchLinkName
     case object PrintBool extends Label("_printb") with BranchLinkName
@@ -109,4 +121,14 @@ object Instructions {
     case object ArrayStoreB extends Label("_arrStoreB") with BranchLinkName
     case object ArrayLoad  extends Label("_arrLoad") with BranchLinkName
     case object FreePair   extends Label("_freepair") with BranchLinkName
+
+    /* standard library functions */
+    case object DivisionLabel extends Label("__aeabi_idivmod") with BranchLinkName
+    case object MallocLabel extends Label("malloc") with BranchLinkName
+    case object ExitLabel extends Label("exit") with BranchLinkName
+    case object FreeLabel extends Label("free") with BranchLinkName
+    case object PrintFormatted extends Label("printf") with BranchLinkName
+    case object ScanFormatted extends Label("scanf") with BranchLinkName
+    case object FileFlush extends Label("fflush") with BranchLinkName
+    case object Puts extends Label("puts") with BranchLinkName
 }

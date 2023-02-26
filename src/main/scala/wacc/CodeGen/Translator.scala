@@ -16,7 +16,7 @@ object Translator {
     implicit val stateST = new StateTable(None)
     implicit val ir = new IR()
 
-    addInstr(CreateLabel(JumpLabel("main")))
+    addInstr(CreateLabel(FuncLabel("main")))
 
 		val regsForUse = new ListBuffer[Register]()
     var stackInUse = false

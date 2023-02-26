@@ -92,7 +92,7 @@ object ExprTranslator {
 
     loc match {
       case loc: Register  => addInstr(MovInstr(R8, loc))
-      case loc: RegOffset => addInstr(LoadInstr(R8, loc))
+      case loc: RegIntOffset => addInstr(LoadInstr(R8, loc))
     }
 
     addInstr(PushInstr(Seq(R8)))
@@ -103,7 +103,9 @@ object ExprTranslator {
     // add str to constant pool
     addStrConst(value)
 
-    LoadInstr(R8, StrLabel(value))
+    val strId = ir.strConsts.length
+
+    LoadInstr(R8, StrLabel(s"str$strId", value))
 
     addInstr(PushInstr(Seq(R8)))
   }
@@ -175,7 +177,7 @@ object ExprTranslator {
 
     // Check overflow
     // Need to modify here. Use constant to define ASR #31
-    addInstr(CmpInstr(R9, RegOffset(R8, 0)))
+    addInstr(CmpInstr(R9, RegIntOffset(R8, 0)))
     translateCondBLink(NeqCond, CheckOverflow)
 
     // Push Result
@@ -381,7 +383,7 @@ object ExprTranslator {
     translateExpr(expr)
     addInstr(PopInstr(Seq(R8)))
 
-    addInstr(LoadInstr(R8, RegOffset(R8, -4)))  // load from a[0] → len a
+    addInstr(LoadInstr(R8, RegIntOffset(R8, -4)))  // load from a[0] → len a
 
     // Push result
     addInstr(PushInstr(Seq(R8)))
