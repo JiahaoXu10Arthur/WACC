@@ -197,7 +197,7 @@ object CodeGenerator {
   private def assembleStat(instr: StatInstr): String = instr match {
     case MovInstr(destReg, opr) => s"mov ${asmReg(destReg)}, ${asmOp(opr)}"
     case CondMovInstr(cond, destReg, opr) =>
-      s"mov${asmCond(cond)}, ${asmReg(destReg)}, ${asmOp(opr)}"
+      s"mov${asmCond(cond)} ${asmReg(destReg)}, ${asmOp(opr)}"
   }
 
   private def assembleStack(instr: StackInstr): String = instr match {

@@ -22,7 +22,6 @@ object Translator {
     addInstr(CreateLabel(Main))
 
 		val regsForUse = new ListBuffer[Register]()
-    var stackInUse = false
 
 		val varNum = mainST.findAllVarNum()
     
@@ -35,7 +34,6 @@ object Translator {
 		} else {
 			// Adding the first four variables to registers and push others to stack
 			regsForUse ++= variableReg
-			stackInUse = true
 		}
 		
 		val pushRegs = regsForUse.toSeq ++ reservedReg
@@ -45,14 +43,22 @@ object Translator {
 		addInstr(PushInstr(pushRegs))
 		addInstr(MovInstr(FP, SP))
 
-		val stackSpace = (varNum - 4) * 4
-    // Add stack space if too many variables
-		if (stackInUse) {
+		val stackSpace = (varNum - variableReg.size) * 4
+		// Sub stack space if too many variables
+		if (stackSpace > 0) {
 			addInstr(SubInstr(SP, SP, Immediate(stackSpace)))
+			// Update stateTable fp pointer
+			stateST.updateFPPtr(stackSpace * (-1))
 		}
+
 
     // Translate Main
     p.stats.foreach { s => translateStatement(s)(s.symb, stateST, ir) }
+
+		// Add stack space if too many variables
+		if (stackSpace > 0) {
+			addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
+		}
 
     // Mov return code 0
     addInstr(MovInstr(R0, Immediate(0)))
@@ -60,9 +66,7 @@ object Translator {
     // Pop register
     addInstr(PopInstr(pushRegs))
     addInstr(PopInstr(Seq(FP, PC)))
-
-		// Update stateTable fp pointer
-		stateST.updateFPPtr(stackSpace * -1)
+		
     // Firstly reading the headeres of the functions
     p.funcs.foreach { f => translateFunction(f) }
 
