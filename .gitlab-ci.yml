@@ -65,8 +65,8 @@ back_unit_test:
 back_int_test:
   stage: backEndTest
   script:
-    - sudo apt update
-    - sudo apt install libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev build-essential bison flex libssl-dev bc
+    - apt update
+    - apt install libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev build-essential bison flex libssl-dev bc
     - echo "Running back end integration test..."
     - sbt "Test / testOnly *IntegrationTests*"
     - echo "test successful!"
