@@ -52,7 +52,7 @@ object CodeGenerator {
   private def asmLabel(label: Label): String = label match {
     case StrLabel(name, value) => s".L.$name"
     case JumpLabel(name)       => s".$name"
-    case FuncLabel(name)       => s"$name:"
+    case label: FuncLabel      => s"${label.getName}:"
     case WACCFuncLabel(name)   => s"wacc_$name:"
     case _                     => s"@unsupported label creation"
   }
@@ -78,7 +78,7 @@ object CodeGenerator {
 
   private def asmOp(op: Operand): String = op match {
     case op: Register                  => asmReg(op)
-    case op: Label                     => op.getName
+    case op: Label                     => asmLabel(op)
     case RegIntOffset(reg, offset)     => s"[${asmReg(reg)}, #$offset]"
     case RegRegOffset(reg, offset) => s"[${asmReg(reg)}, ${asmReg(offset)}]"
     case RegShiftOffset(reg, offReg, shift) => {

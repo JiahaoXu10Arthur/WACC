@@ -13,7 +13,7 @@ class IR (
 	private val strConstsBuffer = mutable.ListBuffer[String]()
 	private val bLInstrsBuffer = mutable.ListBuffer[List[Instruction]]()
 	
-	private val bLNamesBuffer = mutable.ListBuffer[BranchLinkName]()
+	private val bLNamesBuffer = mutable.ListBuffer[FuncLabel]()
 
 	def findStrConstIndex(str: String): Int =
 		strConsts.indexOf(str)
@@ -31,7 +31,7 @@ object IR {
 		}
 	}
 
-	def addBranchLink(bLname: BranchLinkName)(implicit ir: IR) = {
+	def addBranchLink(bLname: FuncLabel)(implicit ir: IR) = {
 		if (!ir.bLNamesBuffer.contains(bLname)){
 			ir.bLNamesBuffer += bLname
 			ir.bLInstrsBuffer += translateBranchLink(bLname)

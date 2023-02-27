@@ -43,13 +43,13 @@ object StatTranslator {
   }
 
   /* Translate for Conditional branch link */
-  def translateCondBLink(cond: CondCode, blName: BranchLinkName)(implicit ir: IR) = {
+  def translateCondBLink(cond: CondCode, blName: FuncLabel)(implicit ir: IR) = {
     addBranchLink(blName)
     addInstr(CondBranchLinkInstr(cond, blName))
   }
 
   /* Translate for Branch link */
-  def translateBLink(blName: BranchLinkName)(implicit ir: IR) = {
+  def translateBLink(blName: FuncLabel)(implicit ir: IR) = {
     addBranchLink(blName)
     addInstr(BranchLinkInstr(blName))
   }
