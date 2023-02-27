@@ -589,7 +589,7 @@ object StatTranslator {
 
     // Execute stat1
     val new_stateST1 = new StateTable(Some(stateST))
-    stats2.foreach(s => translateStatement(s)(s.symb, new_stateST1, ir))
+    stats1.foreach(s => translateStatement(s)(s.symb, new_stateST1, ir))
 
     // The rest of code needs to be in branch2
     // .L1:
