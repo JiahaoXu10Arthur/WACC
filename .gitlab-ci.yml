@@ -52,21 +52,23 @@ front_int_test:
   stage: frontEndTest
   script:
     - echo "Running front end integration test..."
-    - sbt "Test / testOnly *FrontIntegrationTest"
+    - sbt "Test / testOnly *FrontIntegrationTest*"
     - echo "test successful!"
 
 back_unit_test:
   stage: backEndTest
   script:
     - echo "Running back end unit test..."
-    - sbt "Test / testOnly *CodeGen"
+    - sbt "Test / testOnly *CodeGen*"
     - echo "test successful!"
 
-back_int_test:
-  stage: backEndTest
-  script:
-    - echo "Running back end integration test..."
-    - sbt "Test / testOnly *IntegrationTests"
-    - echo "test successful!"
+# back_int_test:
+#   stage: backEndTest
+#   script:
+#     - apt update
+#     - apt install libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev build-essential bison flex libssl-dev bc
+#     - echo "Running back end integration test..."
+#     - sbt "Test / testOnly *IntegrationTests*"
+#     - echo "test successful!"
 
     

@@ -11,11 +11,14 @@ import IR._
 
 object Translator {
 
-  def translate(p: Program, mainST: SymbolTable): IR = {
-    
-    implicit val stateST = new StateTable(None)
-    implicit val ir = new IR()
+	implicit var branchCounter = 0
 
+  def translate(p: Program, mainST: SymbolTable): IR = {
+
+		implicit val stateST = new StateTable(None)
+  	implicit val ir = new IR()
+		branchCounter = 0
+    
     addInstr(CreateLabel(Main))
 
 		val regsForUse = new ListBuffer[Register]()
@@ -49,7 +52,7 @@ object Translator {
 		}
 
     // Translate Main
-    p.stats.foreach { s => translateStatement(s)(s.symb, stateST, ir) }
+    p.stats.foreach { s => translateStatement(s)(s.symb, stateST, ir, branchCounter) }
 
     // Mov return code 0
     addInstr(MovInstr(R0, Immediate(0)))
@@ -64,5 +67,9 @@ object Translator {
     p.funcs.foreach { f => translateFunction(f) }
 
     returnIR()
+  }
+
+  def incBranchCounter() = {
+		branchCounter += 1
   }
 }
