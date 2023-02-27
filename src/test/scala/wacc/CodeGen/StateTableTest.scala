@@ -29,11 +29,11 @@ class StateTableTest extends AnyFlatSpec {
 		st.add("var3", st.nextStoreLocation())
 		st.add("var4", st.nextStoreLocation())
 
-		st.nextStoreLocation() shouldBe RegIntOffset(FP, -4)
+		st.nextStoreLocation() shouldBe RegIntOffset(FP, -8)
 
 		st.add("var5", st.nextStoreLocation())
 
-		st.nextStoreLocation() shouldBe RegIntOffset(FP, 0)
+		st.nextStoreLocation() shouldBe RegIntOffset(FP, -4)
 	}
 
 	"State table" should "consistent with sub state table" in {
