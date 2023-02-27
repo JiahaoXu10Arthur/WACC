@@ -117,13 +117,14 @@ object ExprTranslator {
                stateST: StateTable,
                ir: IR) = {
 
-    // Expr1 store in R8
     translateExpr(expr1)
-    addInstr(PopInstr(Seq(R8)))
+    translateExpr(expr2)
 
     // Expr2 store in R9
-    translateExpr(expr2)
     addInstr(PopInstr(Seq(R9)))
+
+    // Expr1 store in R8
+    addInstr(PopInstr(Seq(R8)))
 
     // Result store in R8
     addInstr(AddInstr(R8, R8, R9))
@@ -140,14 +141,15 @@ object ExprTranslator {
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
                ir: IR) = {
-
-    // Expr1 store in R8
+                
     translateExpr(expr1)
-    addInstr(PopInstr(Seq(R8)))
+    translateExpr(expr2)
 
     // Expr2 store in R9
-    translateExpr(expr2)
     addInstr(PopInstr(Seq(R9)))
+
+    // Expr1 store in R8
+    addInstr(PopInstr(Seq(R8)))
 
     // Result store in R8
     addInstr(SubInstr(R8, R8, R9))
@@ -165,13 +167,14 @@ object ExprTranslator {
                stateST: StateTable,
                ir: IR) = {
 
-    // Expr1 store in R8
     translateExpr(expr1)
-    addInstr(PopInstr(Seq(R8)))
+    translateExpr(expr2)
 
     // Expr2 store in R9
-    translateExpr(expr2)
     addInstr(PopInstr(Seq(R9)))
+
+    // Expr1 store in R8
+    addInstr(PopInstr(Seq(R8)))
 
     // Result store in R8
     addInstr( MulInstr(R8, R9, R8, R9))
@@ -191,13 +194,14 @@ object ExprTranslator {
                stateST: StateTable,
                ir: IR) = {
 
-    // Expr1 store in R0
     translateExpr(expr1)
-    addInstr(PopInstr(Seq(R0)))
+    translateExpr(expr2)
 
     // Expr2 store in R1
-    translateExpr(expr2)
     addInstr(PopInstr(Seq(R1)))
+
+    // Expr1 store in R0
+    addInstr(PopInstr(Seq(R0)))
 
     // Check not div by 0
     addInstr(CmpInstr(R1, Immediate(0)))
@@ -216,13 +220,14 @@ object ExprTranslator {
                stateST: StateTable,
                ir: IR) = {
 
-    // Expr1 store in R0
     translateExpr(expr1)
-    addInstr(PopInstr(Seq(R0)))
+    translateExpr(expr2)
 
     // Expr2 store in R1
-    translateExpr(expr2)
     addInstr(PopInstr(Seq(R1)))
+
+    // Expr1 store in R0
+    addInstr(PopInstr(Seq(R0)))
 
     // Check not div by 0
     addInstr(CmpInstr(R1, Immediate(0)))
@@ -242,13 +247,14 @@ object ExprTranslator {
                            implicit st: SymbolTable, 
                                     stateST: StateTable,
                                     ir: IR) = {
-    // Expr1 store in R8
     translateExpr(expr1)
-    addInstr(PopInstr(Seq(R8)))
+    translateExpr(expr2)
 
     // Expr2 store in R9
-    translateExpr(expr2)
     addInstr(PopInstr(Seq(R9)))
+
+    // Expr1 store in R8
+    addInstr(PopInstr(Seq(R8)))
 
     // Compare expr1, expr2
 		addInstr(CmpInstr(R8, R9))
