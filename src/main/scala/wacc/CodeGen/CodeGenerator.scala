@@ -91,6 +91,7 @@ object CodeGenerator {
 
   private def asmShift(shift: Shifter): String = shift match {
     case LSL(offset) => s"lsl #$offset"
+    case ASR(offset) => s"asr #$offset"
   }
 
   private def asmCond(cond: CondCode): String = cond match {
@@ -115,41 +116,65 @@ object CodeGenerator {
   }
 
   private def assembleExpr(instr: ExprInstr): String = instr match {
-    case AddInstr(destReg, reg1, opr) => {
+    case AddInstr(destReg, reg1, opr, shifter) => {
       val destStr = asmReg(destReg)
       val reg1Str = asmReg(reg1)
       val oprStr = asmOp(opr)
-      s"adds $destStr, $reg1Str, $oprStr"
+      val shiftStr = shifter match{
+        case None => ""
+        case Some(shift) => s", ${asmShift(shift)}"
+      }
+      s"adds $destStr, $reg1Str, $oprStr$shiftStr"
     }
-    case SubInstr(destReg, reg1, opr) => {
+    case SubInstr(destReg, reg1, opr, shifter) => {
       val destStr = asmReg(destReg)
       val reg1Str = asmReg(reg1)
       val oprStr = asmOp(opr)
-      s"subs $destStr, $reg1Str, $oprStr"
+      val shiftStr = shifter match{
+        case None => ""
+        case Some(shift) => s", ${asmShift(shift)}"
+      }
+      s"subs $destStr, $reg1Str, $oprStr$shiftStr"
     }
-    case RsbsInstr(destReg, srcReg, opr) => {
+    case RsbsInstr(destReg, srcReg, opr, shifter) => {
       val destStr = asmReg(destReg)
       val srcStr = asmReg(srcReg)
       val oprStr = asmOp(opr)
-      s"rsbs $destStr, $srcStr, $oprStr"
+      val shiftStr = shifter match{
+        case None => ""
+        case Some(shift) => s", ${asmShift(shift)}"
+      }
+      s"rsbs $destStr, $srcStr, $oprStr$shiftStr"
     }
-    case MulInstr(destRegLo, destRegHi, reg1, reg2) => {
+    case MulInstr(destRegLo, destRegHi, reg1, reg2, shifter) => {
       val destLoStr = asmReg(destRegLo)
       val destHiStr = asmReg(destRegHi)
       val reg1Str = asmReg(reg1)
       val reg2Str = asmReg(reg2)
-      s"smull $destLoStr, $destHiStr, $reg1Str, $reg2Str"
+      val shiftStr = shifter match{
+        case None => ""
+        case Some(shift) => s", ${asmShift(shift)}"
+      }
+      s"smull $destLoStr, $destHiStr, $reg1Str, $reg2Str$shiftStr"
     }
-    case AndInstr(destReg, reg1, opr) => {
+    case AndInstr(destReg, reg1, opr, shifter) => {
       val destStr = asmReg(destReg)
       val reg1Str = asmReg(reg1)
       val oprStr = asmOp(opr)
-      s"and $destStr, $reg1Str, $oprStr"
+      val shiftStr = shifter match{
+        case None => ""
+        case Some(shift) => s", ${asmShift(shift)}"
+      }
+      s"and $destStr, $reg1Str, $oprStr$shiftStr"
     }
-    case CmpInstr(reg1, opr) => {
+    case CmpInstr(reg1, opr, shifter) => {
       val reg1Str = asmReg(reg1)
       val oprStr = asmOp(opr)
-      s"cmp $reg1Str, $oprStr"
+      val shiftStr = shifter match{
+        case None => ""
+        case Some(shift) => s", ${asmShift(shift)}"
+      }
+      s"cmp $reg1Str, $oprStr$shiftStr"
     }
     case _ => "not implemented yet"
   }
