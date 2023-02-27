@@ -2,17 +2,8 @@ image: hzli1202/wacc_test_env
 
 stages:
   - compile
-  - frontEndTest
-  - backEndTest
-
-cache:
-  key: "$CI_BUILD_REF_NAME" # contains either the branch or the tag, so it's caching per branch
-  untracked: true
-  paths:
-    - "sbt-cache/.ivy.cache"
-    - "sbt-cache/.boot"
-    - "sbt-cache/.sbtboot"
-    - "sbt-cache/target"
+  - unit_tests
+  - integration_tests
 
 compile_job:
   stage: compile
@@ -22,38 +13,32 @@ compile_job:
     - echo "compile successful!"
 
 syntax_test: 
-  stage: frontEndTest
+  stage: unit_tests
   script:
-    - echo "Running front end syntax unit test..."
+    - echo "Running front-end syntax unit tests..."
     - sbt "Test / testOnly *SyntaxChecker*"
-    - echo "test successful!"
+    - echo "TEST SUCCESSFUL!"
 
 semantic_test: 
-  stage: frontEndTest
+  stage: unit_tests
   script:
-    - echo "Running front end semantic unit test..."
+    - echo "Running front-end semantic unit tests..."
     - sbt "Test / testOnly *SemanticChecker*"
-    - echo "test successful!"
+    - echo "TEST SUCCESSFUL!"
 
-front_int_test:
-  stage: frontEndTest
-  script:
-    - echo "Running front end integration test..."
-    - sbt "Test / testOnly *FrontIntegrationTest*"
-    - echo "test successful!"
 
-back_unit_test:
-  stage: backEndTest
+backend_unit_test:
+  stage: unit_tests
   script:
-    - echo "Running back end unit test..."
+    - echo "Running back-end unit tests..."
     - sbt "Test / testOnly *CodeGen*"
-    - echo "test successful!"
+    - echo "TEST SUCCESSFUL!"
 
-back_int_test:
-  stage: backEndTest
+integration_test:
+  stage: integration_tests
   script:
-    - echo "Running back end integration test..."
+    - echo "Running integration tests..."
     - sbt "Test / testOnly *IntegrationTests*"
-    - echo "test successful!"
+    - echo "TEST SUCCESSFUL!"
 
     
