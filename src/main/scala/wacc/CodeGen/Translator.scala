@@ -11,11 +11,13 @@ import IR._
 
 object Translator {
 
-	implicit val stateST = new StateTable(None)
-  implicit val ir = new IR()
 	implicit var branchCounter = 0
 
   def translate(p: Program, mainST: SymbolTable): IR = {
+
+		implicit val stateST = new StateTable(None)
+  	implicit val ir = new IR()
+		branchCounter = 0
     
     addInstr(CreateLabel(Main))
 
