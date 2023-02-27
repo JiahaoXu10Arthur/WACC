@@ -16,6 +16,7 @@ image: sbtscala/scala-sbt:graalvm-ce-22.3.0-b2-java17_1.8.2_2.13.10
 stages:
   - compile
   - frontEndTest
+  - backEndTest
 
 cache:
   key: "$CI_BUILD_REF_NAME" # contains either the branch or the tag, so it's caching per branch
@@ -52,6 +53,20 @@ front_int_test:
   script:
     - echo "Running front end integration test..."
     - sbt "Test / testOnly *FrontIntegrationTest"
+    - echo "test successful!"
+
+back_unit_test:
+  stage: backEndTest
+  script:
+    - echo "Running back end unit test..."
+    - sbt "Test / testOnly *CodeGen"
+    - echo "test successful!"
+
+back_int_test:
+  stage: backEndTest
+  script:
+    - echo "Running back end integration test..."
+    - sbt "Test / testOnly *IntegrationTests"
     - echo "test successful!"
 
     
