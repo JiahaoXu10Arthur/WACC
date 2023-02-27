@@ -13,9 +13,6 @@ image: hzli1202/wacc_test_env
 #   - apt-get update -yqq
 #   - apt-get install sbt -yqq
 
-services:
-  - docker:dind
-
 stages:
   - compile
   - frontEndTest
