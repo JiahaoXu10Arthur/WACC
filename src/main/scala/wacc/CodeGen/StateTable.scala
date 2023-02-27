@@ -28,7 +28,7 @@ class StateTable(st: Option[StateTable]) {
     // add used register
     location match {
       case loc: Register  => usedReg += loc
-      case loc: RegIntOffset => updateFPPtr(nextFPPtr())
+      case _ => updateFPPtr(nextFPPtr())
     }
   }
     

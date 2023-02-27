@@ -2,8 +2,6 @@ package wacc.CodeGen
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-import wacc.WACC_Builder
-import wacc.Instructions._
 
 class TranslateBasicTest extends AnyFlatSpec {
 

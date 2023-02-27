@@ -101,8 +101,8 @@ object StatTranslator {
     // Move to the first available location
     val loc = stateST.nextStoreLocation()
     loc match {
-      case loc: Register  => addInstr(MovInstr(loc, R8))
-      case loc: RegIntOffset => addInstr(StoreInstr(R8, loc))
+      case loc: Register => addInstr(MovInstr(loc, R8))
+      case _             => addInstr(StoreInstr(R8, loc))
     }
 
     // Add the location of variable to stateTable
@@ -201,8 +201,8 @@ object StatTranslator {
     val target_loc = findVarLoc(ident.name, stateST)
 
     target_loc match {
-      case target_loc: Register  => addInstr(MovInstr(target_loc, R8))
-      case target_loc: RegIntOffset => addInstr(StoreInstr(R8, target_loc))
+      case target_loc: Register => addInstr(MovInstr(target_loc, R8))
+      case _                    => addInstr(StoreInstr(R8, target_loc))
     }
   }
 
@@ -212,11 +212,11 @@ object StatTranslator {
 
     // If pair on stack, move to R8
     val locReg = location match {
-      case location: RegIntOffset => {
+      case location: Register => location
+      case _ => {
         addInstr(LoadInstr(R8, location))
         R8
       }
-      case location: Register => location
     }
 
     // Check null for pair
