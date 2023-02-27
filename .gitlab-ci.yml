@@ -1,4 +1,4 @@
-image: sbtscala/scala-sbt:graalvm-ce-22.3.0-b2-java17_1.8.2_2.13.10
+image: hzli1202/wacc_test_env
 
 # before_script:
 #   # Enable the usage of sources over https
@@ -68,10 +68,6 @@ cache:
 back_int_test:
   stage: backEndTest
   script:
-    - apk update
-    - apk add qemu
-    - apk add aemu-user
-    - apk add gcc-arm-linux-gnueabi
     - echo "Running back end integration test..."
     - sbt "Test / testOnly *IntegrationTests*"
     - echo "test successful!"
