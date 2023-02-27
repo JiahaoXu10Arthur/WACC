@@ -2,7 +2,6 @@ package wacc.CodeGen
 
 import scala.collection.mutable
 import wacc.Instructions._
-import java.io.File
 
 object BranchLinkTranslator {
 	final val ErrorExitCode = 255

@@ -92,7 +92,7 @@ object ExprTranslator {
 
     loc match {
       case loc: Register  => addInstr(MovInstr(R8, loc))
-      case loc: RegIntOffset => addInstr(LoadInstr(R8, loc))
+      case _ => addInstr(LoadInstr(R8, loc))
     }
 
     addInstr(PushInstr(Seq(R8)))

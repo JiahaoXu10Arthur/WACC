@@ -35,9 +35,17 @@ object CodeGenerator {
       case instr: MemoryInstr => assembleMemory(instr)
       case instr: StackInstr  => assembleStack(instr)
       case instr: StatInstr   => assembleStat(instr)
-      case CreateLabel(label) => s"${label.getName}:"
-      case _                  => "not implemented yet!"
+      case CreateLabel(label) => asmLabel(label)
+      case _                  => "@not implemented yet!"
     }
+  }
+
+  private def asmLabel(label: Label): String = label match {
+    case StrLabel(name, value) => s".L.$name"
+    case JumpLabel(name)       => s".$name"
+    case FuncLabel(name)       => s"$name:"
+    case WACCFuncLabel(name)   => s"wacc_$name:"
+    case _                     => s"@unsupported label creation"
   }
 
   private def asmReg(reg: Register): String = reg match {
@@ -60,12 +68,22 @@ object CodeGenerator {
   }
 
   private def asmOp(op: Operand): String = op match {
-    case op: Register           => asmReg(op)
-    case op: Label              => op.getName
-    case RegIntOffset(reg, offset) => s"[${asmReg(reg)}, #$offset]"
-    case Immediate(value) if value < 0       => s"=$value"
-    case Immediate(value) if value >= 0      => s"#$value"
-    case _ => "@not implemented yet"
+    case op: Register                  => asmReg(op)
+    case op: Label                     => op.getName
+    case RegIntOffset(reg, offset)     => s"[${asmReg(reg)}, #$offset]"
+    case RegRegOffset(reg, offset) => s"[${asmReg(reg)}, ${asmReg(offset)}]"
+    case RegShiftOffset(reg, offReg, shift) => {
+      val regStr = asmReg(reg)
+      val offRegStr = asmReg(offReg)
+      val shiftStr = asmShift(shift)
+      s"[$regStr, $offRegStr, $shiftStr]"
+    }
+    case Immediate(value) if value < 0 => s"=$value"
+    case Immediate(value)              => s"#$value"
+  }
+
+  private def asmShift(shift: Shifter): String = shift match {
+    case LSL(offset) => s"lsl #$offset"
   }
 
   private def asmCond(cond: CondCode): String = cond match {
@@ -130,9 +148,17 @@ object CodeGenerator {
       val wbStr = if (wb) "!" else ""
       s"str ${asmReg(srcReg)}, ${asmOp(destLoc)}$wbStr"
     }
+    case StoreByteInstr(srcReg, destLoc, writeBack) => {
+      val wbStr = if (writeBack) "!" else ""
+      s"strb ${asmReg(srcReg)}, ${asmOp(destLoc)}$wbStr"
+    }
     case LoadInstr(dest, srcLoc, wb) => {
       val wbStr = if (wb) "!" else ""
       s"ldr ${asmReg(dest)}, ${asmOp(srcLoc)}$wbStr"
+    }
+    case LoadSignedByteInstr(dest, srcLoc, writeBack) => {
+      val wbStr = if (writeBack) "!" else ""
+      s"ldrsb ${asmReg(dest)}, ${asmOp(srcLoc)}$wbStr"
     }
   }
 
