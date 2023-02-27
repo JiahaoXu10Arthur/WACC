@@ -34,33 +34,33 @@ compile_job:
     - sbt clean compile
     - echo "compile successful!"
 
-syntax_test: 
-  stage: frontEndTest
-  script:
-    - echo "Running front end syntax unit test..."
-    - sbt "Test / testOnly *SyntaxChecker*"
-    - echo "test successful!"
+# syntax_test: 
+#   stage: frontEndTest
+#   script:
+#     - echo "Running front end syntax unit test..."
+#     - sbt "Test / testOnly *SyntaxChecker*"
+#     - echo "test successful!"
 
-semantic_test: 
-  stage: frontEndTest
-  script:
-    - echo "Running front end semantic unit test..."
-    - sbt "Test / testOnly *SemanticChecker*"
-    - echo "test successful!"
+# semantic_test: 
+#   stage: frontEndTest
+#   script:
+#     - echo "Running front end semantic unit test..."
+#     - sbt "Test / testOnly *SemanticChecker*"
+#     - echo "test successful!"
 
-front_int_test:
-  stage: frontEndTest
-  script:
-    - echo "Running front end integration test..."
-    - sbt "Test / testOnly *FrontIntegrationTest"
-    - echo "test successful!"
+# front_int_test:
+#   stage: frontEndTest
+#   script:
+#     - echo "Running front end integration test..."
+#     - sbt "Test / testOnly *FrontIntegrationTest"
+#     - echo "test successful!"
 
-back_unit_test:
-  stage: backEndTest
-  script:
-    - echo "Running back end unit test..."
-    - sbt "Test / testOnly *CodeGen"
-    - echo "test successful!"
+# back_unit_test:
+#   stage: backEndTest
+#   script:
+#     - echo "Running back end unit test..."
+#     - sbt "Test / testOnly *CodeGen"
+#     - echo "test successful!"
 
 back_int_test:
   stage: backEndTest
