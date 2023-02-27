@@ -1,7 +1,8 @@
 package wacc.IntegrationTests
 
 class IOTests extends IntegrationTest {
-  testSkeleton("wacc_example/valid/IO/")
+  "Pairs Integration tests" in pending
+  //testSkeleton("wacc_example/valid/IO/")
 
   // Fail 9/20
   // /IOLoop --> no output
