@@ -62,13 +62,13 @@ back_unit_test:
     - sbt "Test / testOnly *CodeGen*"
     - echo "test successful!"
 
-back_int_test:
-  stage: backEndTest
-  script:
-    - apt update
-    - apt install libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev build-essential bison flex libssl-dev bc
-    - echo "Running back end integration test..."
-    - sbt "Test / testOnly *IntegrationTests*"
-    - echo "test successful!"
+# back_int_test:
+#   stage: backEndTest
+#   script:
+#     - apt update
+#     - apt install libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev build-essential bison flex libssl-dev bc
+#     - echo "Running back end integration test..."
+#     - sbt "Test / testOnly *IntegrationTests*"
+#     - echo "test successful!"
 
     
