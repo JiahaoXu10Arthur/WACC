@@ -48,6 +48,7 @@ object CodeGenerator {
   }
 
   private def asmLabel(label: Label): String = label match {
+    case SegmentLabel(name)    => s".$name"
     case StrLabel(name, value) => s".L.$name"
     case JumpLabel(name)       => s".$name"
     case label:FuncLabel       => s"${label.getName}"
@@ -85,7 +86,6 @@ object CodeGenerator {
       val shiftStr = asmShift(shift)
       s"[$regStr, $offRegStr, $shiftStr]"
     }
-    case Immediate(value) if value < 0 => s"=$value"
     case Immediate(value)              => s"#$value"
   }
 
@@ -110,6 +110,7 @@ object CodeGenerator {
       s"${asmLabel(instr.label)}:",
       s".asciz \"${value}\""
     )
+    case SegmentLabel(name) => List(s"${asmLabel(instr.label)}")
     case _ => List(s"${asmLabel(instr.label)}:")
   }
 
@@ -163,20 +164,34 @@ object CodeGenerator {
   private def assembleMemory(instr: MemoryInstr): String = instr match {
     case StoreInstr(srcReg, destLoc, wb) => {
       val wbStr = if (wb) "!" else ""
-      s"str ${asmReg(srcReg)}, ${asmOp(destLoc)}$wbStr"
+      s"str ${asmReg(srcReg)}, ${asmMemOp(destLoc)}$wbStr"
     }
     case StoreByteInstr(srcReg, destLoc, writeBack) => {
       val wbStr = if (writeBack) "!" else ""
-      s"strb ${asmReg(srcReg)}, ${asmOp(destLoc)}$wbStr"
+      s"strb ${asmReg(srcReg)}, ${asmMemOp(destLoc)}$wbStr"
     }
     case LoadInstr(dest, srcLoc, wb) => {
       val wbStr = if (wb) "!" else ""
-      s"ldr ${asmReg(dest)}, ${asmOp(srcLoc)}$wbStr"
+      s"ldr ${asmReg(dest)}, ${asmMemOp(srcLoc)}$wbStr"
     }
     case LoadSignedByteInstr(dest, srcLoc, writeBack) => {
       val wbStr = if (writeBack) "!" else ""
-      s"ldrsb ${asmReg(dest)}, ${asmOp(srcLoc)}$wbStr"
+      s"ldrsb ${asmReg(dest)}, ${asmMemOp(srcLoc)}$wbStr"
     }
+  }
+
+  private def asmMemOp(op: Operand): String = op match {
+    case op: Register                  => asmReg(op)
+    case op: Label                     => s"=${asmLabel(op)}"
+    case RegIntOffset(reg, offset)     => s"[${asmReg(reg)}, #$offset]"
+    case RegRegOffset(reg, offset) => s"[${asmReg(reg)}, ${asmReg(offset)}]"
+    case RegShiftOffset(reg, offReg, shift) => {
+      val regStr = asmReg(reg)
+      val offRegStr = asmReg(offReg)
+      val shiftStr = asmShift(shift)
+      s"[$regStr, $offRegStr, $shiftStr]"
+    }
+    case Immediate(value)              => s"=$value"
   }
 
   private def assembleStat(instr: StatInstr): String = instr match {

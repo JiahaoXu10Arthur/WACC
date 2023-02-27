@@ -109,11 +109,11 @@ object BranchLinkTranslator {
       StrLabel(s"${blName.getName}_str0", "fatal error: array index %d out of bounds\n")
 
 		/* Adds error string to data section */
-		instrsBuffer += CreateLabel(JumpLabel("data"))
+		instrsBuffer += CreateLabel(SegmentLabel("data"))
 		instrsBuffer += CreateLabel(errorStr)
 
 		/* Adds error check to text section */
-		instrsBuffer += CreateLabel(JumpLabel("text"))
+		instrsBuffer += CreateLabel(SegmentLabel("text"))
     instrsBuffer += CreateLabel(blName)
 		instrsBuffer += LoadInstr(R0, errorStr)
 		instrsBuffer += BranchLinkInstr(PrintFormatted)
@@ -130,11 +130,11 @@ object BranchLinkTranslator {
       StrLabel(s"${blName.getName}_str0", "fatal error: null pair deferenced or freed\n")
 
 		/* Adds error string to data section */
-		instrsBuffer += CreateLabel(JumpLabel("data"))
+		instrsBuffer += CreateLabel(SegmentLabel("data"))
 		instrsBuffer += CreateLabel(errorStr)
 
 		/* Adds error check to text section */
-		instrsBuffer += CreateLabel(JumpLabel("text"))
+		instrsBuffer += CreateLabel(SegmentLabel("text"))
 		instrsBuffer += CreateLabel(blName)
 		instrsBuffer += LoadInstr(R0, errorStr)
 		instrsBuffer += BranchLinkInstr(PrintStr)
@@ -149,11 +149,11 @@ object BranchLinkTranslator {
       StrLabel(s"${blName.getName}_str0", "fatal error: division or modulo by zero\n")
 
 		/* Adds error string to data section */
-		instrsBuffer += CreateLabel(JumpLabel("data"))
+		instrsBuffer += CreateLabel(SegmentLabel("data"))
 		instrsBuffer += CreateLabel(errorStr)
 
 		/* Adds error check to text section */
-		instrsBuffer += CreateLabel(JumpLabel("text"))
+		instrsBuffer += CreateLabel(SegmentLabel("text"))
 		instrsBuffer += CreateLabel(blName)
 		instrsBuffer += LoadInstr(R0, errorStr)
 		instrsBuffer += BranchLinkInstr(PrintStr)
@@ -168,11 +168,11 @@ object BranchLinkTranslator {
       StrLabel(s"${blName.getName}_str0", "fatal error: integer overflow or underflow occurred\n")
 
 		/* Adds error string to data section */
-		instrsBuffer += CreateLabel(JumpLabel("data"))
+		instrsBuffer += CreateLabel(SegmentLabel("data"))
 		instrsBuffer += CreateLabel(errorStr)
 
 		/* Adds error check to text section */
-		instrsBuffer += CreateLabel(JumpLabel("text"))
+		instrsBuffer += CreateLabel(SegmentLabel("text"))
 		instrsBuffer += CreateLabel(blName)
 		instrsBuffer += LoadInstr(R0, errorStr)
 		instrsBuffer += BranchLinkInstr(PrintStr)
@@ -188,14 +188,14 @@ object BranchLinkTranslator {
     val formatStr = StrLabel(s"${blName.getName}_str2", "%.*s")
 
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(JumpLabel("data"))
+    instrsBuffer += CreateLabel(SegmentLabel("data"))
     instrsBuffer += CreateLabel(falseStr)
     instrsBuffer += CreateLabel(trueStr)
     instrsBuffer += CreateLabel(formatStr)
 
     val trueLabel = JumpLabel(s"${blName.getName}0")
     val printLabel = JumpLabel(s"${blName.getName}1")
-    instrsBuffer += CreateLabel(JumpLabel("text"))
+    instrsBuffer += CreateLabel(SegmentLabel("text"))
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += CmpInstr(R0, Immediate(0))
@@ -225,11 +225,11 @@ object BranchLinkTranslator {
     val intFormatStr = StrLabel(s"${blName.getName}_str0", "%d")
 
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(JumpLabel("data"))
+    instrsBuffer += CreateLabel(SegmentLabel("data"))
     instrsBuffer += CreateLabel(intFormatStr)
 
     /* Adds print_int function to text section */
-    instrsBuffer += CreateLabel(JumpLabel("text"))
+    instrsBuffer += CreateLabel(SegmentLabel("text"))
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += MovInstr(R1, R0)
@@ -246,11 +246,11 @@ object BranchLinkTranslator {
     val charFormatStr = StrLabel(s"${blName.getName}_str0", "%c")
 
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(JumpLabel("data"))
+    instrsBuffer += CreateLabel(SegmentLabel("data"))
     instrsBuffer += CreateLabel(charFormatStr)
 
     /* Adds print_char function to text section */
-    instrsBuffer += CreateLabel(JumpLabel("text"))
+    instrsBuffer += CreateLabel(SegmentLabel("text"))
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += MovInstr(R1, R0)
@@ -267,11 +267,11 @@ object BranchLinkTranslator {
     val lineFormatStr = StrLabel(s"${blName.getName}_str0", "")
 
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(JumpLabel("data"))
+    instrsBuffer += CreateLabel(SegmentLabel("data"))
     instrsBuffer += CreateLabel(lineFormatStr)
 
     /* Adds print_line function to text section */
-    instrsBuffer += CreateLabel(JumpLabel("text"))
+    instrsBuffer += CreateLabel(SegmentLabel("text"))
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += LoadInstr(R0, lineFormatStr)
@@ -287,11 +287,11 @@ object BranchLinkTranslator {
     val pointerFormatStr = StrLabel(s"${blName.getName}_str0", "%p")
 
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(JumpLabel("data"))
+    instrsBuffer += CreateLabel(SegmentLabel("data"))
     instrsBuffer += CreateLabel(pointerFormatStr)
 
     /* Adds print_pointer function to text section */
-    instrsBuffer += CreateLabel(JumpLabel("text"))
+    instrsBuffer += CreateLabel(SegmentLabel("text"))
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += MovInstr(R1, R0)
@@ -308,11 +308,11 @@ object BranchLinkTranslator {
     val strFormatStr = StrLabel(s"${blName.getName}_str0", "%.*s")
 
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(JumpLabel("data"))
+    instrsBuffer += CreateLabel(SegmentLabel("data"))
     instrsBuffer += CreateLabel(strFormatStr)
 
     /* Adds print_str function to text section */
-    instrsBuffer += CreateLabel(JumpLabel("text"))
+    instrsBuffer += CreateLabel(SegmentLabel("text"))
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += MovInstr(R2, R0)
@@ -331,11 +331,11 @@ object BranchLinkTranslator {
     val charByteOffset = 1
 
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(JumpLabel("data"))
+    instrsBuffer += CreateLabel(SegmentLabel("data"))
     instrsBuffer += CreateLabel(readCharFormatStr)
 
     /* Adds read_char function to text section */
-    instrsBuffer += CreateLabel(JumpLabel("text"))
+    instrsBuffer += CreateLabel(SegmentLabel("text"))
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += StoreByteInstr(R0, RegIntOffset(SP, -charByteOffset), true) // Push R0 to stack
@@ -354,11 +354,11 @@ object BranchLinkTranslator {
     val intByteSize = 4
 
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(JumpLabel("data"))
+    instrsBuffer += CreateLabel(SegmentLabel("data"))
     instrsBuffer += CreateLabel(readIntFormatStr)
 
     /* Adds read_int function to text section */
-    instrsBuffer += CreateLabel(JumpLabel("text"))
+    instrsBuffer += CreateLabel(SegmentLabel("text"))
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += StoreInstr(R0, RegIntOffset(SP, -intByteSize), true) // Push R0 to stack

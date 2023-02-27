@@ -9,15 +9,11 @@ object Instructions {
   sealed class Label(name: String) extends Operand {
     def getName: String = name
   }
-    case class StrLabel(name: String, value: String) extends Label(name) {
-      override def getName: String = s".L.$name"
-    }
-    case class JumpLabel(name: String) extends Label(name) {
-      override def getName: String = s".$name"
-    }
-    case class WACCFuncLabel(name: String) extends Label(name) {
-      override def getName: String = s"wacc_$name:"
-    }
+
+    case class SegmentLabel(name: String) extends Label(name)
+    case class StrLabel(name: String, value: String) extends Label(name)
+    case class JumpLabel(name: String) extends Label(name)
+    case class WACCFuncLabel(name: String) extends Label(name)
 
   sealed trait Location extends Operand
     case class RegIntOffset(reg: Register, offset: Int) extends Location
