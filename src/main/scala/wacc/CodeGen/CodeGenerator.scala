@@ -50,7 +50,7 @@ object CodeGenerator {
   private def asmLabel(label: Label): String = label match {
     case SegmentLabel(name)    => s".$name"
     case StrLabel(name, value) => s".L.$name"
-    case JumpLabel(name)       => s".$name"
+    case JumpLabel(name)       => s".L$name"
     case label:FuncLabel       => s"${label.getName}"
     case WACCFuncLabel(name)   => s"wacc_$name"
     case _                     => s"@unsupported label creation"
