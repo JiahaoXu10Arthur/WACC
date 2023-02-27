@@ -105,7 +105,7 @@ object ExprTranslator {
 
     val strId = ir.strConsts.length
 
-    LoadInstr(R8, StrLabel(s"str$strId", value))
+    addInstr(LoadInstr(R8, StrLabel(s"str$strId", value)))
 
     addInstr(PushInstr(Seq(R8)))
   }

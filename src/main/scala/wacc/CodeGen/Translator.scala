@@ -16,7 +16,7 @@ object Translator {
     implicit val stateST = new StateTable(None)
     implicit val ir = new IR()
 
-    addInstr(CreateLabel(FuncLabel("main")))
+    addInstr(CreateLabel(Main))
 
 		val regsForUse = new ListBuffer[Register]()
     var stackInUse = false
@@ -40,6 +40,7 @@ object Translator {
     // Push register
     addInstr(PushInstr(Seq(FP, LR)))
 		addInstr(PushInstr(pushRegs))
+		addInstr(MovInstr(FP, SP))
 
 		val stackSpace = (varNum - 4) * 4
     // Add stack space if too many variables
