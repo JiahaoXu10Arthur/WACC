@@ -180,8 +180,7 @@ object ExprTranslator {
     addInstr( MulInstr(R8, R9, R8, R9))
 
     // Check overflow
-    // Need to modify here. Use constant to define ASR #31
-    addInstr(CmpInstr(R9, RegIntOffset(R8, 0)))
+    addInstr(CmpInstr(R9, R8, Some(ASR(31))))
     translateCondBLink(NeqCond, CheckOverflow)
 
     // Push Result
