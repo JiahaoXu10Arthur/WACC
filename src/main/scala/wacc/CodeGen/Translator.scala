@@ -68,8 +68,4 @@ object Translator {
 
     returnIR()
   }
-
-  def incBranchCounter() = {
-		branchCounter += 1
-  }
 }

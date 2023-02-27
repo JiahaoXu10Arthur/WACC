@@ -75,9 +75,9 @@ object StatTranslator {
 
   def sizeOfElem(elemType: Type): Int = {
     elemType match {
-      case IntType()      => 4
       case BoolType()     => 1
       case CharType()     => 1
+      case IntType()      => 4
       case PairType(_, _) => 4
       case ArrayType(_)   => 4
       case _              => 0
@@ -142,8 +142,16 @@ object StatTranslator {
       // Pop result
       addInstr(PopInstr(Seq(R8)))
 
+      // evaluate size of element to get size factor
+      val size_factor = sizeOfElem(checkExprType(arrayValue.values(i)))
+
       // Store elem to a[i]
-      addInstr(StoreInstr(R8, RegIntOffset(R12, i * 4)))
+      size_factor match {
+        case 1 => addInstr(StoreByteInstr(R8, RegIntOffset(R12, i * size_factor)))
+        case 4 => addInstr(StoreInstr(R8, RegIntOffset(R12, i * size_factor)))
+        case _ =>
+      }
+      
     }
 
     // Push Array pointer
@@ -455,6 +463,7 @@ object StatTranslator {
       case BoolType() => PrintBool
       case CharType() => PrintChar
       case StrType()  => PrintStr
+      case ArrayType(CharType()) => PrintStr
       case _          => PrintPointer
     }
 

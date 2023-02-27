@@ -12,8 +12,8 @@ class IR (
 	private val instrsBuffer = mutable.ListBuffer[Instruction]()
 	private val strConstsBuffer = mutable.ListBuffer[String]()
 	private val bLInstrsBuffer = mutable.ListBuffer[List[Instruction]]()
-	
 	private val bLNamesBuffer = mutable.ListBuffer[FuncLabel]()
+	private var branchCounter = 0
 }
 
 object IR {
@@ -42,4 +42,17 @@ object IR {
 					 strConsts.toList, 
 					 ir.bLInstrsBuffer.toList)
 	}
+
+	def getNextStrId()(implicit ir: IR): Int = {
+		ir.strConstsBuffer.size
+	}
+
+	def getBranchCounter()(implicit ir: IR): Int = {
+		ir.branchCounter
+	}
+
+	def incBranchCounter()(implicit ir: IR) = {
+		ir.branchCounter += 1
+  }
+	
 }

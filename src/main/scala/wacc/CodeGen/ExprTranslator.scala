@@ -102,10 +102,11 @@ object ExprTranslator {
 
   /* Assume Move to R8 */
   private def translateStr(value: String)(implicit ir: IR) = {
+    // get index of this string
+    val strId = getNextStrId()
+
     // add str to constant pool
     addStrConst(value)
-
-    val strId = ir.strConsts.length
 
     addInstr(LoadInstr(R8, StrLabel(s"str$strId", value)))
 
