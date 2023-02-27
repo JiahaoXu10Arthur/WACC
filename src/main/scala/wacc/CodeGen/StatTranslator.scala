@@ -5,7 +5,6 @@ import wacc.SemanticChecker.SymbolTable
 import wacc.Instructions._
 import wacc.SemanticChecker.SemanticTypes._
 
-import Translator._
 import ExprTranslator._
 import IR._
 
@@ -15,8 +14,7 @@ object StatTranslator {
       stat: Stat
   )(implicit st: SymbolTable, 
              stateST: StateTable, 
-             ir: IR,
-             branchCounter: Int): Unit = {
+             ir: IR): Unit = {
     stat match {
       case Declare(type1, ident, initValue) => translateDeclare(ident, initValue)
       case Assign(target, newValue)         => translateAssign(target, newValue)
@@ -87,9 +85,7 @@ object StatTranslator {
   private def translateDeclare(ident: Ident, initValue: Rvalue)(implicit
       st: SymbolTable,
       stateST: StateTable,
-      ir: IR,
-			branchCounter: Int
-  ) = {
+      ir: IR) = {
     initValue match {
       case initValue: Expr     => translateExpr(initValue)
       case initValue: ArrayLit => declareArrayLit(initValue)
@@ -116,8 +112,7 @@ object StatTranslator {
       arrayValue: ArrayLit
   )(implicit st: SymbolTable, 
              stateST: StateTable, 
-             ir: IR,
-			       branchCounter: Int) = {
+             ir: IR) = {
     val arr_len = arrayValue.values.size
     // Array store len + 1 elems -> +1 for store length
     val arr_size = (arr_len + 1) * 4
@@ -162,8 +157,7 @@ object StatTranslator {
       pairValue: NewPair
   )(implicit st: SymbolTable, 
              stateST: StateTable, 
-             ir: IR,
-			       branchCounter: Int) = {
+             ir: IR) = {
     declareNewPairLit(pairValue.expr1)
     declareNewPairLit(pairValue.expr2)
 
@@ -188,8 +182,7 @@ object StatTranslator {
       elem: Expr
   )(implicit st: SymbolTable, 
              stateST: StateTable, 
-             ir: IR,
-			       branchCounter: Int) = {
+             ir: IR) = {
 
     val _type = checkExprType(elem)
     val size = sizeOfElem(_type)
@@ -280,8 +273,7 @@ object StatTranslator {
       arrayValue: ArrayElem
   )(implicit st: SymbolTable, 
              stateST: StateTable, 
-             ir: IR,
-			       branchCounter: Int) = {
+             ir: IR) = {
 
     // find array pointer
     var array_loc = findVarLoc(arrayValue.ident.name, stateST)
@@ -315,8 +307,7 @@ object StatTranslator {
       arrayValue: ArrayElem
   )(implicit st: SymbolTable, 
              stateST: StateTable, 
-             ir: IR,
-			       branchCounter: Int) = {
+             ir: IR) = {
 
     // New value on stack
 
@@ -357,8 +348,7 @@ object StatTranslator {
       callValue: Call
   )(implicit st: SymbolTable, 
              stateST: StateTable, 
-             ir: IR,
-			       branchCounter: Int) = {
+             ir: IR) = {
     // Store parameter
     // First 3 parameters -> R0, R1, R2
     // More parameters -> On stack
@@ -403,8 +393,7 @@ object StatTranslator {
   private def translateAssign(target: Lvalue, 
                               newValue: Rvalue)(implicit st: SymbolTable, 
                                                          stateST: StateTable, 
-                                                         ir: IR,
-                                                         branchCounter: Int
+                                                         ir: IR
   ) = {
     newValue match {
       case initValue: Expr     => translateExpr(initValue)
@@ -427,8 +416,7 @@ object StatTranslator {
   /* Exit will return value in R0 */
   private def translateExit(expr: Expr)(implicit st: SymbolTable, 
                                                  stateST: StateTable, 
-                                                 ir: IR,
-                                                 branchCounter: Int) = {
+                                                 ir: IR) = {
     translateExpr(expr)
 
     // Pop result to R0 for exit
@@ -440,8 +428,7 @@ object StatTranslator {
   /* Return will return value in R0 */
   private def translateReturn(expr: Expr)(implicit st: SymbolTable, 
                                                    stateST: StateTable, 
-                                                   ir: IR,
-                                                   branchCounter: Int) = {
+                                                   ir: IR) = {
     translateExpr(expr)
 
     // Pop result to R0 for return
@@ -451,8 +438,7 @@ object StatTranslator {
   /* Print will print value in R0 */
   private def translatePrint(expr: Expr)(implicit st: SymbolTable, 
                                                   stateST: StateTable, 
-                                                  ir: IR,
-                                                  branchCounter: Int) = {
+                                                  ir: IR) = {
     translateExpr(expr)
     // Pop result to R0 for print
     addInstr(PopInstr(Seq(R0)))
@@ -475,8 +461,7 @@ object StatTranslator {
       expr: Expr
   )(implicit st: SymbolTable, 
              stateST: StateTable, 
-             ir: IR,
-             branchCounter: Int) = {
+             ir: IR) = {
     translatePrint(expr)
     translateBLink(PrintLine)
   }
@@ -486,8 +471,7 @@ object StatTranslator {
       lvalue: Lvalue
   )(implicit st: SymbolTable, 
              stateST: StateTable, 
-             ir: IR,
-             branchCounter: Int) = {
+             ir: IR) = {
 
     val _type = checkLvalueType(lvalue)
     val readType = _type match {
@@ -550,8 +534,7 @@ object StatTranslator {
   /* Free can be appied to array and pair */
   private def translateFree(expr: Expr)(implicit st: SymbolTable, 
                                                  stateST: StateTable, 
-                                                 ir: IR,
-                                                 branchCounter: Int) = {
+                                                 ir: IR) = {
 
     val _type = checkExprType(expr)
     val freeType = _type match {
@@ -574,8 +557,7 @@ object StatTranslator {
                           stats1: List[Stat], 
                           stats2: List[Stat])(implicit st: SymbolTable, 
                                                        stateST: StateTable, 
-                                                       ir: IR,
-                                                       branchCounter: Int) = {
+                                                       ir: IR) = {
     // Translate condition
     translateExpr(expr)
 
@@ -583,10 +565,10 @@ object StatTranslator {
     addInstr(PopInstr(Seq(R8)))
 
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"L$branchCounter")
+    val branch_0 = JumpLabel(s"L${getBranchCounter()}")
     incBranchCounter()
 
-    val branch_1 = JumpLabel(s"L$branchCounter")
+    val branch_1 = JumpLabel(s"L${getBranchCounter()}")
     incBranchCounter()
 
     // if true, branch to stat1 (if true branch)
@@ -597,7 +579,7 @@ object StatTranslator {
     // if false, continue executing stat2 (else branch)
     /* Create new state table */
     val new_stateST2 = new StateTable(Some(stateST))
-    stats2.foreach(s => translateStatement(s)(s.symb, new_stateST2, ir, branchCounter))
+    stats2.foreach(s => translateStatement(s)(s.symb, new_stateST2, ir))
 
     // As Branch1 will be below, when false, skip to Branch 2 (will be the rest of code)
     addInstr(BranchInstr(branch_1))
@@ -608,7 +590,7 @@ object StatTranslator {
 
     // Execute stat1
     val new_stateST1 = new StateTable(Some(stateST))
-    stats2.foreach(s => translateStatement(s)(s.symb, new_stateST1, ir, branchCounter))
+    stats2.foreach(s => translateStatement(s)(s.symb, new_stateST1, ir))
 
     // The rest of code needs to be in branch2
     // .L1:
@@ -619,14 +601,13 @@ object StatTranslator {
   private def translateWhile(expr: Expr, stats: List[Stat])(implicit
       st: SymbolTable,
       stateST: StateTable,
-      ir: IR,
-      branchCounter: Int
+      ir: IR
   ) = {
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"L$branchCounter")
+    val branch_0 = JumpLabel(s"L${getBranchCounter()}")
     incBranchCounter()
 
-    val branch_1 = JumpLabel(s"L$branchCounter")
+    val branch_1 = JumpLabel(s"L${getBranchCounter()}")
     incBranchCounter()
 
     // First, unconditionally jump to Branch 1
@@ -636,7 +617,7 @@ object StatTranslator {
     // .L1:
     addInstr(CreateLabel(branch_1))
     val new_stateST = new StateTable(Some(stateST))
-    stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir, branchCounter))
+    stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
 
     // .L0:
     // Translate condition
@@ -668,10 +649,9 @@ object StatTranslator {
 
   /* New scope will have new state table */
   private def translateBegin(stats: List[Stat])(implicit stateST: StateTable, 
-                                                         ir: IR,
-                                                         branchCounter: Int) = {
+                                                         ir: IR) = {
     /* Create new state table */
     val new_stateST = new StateTable(Some(stateST))
-    stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir, branchCounter))
+    stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
   }
 }

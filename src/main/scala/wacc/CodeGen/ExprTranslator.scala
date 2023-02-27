@@ -5,7 +5,6 @@ import wacc.Ast._
 import wacc.SemanticChecker.SymbolTable
 import wacc.Instructions._
 
-import Translator._
 import StatTranslator._
 import IR._
 
@@ -14,8 +13,7 @@ object ExprTranslator {
       expr: Expr
     )(implicit st: SymbolTable, 
 							 stateST: StateTable,
-               ir: IR,
-               branchCounter: Int): Unit = {
+               ir: IR): Unit = {
 
     expr match {
       case Add(expr1, expr2)   => translateAdd(expr1, expr2)
@@ -117,8 +115,7 @@ object ExprTranslator {
 			expr1: Expr, expr2: Expr
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
-               ir: IR,
-               branchCounter: Int) = {
+               ir: IR) = {
 
     // Expr1 store in R8
     translateExpr(expr1)
@@ -142,8 +139,7 @@ object ExprTranslator {
 			expr1: Expr, expr2: Expr
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
-               ir: IR,
-               branchCounter: Int) = {
+               ir: IR) = {
 
     // Expr1 store in R8
     translateExpr(expr1)
@@ -167,8 +163,7 @@ object ExprTranslator {
 			expr1: Expr, expr2: Expr
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
-               ir: IR,
-               branchCounter: Int) = {
+               ir: IR) = {
 
     // Expr1 store in R8
     translateExpr(expr1)
@@ -194,8 +189,7 @@ object ExprTranslator {
 			expr1: Expr, expr2: Expr
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
-               ir: IR,
-               branchCounter: Int) = {
+               ir: IR) = {
 
     // Expr1 store in R0
     translateExpr(expr1)
@@ -220,8 +214,7 @@ object ExprTranslator {
 			expr1: Expr, expr2: Expr
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
-               ir: IR,
-               branchCounter: Int) = {
+               ir: IR) = {
 
     // Expr1 store in R0
     translateExpr(expr1)
@@ -248,8 +241,7 @@ object ExprTranslator {
                            falseCode: CondCode)(
                            implicit st: SymbolTable, 
                                     stateST: StateTable,
-                                    ir: IR,
-                                    branchCounter: Int) = {
+                                    ir: IR) = {
     // Expr1 store in R8
     translateExpr(expr1)
     addInstr(PopInstr(Seq(R8)))
@@ -274,8 +266,7 @@ object ExprTranslator {
 			expr1: Expr, expr2: Expr
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
-               ir: IR,
-               branchCounter: Int) = {
+               ir: IR) = {
 
     // Expr1 store in R8
     translateExpr(expr1)
@@ -285,7 +276,7 @@ object ExprTranslator {
     addInstr(CmpInstr(R8, Immediate(1)))
 
     // Allocate new branch name
-    val branch_0 = JumpLabel(".L" + branchCounter)
+    val branch_0 = JumpLabel(".L" + getBranchCounter())
     incBranchCounter()
 
     // If expr1 false, shortcut to L0
@@ -314,8 +305,7 @@ object ExprTranslator {
 			expr1: Expr, expr2: Expr
 		)(implicit st: SymbolTable, 
                stateST: StateTable,
-               ir: IR,
-               branchCounter: Int) = {
+               ir: IR) = {
     // Expr1 store in R8
     translateExpr(expr1)
     addInstr(PopInstr(Seq(R8)))
@@ -324,7 +314,7 @@ object ExprTranslator {
     addInstr(CmpInstr(R8, Immediate(1)))
 
     // Allocate new branch name
-    val branch_0 = JumpLabel(".L" + branchCounter)
+    val branch_0 = JumpLabel(".L" + getBranchCounter())
     incBranchCounter()
 
     // If expr1 true, shortcut to L0

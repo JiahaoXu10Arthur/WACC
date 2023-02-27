@@ -52,7 +52,7 @@ object Translator {
 		}
 
     // Translate Main
-    p.stats.foreach { s => translateStatement(s)(s.symb, stateST, ir, branchCounter) }
+    p.stats.foreach { s => translateStatement(s)(s.symb, stateST, ir) }
 
     // Mov return code 0
     addInstr(MovInstr(R0, Immediate(0)))
