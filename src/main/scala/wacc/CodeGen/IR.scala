@@ -27,11 +27,15 @@ object IR {
 		}
 	}
 
-	def addBranchLink(bLname: FuncLabel)(implicit ir: IR) = {
-		if (!ir.bLNamesBuffer.contains(bLname)){
-			ir.bLNamesBuffer += bLname
-			ir.bLInstrsBuffer += translateBranchLink(bLname)
+	def addBranchLink(bLName: FuncLabel)(implicit ir: IR): Unit = {
+		val (instrs, extra_bls) = translateBranchLink(bLName)
+		if (!ir.bLNamesBuffer.contains(bLName)){
+			ir.bLNamesBuffer += bLName
+			ir.bLInstrsBuffer += instrs
 		}
+
+		// Add extra bl if the branch link requires more bl in its implementation
+		extra_bls.foreach(bLName => addBranchLink(bLName))
 	}
 
 	def returnIR()(implicit ir: IR): IR = {

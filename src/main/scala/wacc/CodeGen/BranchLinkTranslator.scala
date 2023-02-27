@@ -6,8 +6,9 @@ import wacc.Instructions._
 object BranchLinkTranslator {
 	final val ErrorExitCode = 255
 
-  def translateBranchLink(blName: FuncLabel): List[Instruction] = {
+  def translateBranchLink(blName: FuncLabel): (List[Instruction], List[FuncLabel]) = {
     implicit val instrsBuffer = mutable.ListBuffer[Instruction]()
+    implicit val blNameBuffer = mutable.ListBuffer[FuncLabel]()
 
     blName match {
       case ArrayLoad     => translateArrayLoad(blName)
@@ -29,7 +30,7 @@ object BranchLinkTranslator {
       case _             =>
     }
 
-    instrsBuffer.toList
+    (instrsBuffer.toList, blNameBuffer.toList)
   }
 
   /*
@@ -38,7 +39,8 @@ object BranchLinkTranslator {
    */
   private def translateArrayLoad(
       blName: FuncLabel
-  )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+  )(implicit instrsBuffer: mutable.ListBuffer[Instruction],
+             bLNameBuffer: mutable.ListBuffer[FuncLabel]): Unit = {
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += CmpInstr(R10, Immediate(0))
@@ -50,6 +52,8 @@ object BranchLinkTranslator {
     instrsBuffer += CondBranchLinkInstr(GteCond, CheckBound)
     instrsBuffer += LoadInstr(R3, RegShiftOffset(R3, R10, LSL(2)))
     instrsBuffer += PopInstr(Seq(PC))
+
+    bLNameBuffer += CheckBound
   }
 
   /*
@@ -59,7 +63,8 @@ object BranchLinkTranslator {
   private def translateArrayStore(
       blName: FuncLabel,
       storeByte: Boolean = false
-  )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+  )(implicit instrsBuffer: mutable.ListBuffer[Instruction],
+             bLNameBuffer: mutable.ListBuffer[FuncLabel]): Unit = {
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += CmpInstr(R10, Immediate(0))
@@ -76,11 +81,14 @@ object BranchLinkTranslator {
         StoreInstr(R8, RegShiftOffset(R3, R10, LSL(2)))
     )
     instrsBuffer += PopInstr(Seq(PC))
+
+    bLNameBuffer += CheckBound
   }
 
   private def translateFreePair(
       blName: FuncLabel
-  )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+  )(implicit instrsBuffer: mutable.ListBuffer[Instruction],
+             bLNameBuffer: mutable.ListBuffer[FuncLabel]): Unit = {
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += MovInstr(R8, R0)
@@ -100,6 +108,8 @@ object BranchLinkTranslator {
     instrsBuffer += MovInstr(R0, R8)
     instrsBuffer += BranchLinkInstr(FreeLabel)
     instrsBuffer += PopInstr(Seq(PC))
+
+    bLNameBuffer += CheckNull
   }
 
   private def translateCheckBound(
@@ -125,7 +135,8 @@ object BranchLinkTranslator {
 
 	private def translateCheckNull(
 		blName: FuncLabel
-	)(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+	)(implicit instrsBuffer: mutable.ListBuffer[Instruction],
+             bLNameBuffer: mutable.ListBuffer[FuncLabel]): Unit = {
 	  val errorStr =
       StrLabel(s"${blName.getName}_str0", "fatal error: null pair deferenced or freed\n")
 
@@ -140,11 +151,14 @@ object BranchLinkTranslator {
 		instrsBuffer += BranchLinkInstr(PrintStr)
 		instrsBuffer += MovInstr(R0, Immediate(ErrorExitCode))
 		instrsBuffer += BranchLinkInstr(ExitLabel)
+
+    bLNameBuffer += PrintStr
 	}
 
 	private def translateCheckDivZero(
 		blName: FuncLabel
-	)(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+	)(implicit instrsBuffer: mutable.ListBuffer[Instruction],
+             bLNameBuffer: mutable.ListBuffer[FuncLabel]): Unit = {
     val errorStr =
       StrLabel(s"${blName.getName}_str0", "fatal error: division or modulo by zero\n")
 
@@ -159,11 +173,14 @@ object BranchLinkTranslator {
 		instrsBuffer += BranchLinkInstr(PrintStr)
 		instrsBuffer += MovInstr(R0, Immediate(ErrorExitCode))
 		instrsBuffer += BranchLinkInstr(ExitLabel)
+
+    bLNameBuffer += PrintStr
 	}
 
 	private def translateCheckOverflow(
 		blName: FuncLabel
-	)(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+	)(implicit instrsBuffer: mutable.ListBuffer[Instruction],
+             bLNameBuffer: mutable.ListBuffer[FuncLabel]): Unit = {
     val errorStr =
       StrLabel(s"${blName.getName}_str0", "fatal error: integer overflow or underflow occurred\n")
 
@@ -178,6 +195,8 @@ object BranchLinkTranslator {
 		instrsBuffer += BranchLinkInstr(PrintStr)
 		instrsBuffer += MovInstr(R0, Immediate(ErrorExitCode))
 		instrsBuffer += BranchLinkInstr(ExitLabel)
+
+    bLNameBuffer += PrintStr
 	}
 
   private def translatePrintBool(
