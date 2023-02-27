@@ -23,6 +23,15 @@ object CodeGenerator {
       val asm = assembleInstr(instr)
       writer.println(asm)
     }
+
+    /* Translate branchlink widgets */
+    for (instrs <- ir.bLInstrs) {
+      for (instr <- instrs) {
+        val asm = assembleInstr(instr)
+        writer.println(asm)
+      }
+    }
+    
     writer.close()
     asmFile.createNewFile()
     asmFile.getAbsolutePath()
