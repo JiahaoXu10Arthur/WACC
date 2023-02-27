@@ -17,7 +17,6 @@ object FunctionTranslator {
 
 		val funcRegs = Seq(FP, LR)
 		val regsForUse = mutable.ListBuffer[Register]()
-		var stackInUse = false
 
 		// Find overall viriable number in the function
 		val regNum = func.symb.findAllVarNum()
@@ -30,22 +29,23 @@ object FunctionTranslator {
 		} else {
 			// Adding the first four variables to registers and push others to stack
 			regsForUse ++= variableReg
-			stackInUse = true
 		}
 
 		// Push register
 		addInstr(PushInstr(funcRegs))
 		addInstr(PushInstr(regsForUse.toSeq))
 		addInstr(MovInstr(FP, SP))
-		
-		val stackSpace = (regNum - 4) * 4
+
+		val new_stateST = new StateTable(Some(stateST))
+
+		val stackSpace = (regNum - variableReg.size) * 4
 		// Add stack space if too many variables
-		if (stackInUse) {
+		if (stackSpace > 0) {
 			addInstr(SubInstr(SP, SP, Immediate(stackSpace)))
+			// Update stateTable fp pointer
+			new_stateST.updateFPPtr(stackSpace * (-1))
 		}
-
-		// Add parameter to state table
-
+	
 		// Store parameter
     // First 3 parameters -> R0, R1, R2
     // More parameters -> On stack
@@ -63,12 +63,12 @@ object FunctionTranslator {
             case 1 => R1
             case 2 => R2
           }
-				stateST.add(func.params(index).ident.name, reg)
+				new_stateST.add(func.params(index).ident.name, reg)
 
 			} else {
 
 				// may need to check, does not need to specify where it is?
-				stateST.add(func.params(index).ident.name, RegIntOffset(SP, -4))
+				new_stateST.add(func.params(index).ident.name, RegIntOffset(SP, -4))
 			}
 
 			index += 1
@@ -76,13 +76,13 @@ object FunctionTranslator {
 		
 		// Create function label
 		addInstr(CreateLabel(JumpLabel("wacc_" + func.ident.name)))
-
 		// Translate function body
-		val new_stateST = new StateTable(Some(stateST))
-		// Update stateTable fp pointer
-		new_stateST.updateFPPtr(stackSpace * -1)
-
 		func.stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
+
+		// Add stack space if too many variables
+		if (stackSpace > 0) {
+			addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
+		}
 		
 		// Pop register
 		addInstr(PopInstr(regsForUse.toSeq))

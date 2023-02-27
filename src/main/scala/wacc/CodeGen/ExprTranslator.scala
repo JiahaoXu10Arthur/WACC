@@ -100,11 +100,11 @@ object ExprTranslator {
 
   /* Assume Move to R8 */
   private def translateStr(value: String)(implicit ir: IR) = {
-    // get index of this string
-    val strId = getNextStrId()
-
     // add str to constant pool
     addStrConst(value)
+
+    // get index of this string
+    val strId = findStrConstIndex(value)
 
     addInstr(LoadInstr(R8, StrLabel(s"str$strId", value)))
 
@@ -276,7 +276,7 @@ object ExprTranslator {
     addInstr(CmpInstr(R8, Immediate(1)))
 
     // Allocate new branch name
-    val branch_0 = JumpLabel(".L" + getBranchCounter())
+    val branch_0 = JumpLabel(s"${getBranchCounter()}")
     incBranchCounter()
 
     // If expr1 false, shortcut to L0
@@ -314,7 +314,7 @@ object ExprTranslator {
     addInstr(CmpInstr(R8, Immediate(1)))
 
     // Allocate new branch name
-    val branch_0 = JumpLabel(".L" + getBranchCounter())
+    val branch_0 = JumpLabel(s"${getBranchCounter()}")
     incBranchCounter()
 
     // If expr1 true, shortcut to L0

@@ -54,5 +54,9 @@ object IR {
 	def incBranchCounter()(implicit ir: IR) = {
 		ir.branchCounter += 1
   }
+
+	def findStrConstIndex(str: String)(implicit ir: IR): Int =
+		ir.strConstsBuffer.indexOf(str)
+
 	
 }

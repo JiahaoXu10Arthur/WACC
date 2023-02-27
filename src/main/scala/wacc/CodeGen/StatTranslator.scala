@@ -383,8 +383,7 @@ object StatTranslator {
     }
 
     // Create branch jump
-    val branchName = "wacc_" + callValue.ident.name
-    addInstr(BranchInstr(new Label(branchName)))
+    addInstr(BranchInstr(WACCFuncLabel(callValue.ident.name)))
 
     // Push function return value
     addInstr(PushInstr(Seq(R0)))
@@ -565,10 +564,10 @@ object StatTranslator {
     addInstr(PopInstr(Seq(R8)))
 
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"L${getBranchCounter()}")
+    val branch_0 = JumpLabel(s"${getBranchCounter()}")
     incBranchCounter()
 
-    val branch_1 = JumpLabel(s"L${getBranchCounter()}")
+    val branch_1 = JumpLabel(s"${getBranchCounter()}")
     incBranchCounter()
 
     // if true, branch to stat1 (if true branch)
@@ -590,7 +589,7 @@ object StatTranslator {
 
     // Execute stat1
     val new_stateST1 = new StateTable(Some(stateST))
-    stats2.foreach(s => translateStatement(s)(s.symb, new_stateST1, ir))
+    stats1.foreach(s => translateStatement(s)(s.symb, new_stateST1, ir))
 
     // The rest of code needs to be in branch2
     // .L1:
@@ -604,10 +603,10 @@ object StatTranslator {
       ir: IR
   ) = {
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"L${getBranchCounter()}")
+    val branch_0 = JumpLabel(s"${getBranchCounter()}")
     incBranchCounter()
 
-    val branch_1 = JumpLabel(s"L${getBranchCounter()}")
+    val branch_1 = JumpLabel(s"${getBranchCounter()}")
     incBranchCounter()
 
     // First, unconditionally jump to Branch 1

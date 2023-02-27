@@ -32,7 +32,6 @@ class StateTable(st: Option[StateTable]) {
     }
   }
     
-
   /* Remove a key-value pair specified by key from dictionary */
   def remove(name: String) = {
     val location = lookUpAll(name)
@@ -95,7 +94,7 @@ class StateTable(st: Option[StateTable]) {
       unUsedReg.head
     } else {
       // Go to storage
-      val returnLoc = RegIntOffset(FP, nextFPPtr())
+      val returnLoc = RegIntOffset(FP, fpPtr)
       returnLoc
     }
 
