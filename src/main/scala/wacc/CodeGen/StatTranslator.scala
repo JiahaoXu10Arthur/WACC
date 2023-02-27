@@ -187,21 +187,20 @@ object StatTranslator {
     val _type = checkExprType(elem)
     val size = sizeOfElem(_type)
 
-    // If size == 0 -> pair elem is null, do not store
+    // If size == 0 -> pair elem is null, do not malloc
     if (size != 0) {
       translateMalloc(size)
-
-      // Load value of elem
-      translateExpr(elem)
-      // Pop result
-      addInstr(PopInstr(Seq(R8)))
-
-      // store value of elem
-      addInstr(StoreInstr(R8, RegIntOffset(R12, 0)))
-
-      // Push Pair elem pointer
-      addInstr(PushInstr(Seq(R12)))
     }
+    // Load value of elem
+    translateExpr(elem)
+    // Pop result
+    addInstr(PopInstr(Seq(R8)))
+
+    // store value of elem
+    addInstr(StoreInstr(R8, RegIntOffset(R12, 0)))
+
+    // Push Pair elem pointer
+    addInstr(PushInstr(Seq(R12)))
   }
 
   private def storeIdent(ident: Ident)(implicit stateST: StateTable, ir: IR) = {
@@ -236,11 +235,14 @@ object StatTranslator {
     addInstr(CmpInstr(locReg, Immediate(0)))
     translateCondBLink(EqCond, CheckNull)
 
-    // Move fst/snd of pair to R8
+    // Move fst/snd pointer of pair to R8
     pairValue.index match {
       case "fst" => addInstr(LoadInstr(R8, RegIntOffset(locReg, 0)))
       case "snd" => addInstr(LoadInstr(R8, RegIntOffset(locReg, 4)))
     }
+
+    // Load actual pair elem
+    addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
 
     // Push result
     addInstr(PushInstr(Seq(R8)))
