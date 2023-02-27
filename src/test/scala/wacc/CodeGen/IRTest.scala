@@ -50,29 +50,4 @@ class IRTest extends AnyFlatSpec {
 		immutableIR.strConsts should have size 1
 		immutableIR.bLInstrs should have size 1
 	}
-
-	"IR strConsts" should "retrieve index" in {
-		implicit val ir = new IR()
-
-		addStrConst("String")
-		addStrConst("Branch")
-
-		val immutableIR = returnIR()
-		immutableIR.findStrConstIndex("String") shouldBe 0
-		immutableIR.findStrConstIndex("Branch") shouldBe 1
-	}
-
-	"IR strConsts" should "retrieve index even have duplicate" in {
-		implicit val ir = new IR()
-
-		addStrConst("String")
-		addStrConst("String")
-		addStrConst("Branch")
-
-		val immutableIR = returnIR()
-		immutableIR.findStrConstIndex("String") shouldBe 0
-		immutableIR.findStrConstIndex("Branch") shouldBe 1
-	}
-
-
 }

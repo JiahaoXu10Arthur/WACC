@@ -10,11 +10,9 @@ object CodeGenerator {
     val writer = new PrintWriter(asmFile)
     /* String constant pool generation */
     writer.println(".data")
-    for ((str, i) <- ir.strConsts.zipWithIndex) {
-      writer.println(s"@ length of .L.str$i")
-      writer.println(s".word ${str.length}")
-      writer.println(s".L.str$i:")
-      writer.println(s".asciz \"${str}\"")
+    for (str <- ir.strConsts) {
+      val asmStrConst = assembleInstr(str)
+      writer.println(asmStrConst)
     }
     writer.println(".text")
     /* Translate instructions */
@@ -31,7 +29,7 @@ object CodeGenerator {
         writer.println(asm)
       }
     }
-    
+
     writer.close()
     asmFile.createNewFile()
     asmFile.getAbsolutePath()
@@ -44,7 +42,7 @@ object CodeGenerator {
       case instr: MemoryInstr => assembleMemory(instr)
       case instr: StackInstr  => assembleStack(instr)
       case instr: StatInstr   => assembleStat(instr)
-      case CreateLabel(label) => asmLabel(label)
+      case instr: CreateLabel => assembleCreateLabel(instr).mkString("\n")
       case _                  => "@not implemented yet!"
     }
   }
@@ -52,8 +50,8 @@ object CodeGenerator {
   private def asmLabel(label: Label): String = label match {
     case StrLabel(name, value) => s".L.$name"
     case JumpLabel(name)       => s".$name"
-    case FuncLabel(name)       => s"$name:"
-    case WACCFuncLabel(name)   => s"wacc_$name:"
+    case FuncLabel(name)       => s"$name"
+    case WACCFuncLabel(name)   => s"wacc_$name"
     case _                     => s"@unsupported label creation"
   }
 
@@ -105,6 +103,16 @@ object CodeGenerator {
     case NeqCond => "ne"
   }
 
+  private def assembleCreateLabel(instr: CreateLabel): List[String] = instr.label match {
+    case StrLabel(name, value) => List(
+      s"@ length of ${asmLabel(instr.label)}",
+      s".word ${value.length}",
+      s"${asmLabel(instr.label)}:",
+      s".asciz \"${value}\""
+    )
+    case _ => List(s"${asmLabel(instr.label)}:")
+  }
+
   private def assembleExpr(instr: ExprInstr): String = instr match {
     case AddInstr(destReg, reg1, opr) => {
       val destStr = asmReg(destReg)
@@ -146,10 +154,10 @@ object CodeGenerator {
   }
 
   private def assembleJump(instr: JumpInstr): String = instr match {
-    case BranchLinkInstr(label)           => s"bl ${label.getName}"
-    case BranchInstr(label)               => s"b ${label.getName}"
-    case CondBranchLinkInstr(cond, label) => s"bl${asmCond(cond)} ${label.getName}"
-    case CondBranchInstr(cond, label)     => s"b${asmCond(cond)} ${label.getName}"
+    case BranchLinkInstr(label)           => s"bl ${asmLabel(label)}"
+    case BranchInstr(label)               => s"b ${asmLabel(label)}"
+    case CondBranchLinkInstr(cond, label) => s"bl${asmCond(cond)} ${asmLabel(label)}"
+    case CondBranchInstr(cond, label)     => s"b${asmCond(cond)} ${asmLabel(label)}"
   }
 
   private def assembleMemory(instr: MemoryInstr): String = instr match {
