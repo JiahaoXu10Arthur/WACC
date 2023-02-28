@@ -90,7 +90,7 @@ object StatTranslator {
       case initValue: Expr     => translateExpr(initValue)
       case initValue: ArrayLit => declareArrayLit(initValue)
       case initValue: NewPair  => declareNewPair(initValue)
-      case initValue: PairElem => loadPairElem(initValue)
+      case initValue: PairElem => getPairElem(initValue)
       case initValue: Call     => translateCall(initValue)
     }
 
@@ -191,6 +191,7 @@ object StatTranslator {
     if (size != 0) {
       translateMalloc(size)
     }
+
     // Load value of elem
     translateExpr(elem)
     // Pop result
@@ -218,7 +219,21 @@ object StatTranslator {
     }
   }
 
-  private def loadPairElem(pairValue: PairElem)(implicit stateST: StateTable, ir: IR) = {
+  private def getPairElem(pairValue: PairElem)(implicit stateST: StateTable, ir: IR) = {
+
+    // Get pair elem pointer
+    getPairElemPointer(pairValue)
+    addInstr(PopInstr(Seq(R8)))
+
+    // Load actual pair elem
+    addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
+
+    // Push result
+    addInstr(PushInstr(Seq(R8)))
+
+  }
+
+  private def getPairElemPointer(pairValue: PairElem)(implicit stateST: StateTable, ir: IR) = {
 
     val location = findLvalueLoc(pairValue, stateST)
 
@@ -241,9 +256,6 @@ object StatTranslator {
       case "snd" => addInstr(LoadInstr(R8, RegIntOffset(locReg, 4)))
     }
 
-    // Load actual pair elem
-    addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
-
     // Push result
     addInstr(PushInstr(Seq(R8)))
   }
@@ -252,7 +264,7 @@ object StatTranslator {
     // Assign value on stack now
 
     // Load pair elem pointer to stack
-    loadPairElem(pairValue)
+    getPairElemPointer(pairValue)
 
     // Pop pair elem pointer to R9
     addInstr(PopInstr(Seq(R9)))
@@ -400,7 +412,7 @@ object StatTranslator {
       case initValue: Expr     => translateExpr(initValue)
       case initValue: ArrayLit => declareArrayLit(initValue)
       case initValue: NewPair  => declareNewPair(initValue)
-      case initValue: PairElem => loadPairElem(initValue)
+      case initValue: PairElem => getPairElem(initValue)
       case initValue: Call     => translateCall(initValue)
     }
 
@@ -513,8 +525,8 @@ object StatTranslator {
       }
       case lvalue: PairElem => {
 
-        loadPairElem(lvalue)
-        // Pop original value to R0
+        getPairElemPointer(lvalue)
+        // Pop pair elem pointer to R0
         addInstr(PopInstr(Seq(R0)))
 
         // Read from input

@@ -10,17 +10,17 @@ class PairsTests extends IntegrationTest {
   testFile("wacc_example/valid/pairs/", new File("createPair03.wacc"))
   testFile("wacc_example/valid/pairs/", new File("createRefPair.wacc"))
   testFile("wacc_example/valid/pairs/", new File("free.wacc"))
-  testFile("wacc_example/valid/pairs/", new File("linkedList.wacc"))
+  testFile("wacc_example/valid/pairs/", new File("linkedList.wacc")) // Fail
   testFile("wacc_example/valid/pairs/", new File("nestedPair.wacc"))
-  testFile("wacc_example/valid/pairs/", new File("nestedPairLeftAssign.wacc"))
-  testFile("wacc_example/valid/pairs/", new File("nestedPairRightExtract.wacc"))
+  testFile("wacc_example/valid/pairs/", new File("nestedPairLeftAssign.wacc")) // Fail
+  testFile("wacc_example/valid/pairs/", new File("nestedPairRightExtract.wacc")) // Fail
   testFile("wacc_example/valid/pairs/", new File("null.wacc"))
-  testFile("wacc_example/valid/pairs/", new File("pairarray.wacc"))
+  testFile("wacc_example/valid/pairs/", new File("pairarray.wacc")) // Fail
   testFile("wacc_example/valid/pairs/", new File("printNull.wacc"))
   testFile("wacc_example/valid/pairs/", new File("printNullPair.wacc"))
-  testFile("wacc_example/valid/pairs/", new File("readPair.wacc"))
-  testFile("wacc_example/valid/pairs/", new File("writeFst.wacc"))
-  testFile("wacc_example/valid/pairs/", new File("writeSnd.wacc"))
+  testFile("wacc_example/valid/pairs/", new File("readPair.wacc")) // Fail
+  testFile("wacc_example/valid/pairs/", new File("writeFst.wacc")) // Fail
+  testFile("wacc_example/valid/pairs/", new File("writeSnd.wacc")) // Fail
   
 
   // The tests contain #addr:(cannot be tested)
