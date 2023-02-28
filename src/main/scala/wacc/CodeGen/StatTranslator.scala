@@ -408,7 +408,7 @@ object StatTranslator {
     }
 
     // Create branch jump
-    addInstr(BranchInstr(WACCFuncLabel(callValue.ident.name)))
+    addInstr(BranchLinkInstr(WACCFuncLabel(callValue.ident.name)))
 
     // Push function return value
     addInstr(PushInstr(Seq(R0)))
@@ -453,6 +453,22 @@ object StatTranslator {
 
     // Pop result to R0 for return
     addInstr(PopInstr(Seq(R0)))
+
+    translateReturnPop()
+  }
+
+  /* Add pop after return */
+  def translateReturnPop()(implicit ir: IR) = {
+    addInstr(MovInstr(SP, FP))
+    
+    val regsInUse = getRegsInUse()
+
+    // Pop Register on stack
+		if (!regsInUse.isEmpty){
+			addInstr(PopInstr(regsInUse.toSeq))
+		}
+    
+    addInstr(PopInstr(Seq(FP, PC)))
   }
 
   /* Print will print value in R0 */

@@ -14,7 +14,7 @@ object FunctionTranslator {
 		func: Func
 	)(implicit ir: IR): Unit = {
 
-    val funcRegs   = Seq(FP, LR)
+    val pushFuncRegs   = Seq(FP, LR)
     val regsForUse = mutable.ListBuffer[Register]()
 
     // Find overall viriable number in the function
@@ -29,11 +29,13 @@ object FunctionTranslator {
       regsForUse ++= variableReg
     }
 
+    updateRegsInUse(regsForUse.toList)
+
 		// Create function label
 		addInstr(CreateLabel(WACCFuncLabel(func.ident.name)))
 
 		// Push register
-		addInstr(PushInstr(funcRegs))
+		addInstr(PushInstr(pushFuncRegs))
 		if (!regsForUse.isEmpty){
 			addInstr(PushInstr(regsForUse.toSeq))
 		}
@@ -79,24 +81,20 @@ object FunctionTranslator {
     }
 		
 		// Translate function body
-		func.stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
+		func.stats.foreach(s => {translateStatement(s)(s.symb, new_stateST, ir)})
 
-    // Create function label
-    addInstr(CreateLabel(JumpLabel("wacc_" + func.ident.name)))
-    // Translate function body
-    func.stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
+    // val popFuncRegs    = Seq(FP, PC)
 
     // Add stack space if too many variables
     if (stackSpace > 0) {
       addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
     }
 
-		// Pop register
-		if (!regsForUse.isEmpty){
-			addInstr(PopInstr(regsForUse.toSeq))
-		}
-    addInstr(PopInstr(funcRegs))
+    // addInstr(MovInstr(SP, FP))
+    // addInstr(PopInstr(popFuncRegs))
 
   }
+
+
 
 }

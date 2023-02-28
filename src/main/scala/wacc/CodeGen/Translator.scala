@@ -21,6 +21,8 @@ object Translator {
 
     addInstr(CreateLabel(Main))
 
+		val pushFuncRegs   = Seq(FP, LR)
+    val popFuncRegs    = Seq(FP, PC)
     val regsForUse = new ListBuffer[Register]()
 
     val varNum = mainST.findAllVarNum()
@@ -38,7 +40,7 @@ object Translator {
     val pushRegs = regsForUse.toSeq ++ reservedReg
 
     // Push register
-    addInstr(PushInstr(Seq(FP, LR)))
+    addInstr(PushInstr(pushFuncRegs))
     addInstr(PushInstr(pushRegs))
     addInstr(MovInstr(FP, SP))
 
@@ -63,7 +65,7 @@ object Translator {
 
     // Pop register
     addInstr(PopInstr(pushRegs))
-    addInstr(PopInstr(Seq(FP, PC)))
+    addInstr(PopInstr(popFuncRegs))
 
     // Firstly reading the headeres of the functions
     p.funcs.foreach(f => translateFunction(f))

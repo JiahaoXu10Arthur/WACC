@@ -110,9 +110,9 @@ object Instructions {
   case class PopInstr(registers: Seq[Register]) extends StackInstr
 
   sealed trait JumpInstr extends Instruction
-  case class BranchLinkInstr(label: FuncLabel) extends JumpInstr // bl exit
+  case class BranchLinkInstr(label: Label) extends JumpInstr // bl exit
   case class BranchInstr(label: Label) extends JumpInstr // b .L0
-  case class CondBranchLinkInstr(cond: CondCode, label: FuncLabel) extends JumpInstr
+  case class CondBranchLinkInstr(cond: CondCode, label: Label) extends JumpInstr
   case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
 
   case class CreateLabel(label: Label) extends Instruction
