@@ -1,5 +1,4 @@
 package wacc.IntegrationTests
-import java.io.File
 
 class IOTests extends IntegrationTest {
 

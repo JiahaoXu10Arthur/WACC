@@ -5,7 +5,7 @@ import wacc.Instructions._
 import wacc.CodeGen.IR.addBranchLink
 
 object BranchLinkTranslator {
-  final private val ErrorExitCode = 255
+  final private val ErrorExitCode  = 255
   final private val ArrayLenOffset = -4
 
   def translateBranchLink(blName: FuncLabel)(implicit ir: IR): List[Instruction] = {
@@ -203,8 +203,8 @@ object BranchLinkTranslator {
   private def translatePrintBool(
       blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
-    val falseStr = StrLabel(s"${blName.getName}_str0", "false")
-    val trueStr = StrLabel(s"${blName.getName}_str1", "true")
+    val falseStr  = StrLabel(s"${blName.getName}_str0", "false")
+    val trueStr   = StrLabel(s"${blName.getName}_str1", "true")
     val formatStr = StrLabel(s"${blName.getName}_str2", "%.*s")
 
     /* Adds format string to data section */
@@ -213,7 +213,7 @@ object BranchLinkTranslator {
     instrsBuffer += CreateLabel(trueStr)
     instrsBuffer += CreateLabel(formatStr)
 
-    val trueLabel = JumpLabel(s"${blName.getName}0")
+    val trueLabel  = JumpLabel(s"${blName.getName}0")
     val printLabel = JumpLabel(s"${blName.getName}1")
     instrsBuffer += CreateLabel(SegmentLabel("text"))
     instrsBuffer += CreateLabel(blName)
@@ -348,7 +348,7 @@ object BranchLinkTranslator {
       blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
     val readCharFormatStr = StrLabel(s"${blName.getName}_str0", "%c")
-    val charByteOffset = 1
+    val charByteOffset    = 1
 
     /* Adds format string to data section */
     instrsBuffer += CreateLabel(SegmentLabel("data"))
@@ -359,7 +359,7 @@ object BranchLinkTranslator {
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += StoreByteInstr(R0, RegIntOffset(SP, -charByteOffset), true) // Push R0 to stack
-    instrsBuffer += MovInstr(R1, SP) // Pass address of R0 to scanf
+    instrsBuffer += MovInstr(R1, SP)                                            // Pass address of R0 to scanf
     instrsBuffer += LoadInstr(R0, readCharFormatStr)
     instrsBuffer += BranchLinkInstr(ScanFormatted)
     instrsBuffer += LoadSignedByteInstr(R0, RegIntOffset(SP, 0)) // Pop R0 from stack
@@ -371,7 +371,7 @@ object BranchLinkTranslator {
       blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
     val readIntFormatStr = StrLabel(s"${blName.getName}_str0", "%d")
-    val intByteSize = 4
+    val intByteSize      = 4
 
     /* Adds format string to data section */
     instrsBuffer += CreateLabel(SegmentLabel("data"))
@@ -382,7 +382,7 @@ object BranchLinkTranslator {
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
     instrsBuffer += StoreInstr(R0, RegIntOffset(SP, -intByteSize), true) // Push R0 to stack
-    instrsBuffer += MovInstr(R1, SP) // Pass address of R0 to scanf
+    instrsBuffer += MovInstr(R1, SP)                                     // Pass address of R0 to scanf
     instrsBuffer += LoadInstr(R0, readIntFormatStr)
     instrsBuffer += BranchLinkInstr(ScanFormatted)
     instrsBuffer += LoadInstr(R0, RegIntOffset(SP, 0)) // Pop R0 from stack
