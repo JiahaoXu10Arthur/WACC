@@ -5,14 +5,14 @@ stages:
   - unit_tests
   - integration_tests
 
-cache:
-  key: "$CI_BUILD_REF_NAME" # contains either the branch or the tag, so it's caching per branch
-  untracked: true
-  paths:
-    - "sbt-cache/.ivy.cache"
-    - "sbt-cache/.boot"
-    - "sbt-cache/.sbtboot"
-    - "sbt-cache/target"
+# cache:
+#   key: "$CI_BUILD_REF_NAME" # contains either the branch or the tag, so it's caching per branch
+#   untracked: true
+#   paths:
+#     - "sbt-cache/.ivy.cache"
+#     - "sbt-cache/.boot"
+#     - "sbt-cache/.sbtboot"
+#     - "sbt-cache/target"
 
 compile_job:
   stage: compile
