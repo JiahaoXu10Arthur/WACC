@@ -61,8 +61,10 @@ object BackEndUtils {
     }
 
     def cutString(buff: ListBuffer[String]): String = {
-        val ignorable = " #"
-        buff.drop(1).dropRight(1).map(_.dropWhile(a => ignorable.indexOf(s"$a") >= 0)).mkString("\n")
+        val ignorable = "#"
+        val ignorable2 = " "
+        val empty = ""
+        buff.drop(1).dropRight(1).map(_.replaceFirst(ignorable, empty).replaceFirst(ignorable2, empty)).mkString("\n")
     }
 
     def getExpects(filename: String): (String, String) = {
@@ -91,12 +93,11 @@ object BackEndUtils {
         (output, exitCode.toString())
     }
 
-    def compareOutput(_output: String, expect: String): Boolean = {
-        var output = _output
-        if (expect.contains(ADDRS)) 
-            output = ADDRSREGEX.replaceAllIn(_output, ADDRS)
-        
-        output == expect
+    def replaceAddrs(_output: String): String = {
+        val output = _output
+        if (output.contains(ADDRS))
+            ADDRSREGEX.replaceAllIn(output, ADDRS)
+        output
     }
 }
 
