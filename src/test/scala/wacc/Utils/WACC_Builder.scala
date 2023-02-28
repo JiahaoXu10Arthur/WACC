@@ -1,4 +1,4 @@
-package wacc
+package wacc.Utils
 
 import parsley.{Success, Failure}
 import wacc.SyntaxChecker.Parser
@@ -32,9 +32,9 @@ object WACC_Builder {
     buildProgram(programCode(bodyStr))
   }
 
-  def buildExitProgram(expr: String): (Program, SymbolTable) = {
+  def buildExitProgram(code: Int): (Program, SymbolTable) = {
     buildProgram(programCode(s"""
-      exit $expr
+      exit $code
     """))
   }
 
@@ -53,6 +53,39 @@ object WACC_Builder {
   def buildPrintlnProgram(expr: String): (Program, SymbolTable) = {
     buildProgram(programCode(s"""
       println $expr
+    """))
+  }
+
+  def buildIntExprProgram(expr: String): (Program, SymbolTable) = {
+    buildProgram(programCode(s"""
+      int a = $expr;
+      exit a
+    """))
+  }
+
+  def buildBoolExprProgram(expr: String): (Program, SymbolTable) = {
+    buildProgram(programCode(s"""
+      bool a = $expr;
+      print a
+    """))
+  }
+
+  def buildIfProgram(cond: String, body1: String, body2: String): (Program, SymbolTable) = {
+    buildProgram(programCode(s"""
+      if $cond 
+      then
+        $body1
+      else
+        $body2
+      fi
+    """))
+  }
+
+  def buildWhileProgram(cond: String, body: String): (Program, SymbolTable) = {
+    buildProgram(programCode(s"""
+      while $cond do
+        $body
+      done
     """))
   }
 }
