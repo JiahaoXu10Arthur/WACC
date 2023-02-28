@@ -49,6 +49,7 @@ object Instructions {
   val LR = R14
   val PC = R15
 
+  val paramReg = List(R0, R1, R2)
   val variableReg = List(R4, R5, R6, R7)
   val reservedReg = List(R8, R10, R12)
 

@@ -15,12 +15,12 @@ class ArrayTests extends IntegrationTest {
   testFile("wacc_example/valid/array/", new File("arraySimple.wacc"), skip = false)
   testFile("wacc_example/valid/array/", new File("emptyArrayAloneIsFine.wacc"), skip = false)
   testFile("wacc_example/valid/array/", new File("emptyArrayNextLine.wacc"), skip = false)
-  testFile("wacc_example/valid/array/", new File("emptyArrayPrint.wacc"), skip = true) // Fail --> extra \n ?
-  testFile("wacc_example/valid/array/", new File("emptyArrayReplace.wacc"), skip = true) // Fail --> extra \n ?
+  testFile("wacc_example/valid/array/", new File("emptyArrayPrint.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("emptyArrayReplace.wacc"), skip = false)
   testFile("wacc_example/valid/array/", new File("emptyArrayScope.wacc"), skip = false)
   testFile("wacc_example/valid/array/", new File("modifyString.wacc"), skip = false)
 
-  // The tests contain #addr:(cannot be tested)
+  // The tests contain #addr:
   testFile("wacc_example/valid/array/", new File("array.wacc"), skip = true)
   testFile("wacc_example/valid/array/", new File("arrayPrint.wacc"), skip = true)
   testFile("wacc_example/valid/array/", new File("printRef.wacc"), skip = true)

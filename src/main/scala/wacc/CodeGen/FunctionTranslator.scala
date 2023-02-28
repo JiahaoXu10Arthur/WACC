@@ -41,15 +41,19 @@ object FunctionTranslator {
 		}
 		addInstr(MovInstr(FP, SP))
 
+    var pushedRegNum = pushFuncRegs.size
+    pushedRegNum += regsForUse.size
+
 		// Function does not inherit main's state table
 		val new_stateST = new StateTable(None)
 
+    // variable stack space
     val stackSpace = (regNum - variableReg.size) * 4
     // Add stack space if too many variables
     if (stackSpace > 0) {
       addInstr(SubInstr(SP, SP, Immediate(stackSpace)))
       // Update stateTable fp pointer
-      new_stateST.updateFPPtr(stackSpace * -1)
+      new_stateST.updateFPPtr(stackSpace * (-1))
     }
 
     // Store parameter
@@ -60,7 +64,7 @@ object FunctionTranslator {
 
     while (index < para_len) {
       // First 3 parameters
-      if (index < 3) {
+      if (index < paramReg.size) {
 
         // Change it later, should have pool of usable register
         val reg =
@@ -74,7 +78,9 @@ object FunctionTranslator {
       } else {
 
         // may need to check, does not need to specify where it is?
-        new_stateST.add(func.params(index).ident.name, RegIntOffset(SP, -4))
+        val offset = (pushedRegNum + para_len - index - 1) * 4
+
+        new_stateST.add(func.params(index).ident.name, RegIntOffset(FP, offset))
       }
 
       index += 1

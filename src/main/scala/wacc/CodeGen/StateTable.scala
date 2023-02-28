@@ -30,7 +30,7 @@ class StateTable(st: Option[StateTable]) {
       case _             => updateFPPtr(nextFPPtr())
     }
   }
-
+  
   /* Remove a key-value pair specified by key from dictionary */
   def remove(name: String) = {
     val location = lookUpAll(name)
@@ -96,5 +96,5 @@ class StateTable(st: Option[StateTable]) {
   }
 
   def getUsedRegs(): List[Register] = usedReg.toList
-
+  
 }

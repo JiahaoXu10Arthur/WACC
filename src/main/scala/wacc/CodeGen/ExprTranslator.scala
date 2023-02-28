@@ -248,7 +248,6 @@ object ExprTranslator {
     addInstr(CondMovInstr(trueCode, R8, Immediate(1)))
     addInstr(CondMovInstr(falseCode, R8, Immediate(0)))
 
-    // Do not need to push for compare
     addInstr(PushInstr(Seq(R8)))
   }
 

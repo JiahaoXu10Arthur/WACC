@@ -14,19 +14,15 @@ class PairsTests extends IntegrationTest {
   testFile("wacc_example/valid/pairs/", new File("nestedPairLeftAssign.wacc"), skip = false)
   testFile("wacc_example/valid/pairs/", new File("nestedPairRightExtract.wacc"), skip = false)
   testFile("wacc_example/valid/pairs/", new File("null.wacc"), skip = false)
-  testFile("wacc_example/valid/pairs/", new File("pairarray.wacc"), skip = true) // Fail --> extra \n ?
+  testFile("wacc_example/valid/pairs/", new File("pairarray.wacc"), skip = false)
   testFile("wacc_example/valid/pairs/", new File("printNull.wacc"), skip = false)
   testFile("wacc_example/valid/pairs/", new File("printNullPair.wacc"), skip = false)
-  testFile("wacc_example/valid/pairs/", new File("readPair.wacc"), skip = true) // Fail --> extra \n ?
+  testFile("wacc_example/valid/pairs/", new File("readPair.wacc"), skip = false)
   testFile("wacc_example/valid/pairs/", new File("writeFst.wacc"), skip = false)
   testFile("wacc_example/valid/pairs/", new File("writeSnd.wacc"), skip = false)
 
-  // The tests contain #addr:(cannot be tested)
+  // The tests contain #addr:
   testFile("wacc_example/valid/pairs/", new File("checkRefPair.wacc"), skip = true)
   testFile("wacc_example/valid/pairs/", new File("printPair.wacc"), skip = true)
   testFile("wacc_example/valid/pairs/", new File("printPairOfNulls.wacc"), skip = true)
-
-    // checkRefPair (Success)
-    // printPair (Succeess)
-    // printPairOfNulls (Success)
 }
