@@ -1,5 +1,5 @@
 package wacc.IntegrationTests
 
 class RuntimeErrTests extends IntegrationTest {
-  testSkeleton("wacc_example/valid/runtimeErr/", skip = true)
+  testSkeleton("wacc_example/valid/runtimeErr", skip = false)
 }

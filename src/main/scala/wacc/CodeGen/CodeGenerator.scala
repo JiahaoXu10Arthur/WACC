@@ -5,6 +5,8 @@ import wacc.Instructions._
 import wacc.CodeGen.IR
 
 object CodeGenerator {
+  private final val MovImmMax = 255
+
   def assemble(ir: IR, fileName: String): String = {
     val asmFile = new File(s"$fileName.s")
     val writer  = new PrintWriter(asmFile)
@@ -220,6 +222,8 @@ object CodeGenerator {
   }
 
   private def assembleStat(instr: StatInstr): String = instr match {
+    case MovInstr(destReg, opr@Immediate(n)) if n > MovImmMax =>
+      s"ldr ${asmReg(destReg)}, ${asmMemOp(opr)}"
     case MovInstr(destReg, opr) => s"mov ${asmReg(destReg)}, ${asmOp(opr)}"
     case CondMovInstr(cond, destReg, opr) =>
       s"mov${asmCond(cond)} ${asmReg(destReg)}, ${asmOp(opr)}"
