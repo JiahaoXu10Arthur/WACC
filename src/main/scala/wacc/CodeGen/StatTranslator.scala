@@ -604,6 +604,14 @@ object StatTranslator {
     translateBLink(freeType)
   }
 
+  private def translateBoolCond(expr: Expr)(implicit ir: IR) = {
+    addInstr(PopInstr(Seq(R8)))
+    expr match {
+      case BoolLit(_) => addInstr(CmpInstr(R8, Immediate(1)))
+      case _ =>
+    }
+ }
+
   /* New scope will have new state table */
   private def translateIf(expr: Expr, 
                           stats1: List[Stat], 
@@ -613,8 +621,7 @@ object StatTranslator {
     // Translate condition
     translateExpr(expr)
 
-    // Pop condition -> not needed but empty stack
-    addInstr(PopInstr(Seq(R8)))
+    translateBoolCond(expr)
 
     // Allocate new branch name
     val branch_0 = JumpLabel(s"${getBranchCounter()}")
@@ -676,8 +683,7 @@ object StatTranslator {
     addInstr(CreateLabel(branch_0))
     translateExpr(expr)
 
-    // Pop condition -> not needed but empty stack
-    addInstr(PopInstr(Seq(R8)))
+    translateBoolCond(expr)
 
     // may need to specially check when expr: bool
 
