@@ -12,8 +12,7 @@ object FunctionTranslator {
 
 	def translateFunction(
 		func: Func
-	)(implicit stateST: StateTable,
-			   		 ir: IR): Unit = {
+	)(implicit ir: IR): Unit = {
 
 		val funcRegs = Seq(FP, LR)
 		val regsForUse = mutable.ListBuffer[Register]()
@@ -31,12 +30,16 @@ object FunctionTranslator {
 			regsForUse ++= variableReg
 		}
 
+		// Create function label
+		addInstr(CreateLabel(WACCFuncLabel(func.ident.name)))
+
 		// Push register
 		addInstr(PushInstr(funcRegs))
 		addInstr(PushInstr(regsForUse.toSeq))
 		addInstr(MovInstr(FP, SP))
 
-		val new_stateST = new StateTable(Some(stateST))
+		// Function does not inherit main's state table
+		val new_stateST = new StateTable(None)
 
 		val stackSpace = (regNum - variableReg.size) * 4
 		// Add stack space if too many variables
@@ -74,8 +77,6 @@ object FunctionTranslator {
 			index += 1
     }
 		
-		// Create function label
-		addInstr(CreateLabel(JumpLabel("wacc_" + func.ident.name)))
 		// Translate function body
 		func.stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
 

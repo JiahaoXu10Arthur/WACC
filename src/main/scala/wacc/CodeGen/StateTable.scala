@@ -9,8 +9,7 @@ class StateTable(st: Option[StateTable]) {
   val dictionary = mutable.Map[String, Location]()
   val usedReg: mutable.ListBuffer[Register] =
     encStateTable match {
-      case Some(upSt) => mutable.ListBuffer[Register]() ++= upSt.usedReg
-      // First state table
+      case Some(upSt) => mutable.ListBuffer[Register]() ++= upSt.getUsedRegs()
       case None => mutable.ListBuffer[Register]()
     }
 
@@ -99,5 +98,7 @@ class StateTable(st: Option[StateTable]) {
     }
 
   }
+
+  def getUsedRegs(): List[Register] = usedReg.toList
 
 }
