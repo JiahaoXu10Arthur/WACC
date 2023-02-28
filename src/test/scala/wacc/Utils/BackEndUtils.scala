@@ -9,8 +9,6 @@ object BackEndUtils {
 
     private final val WACCLENGTH = 5
     private final val INPUTLENGTH = 9
-    private final val ADDRS = "#addrs#"
-    private final val ADDRSREGEX = "0x\\d{5}".r
 
     class Expects(val _input: String, _output: String, _exit: String) {
         def input: String = _input
@@ -90,13 +88,29 @@ object BackEndUtils {
         ) #< inputStream
         val res@(exitCode, output) = runCommand(a)
 
+        /* Removes generated executable */
+        s"rm $filename".!
+
         (output, exitCode.toString())
     }
 
-    def replaceAddrs(_output: String): String = {
-        val output = _output
-        if (output.contains(ADDRS))
-            ADDRSREGEX.replaceAllIn(output, ADDRS)
+    def replaceAddrs(_output: String, expect: String): String = {
+        val addrs = "#addrs#"
+        val addrsRegex = "0x[a-f0-9]{5}".r
+
+        val runtimeErr = "#runtime_error#"
+        val fatalErr = "fatal error:"
+
+        var output = _output
+        if (expect.contains(addrs))
+            output = addrsRegex.replaceAllIn(output, addrs)
+
+        if (expect.contains(runtimeErr)) {
+            val start = output.indexOf(fatalErr)
+            if (start == -1) println(output)
+            val sub = output.substring(start)
+            output = output.replace(sub, runtimeErr)
+        }    
         output
     }
 }

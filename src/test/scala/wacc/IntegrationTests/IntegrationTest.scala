@@ -66,7 +66,7 @@ package wacc.IntegrationTests
                     CodeGenerator.assemble(ir, waccName)
                     val (expectOutput, expectExit) = getExpects(waccName)
                     val (_output, exit) = getOutputAndExit(waccName)
-                    val output = replaceAddrs(_output)
+                    val output = replaceAddrs(_output,expectOutput)
                     output shouldBe expectOutput
                     exit shouldBe expectExit
                     true
