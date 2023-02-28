@@ -9,6 +9,8 @@ object BackEndUtils {
 
     private final val WACCLENGTH = 5
     private final val INPUTLENGTH = 9
+    private final val ADDRS = "#addrs#"
+    private final val ADDRSREGEX = "0x\\d{5}".r
 
     class Expects(val _input: String, _output: String, _exit: String) {
         def input: String = _input
@@ -89,13 +91,12 @@ object BackEndUtils {
         (output, exitCode.toString())
     }
 
-     def main(args: Array[String]): Unit = {
-        val filename = "/Users/paulodybala/Desktop/WACC_17/wacc_example/valid/basic/exit/exitBasic.wacc"
-        val (_output, _exit) = getExpects(filename)
-        val (output, exit) = getOutputAndExit(filename)
-
-        println(getExpects(filename))
-        println(getOutputAndExit(filename))
-     }
+    def compareOutput(_output: String, expect: String): Boolean = {
+        var output = _output
+        if (expect.contains(ADDRS)) 
+            output = ADDRSREGEX.replaceAllIn(_output, ADDRS)
+        
+        output == expect
+    }
 }
 

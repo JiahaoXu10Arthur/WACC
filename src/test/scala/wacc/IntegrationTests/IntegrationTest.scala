@@ -66,7 +66,7 @@ package wacc.IntegrationTests
                     CodeGenerator.assemble(ir, waccName)
                     val (_output, _exit) = getExpects(waccName)
                     val (output, exit) = getOutputAndExit(waccName)
-                    output shouldBe _output
+                    compareOutput(output, _output) shouldBe true 
                     exit shouldBe _exit
                     true
                   }
