@@ -5,6 +5,8 @@
 # 1
 #
 
+# Program:
+
 begin
     int f() is
         println "go";
