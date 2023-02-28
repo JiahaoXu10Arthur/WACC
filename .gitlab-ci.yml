@@ -49,5 +49,37 @@ integration_test:
     - echo "Running integration tests..."
     - sbt "Test / testOnly *IntegrationTests*"
     - echo "TEST SUCCESSFUL!"
+  artifacts:
+    when: always
+    paths:
+      - target/test-reports/TEST-wacc.IntegrationTests.ArrayTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.ExitTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.ExpressionsTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.FunctionTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.IfTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.InvalidTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.IOTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.PairsTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.ScopeTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.SequenceTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.SkipTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.VariablesTests.xml
+      - target/test-reports/TEST-wacc.IntegrationTests.WhileTests.xml
+    reports:
+      junit:
+        - target/test-reports/TEST-wacc.IntegrationTests.ExitTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.ExpressionsTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.FunctionTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.ArrayTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.IfTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.InvalidTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.IOTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.PairsTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.ScopeTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.SequenceTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.SkipTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.VariablesTests.xml
+        - target/test-reports/TEST-wacc.IntegrationTests.WhileTests.xml
+
 
     
