@@ -1,5 +1,5 @@
 package wacc.IntegrationTests
 
 class WhileTests extends IntegrationTest {
-  testSkeleton("wacc_example/valid/while/", skip = true)
+  testSkeleton("wacc_example/valid/while/", skip = false)
 }
