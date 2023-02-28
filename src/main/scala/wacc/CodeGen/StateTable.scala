@@ -9,8 +9,7 @@ class StateTable(st: Option[StateTable]) {
   val dictionary    = mutable.Map[String, Location]()
   val usedReg: mutable.ListBuffer[Register] =
     encStateTable match {
-      case Some(upSt) => mutable.ListBuffer[Register]() ++= upSt.usedReg
-      // First state table
+      case Some(upSt) => mutable.ListBuffer[Register]() ++= upSt.getUsedRegs()
       case None => mutable.ListBuffer[Register]()
     }
 
@@ -31,7 +30,7 @@ class StateTable(st: Option[StateTable]) {
       case _             => updateFPPtr(nextFPPtr())
     }
   }
-
+  
   /* Remove a key-value pair specified by key from dictionary */
   def remove(name: String) = {
     val location = lookUpAll(name)
@@ -96,4 +95,6 @@ class StateTable(st: Option[StateTable]) {
 
   }
 
+  def getUsedRegs(): List[Register] = usedReg.toList
+  
 }

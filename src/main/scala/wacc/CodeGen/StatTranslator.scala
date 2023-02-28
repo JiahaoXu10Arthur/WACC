@@ -40,14 +40,22 @@ object StatTranslator {
 
   /* Translate for Conditional branch link */
   def translateCondBLink(cond: CondCode, blName: FuncLabel)(implicit ir: IR) = {
+
+    addInstr(PushInstr(paramReg))
+
     addBranchLink(blName)
     addInstr(CondBranchLinkInstr(cond, blName))
+
+    addInstr(PopInstr(paramReg))
   }
 
   /* Translate for Branch link */
   def translateBLink(blName: FuncLabel)(implicit ir: IR) = {
     addBranchLink(blName)
+
+    addInstr(PushInstr(paramReg))
     addInstr(BranchLinkInstr(blName))
+    addInstr(PopInstr(paramReg))
   }
 
   /* Find variable by name in stateTable to find its location */
@@ -387,7 +395,7 @@ object StatTranslator {
       addInstr(PopInstr(Seq(R8)))
 
       // First 3 parameters
-      if (index < 3) {
+      if (index < paramReg.size) {
 
         // Change it later, should have pool of usable register
         val reg =
@@ -396,19 +404,24 @@ object StatTranslator {
             case 1 => R1
             case 2 => R2
           }
-
         addInstr(MovInstr(reg, R8))
       } else {
         // More parameters
         // Push R8
-        addInstr(StoreInstr(R8, RegIntOffset(SP, -4)))
+        addInstr(StoreInstr(R8, RegIntOffset(SP, -4), writeBack = true))
       }
 
       index += 1
     }
 
     // Create branch jump
-    addInstr(BranchInstr(WACCFuncLabel(callValue.ident.name)))
+    addInstr(BranchLinkInstr(WACCFuncLabel(callValue.ident.name)))
+
+    // Add stackSpace back for parameter
+    val stackSpace = (para_len - paramReg.size) * 4
+    if (stackSpace > 0) {
+      addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
+    }
 
     // Push function return value
     addInstr(PushInstr(Seq(R0)))
@@ -453,6 +466,22 @@ object StatTranslator {
 
     // Pop result to R0 for return
     addInstr(PopInstr(Seq(R0)))
+
+    translateReturnPop()
+  }
+
+  /* Add pop after return */
+  def translateReturnPop()(implicit ir: IR) = {
+    addInstr(MovInstr(SP, FP))
+    
+    val regsInUse = getRegsInUse()
+
+    // Pop Register on stack
+		if (!regsInUse.isEmpty){
+			addInstr(PopInstr(regsInUse.toSeq))
+		}
+    
+    addInstr(PopInstr(Seq(FP, PC)))
   }
 
   /* Print will print value in R0 */
@@ -561,9 +590,11 @@ object StatTranslator {
   private def translateBoolCond(expr: Expr)(implicit ir: IR) = {
     addInstr(PopInstr(Seq(R8)))
     expr match {
+      case Ident(_)   => addInstr(CmpInstr(R8, Immediate(1)))
       case BoolLit(_) => addInstr(CmpInstr(R8, Immediate(1)))
       case _          =>
     }
+    
   }
 
   /* New scope will have new state table */

@@ -14,6 +14,7 @@ class IR(
   private val bLInstrsBuffer  = mutable.ListBuffer[List[Instruction]]()
   private val bLNamesBuffer   = mutable.ListBuffer[FuncLabel]()
   private var branchCounter   = 0
+  private val regsInUse       = mutable.ListBuffer[Register]()
 }
 
 object IR {
@@ -50,5 +51,11 @@ object IR {
 
   def findStrConstIndex(str: String)(implicit ir: IR): Int =
     ir.strConstsBuffer.indexOf(str)
+
+  def updateRegsInUse(used: Seq[Register])(implicit ir: IR) = 
+    ir.regsInUse ++= used
+  
+  def getRegsInUse()(implicit ir: IR): Seq[Register] = 
+    ir.regsInUse.toList
 
 }

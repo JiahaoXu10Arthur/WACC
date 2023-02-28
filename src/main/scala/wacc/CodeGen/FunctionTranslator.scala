@@ -10,11 +10,11 @@ import IR._
 
 object FunctionTranslator {
 
-  def translateFunction(
-      func: Func
-  )(implicit stateST: StateTable, ir: IR): Unit = {
+	def translateFunction(
+		func: Func
+	)(implicit ir: IR): Unit = {
 
-    val funcRegs   = Seq(FP, LR)
+    val pushFuncRegs   = Seq(FP, LR)
     val regsForUse = mutable.ListBuffer[Register]()
 
     // Find overall viriable number in the function
@@ -29,19 +29,31 @@ object FunctionTranslator {
       regsForUse ++= variableReg
     }
 
-    // Push register
-    addInstr(PushInstr(funcRegs))
-    addInstr(PushInstr(regsForUse.toSeq))
-    addInstr(MovInstr(FP, SP))
+    updateRegsInUse(regsForUse.toList)
 
-    val new_stateST = new StateTable(Some(stateST))
+		// Create function label
+		addInstr(CreateLabel(WACCFuncLabel(func.ident.name)))
 
+		// Push register
+		addInstr(PushInstr(pushFuncRegs))
+		if (!regsForUse.isEmpty){
+			addInstr(PushInstr(regsForUse.toSeq))
+		}
+		addInstr(MovInstr(FP, SP))
+
+    var pushedRegNum = pushFuncRegs.size
+    pushedRegNum += regsForUse.size
+
+		// Function does not inherit main's state table
+		val new_stateST = new StateTable(None)
+
+    // variable stack space
     val stackSpace = (regNum - variableReg.size) * 4
     // Add stack space if too many variables
     if (stackSpace > 0) {
       addInstr(SubInstr(SP, SP, Immediate(stackSpace)))
       // Update stateTable fp pointer
-      new_stateST.updateFPPtr(stackSpace * -1)
+      new_stateST.updateFPPtr(stackSpace * (-1))
     }
 
     // Store parameter
@@ -52,7 +64,7 @@ object FunctionTranslator {
 
     while (index < para_len) {
       // First 3 parameters
-      if (index < 3) {
+      if (index < paramReg.size) {
 
         // Change it later, should have pool of usable register
         val reg =
@@ -66,26 +78,29 @@ object FunctionTranslator {
       } else {
 
         // may need to check, does not need to specify where it is?
-        new_stateST.add(func.params(index).ident.name, RegIntOffset(SP, -4))
+        val offset = (pushedRegNum + para_len - index - 1) * 4
+
+        new_stateST.add(func.params(index).ident.name, RegIntOffset(FP, offset))
       }
 
       index += 1
     }
+		
+		// Translate function body
+		func.stats.foreach(s => {translateStatement(s)(s.symb, new_stateST, ir)})
 
-    // Create function label
-    addInstr(CreateLabel(JumpLabel("wacc_" + func.ident.name)))
-    // Translate function body
-    func.stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
+    // val popFuncRegs    = Seq(FP, PC)
 
     // Add stack space if too many variables
     if (stackSpace > 0) {
       addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
     }
 
-    // Pop register
-    addInstr(PopInstr(regsForUse.toSeq))
-    addInstr(PopInstr(funcRegs))
+    // addInstr(MovInstr(SP, FP))
+    // addInstr(PopInstr(popFuncRegs))
 
   }
+
+
 
 }

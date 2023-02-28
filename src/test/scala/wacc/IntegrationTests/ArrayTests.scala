@@ -1,5 +1,30 @@
 package wacc.IntegrationTests
 
 class ArrayTests extends IntegrationTest {
-  testSkeleton("wacc_example/valid/array/")
+  // "Array Integration tests" in pending
+  // testSkeleton("wacc_example/valid/array/")
+
+  testFile("wacc_example/valid/array/", new File("arrayBasic.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("arrayEmpty.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("arrayIndexMayBeArrayIndex.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("arrayLength.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("arrayLookup.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("arrayNested.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("arrayOnHeap.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("arraySimple.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("emptyArrayAloneIsFine.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("emptyArrayNextLine.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("emptyArrayPrint.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("emptyArrayReplace.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("emptyArrayScope.wacc"), skip = false)
+  testFile("wacc_example/valid/array/", new File("modifyString.wacc"), skip = false)
+
+  // The tests contain #addr:
+  testFile("wacc_example/valid/array/", new File("array.wacc"), skip = true)
+  testFile("wacc_example/valid/array/", new File("arrayPrint.wacc"), skip = true)
+  testFile("wacc_example/valid/array/", new File("printRef.wacc"), skip = true)
+
+    // array (Success)
+    // arrayPrint (Success)
+    // printRef (Success)
 }

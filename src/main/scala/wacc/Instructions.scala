@@ -49,6 +49,7 @@ object Instructions {
   val LR = R14
   val PC = R15
 
+  val paramReg = List(R0, R1, R2)
   val variableReg = List(R4, R5, R6, R7)
   val reservedReg = List(R8, R10, R12)
 
@@ -110,9 +111,9 @@ object Instructions {
   case class PopInstr(registers: Seq[Register]) extends StackInstr
 
   sealed trait JumpInstr extends Instruction
-  case class BranchLinkInstr(label: FuncLabel) extends JumpInstr // bl exit
+  case class BranchLinkInstr(label: Label) extends JumpInstr // bl exit
   case class BranchInstr(label: Label) extends JumpInstr // b .L0
-  case class CondBranchLinkInstr(cond: CondCode, label: FuncLabel) extends JumpInstr
+  case class CondBranchLinkInstr(cond: CondCode, label: Label) extends JumpInstr
   case class CondBranchInstr(cond: CondCode, label: Label) extends JumpInstr
 
   case class CreateLabel(label: Label) extends Instruction
