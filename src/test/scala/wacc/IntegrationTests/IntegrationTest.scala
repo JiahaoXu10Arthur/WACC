@@ -37,63 +37,73 @@ package wacc.IntegrationTests
   // testFile("wacc_example/valid/pairs/", new File("nestedPairRightExtract.wacc"))
   // testSkeleton("wacc_example/")
 
-  def testSkeleton(path: String) :Unit = {
+  def testSkeleton(path: String, skip: Boolean = false) :Unit = {
     val allFiles = getListOfFiles(path)
     val subDirs = getListOfSubDirectories(path)
-
-    "A bunch of generated ScalaTest tests" should {
-      allFiles.foreach{x => if (x.getName().endsWith(".wacc")) testFile(path, x)}
-      if (subDirs.nonEmpty) {
-        subDirs.foreach{x => testSkeleton(path ++ "/" ++ x ++ "/")}
-      }
+    allFiles.foreach{x => if (x.getName().endsWith(".wacc")) testFile(path, x, skip)}
+    if (subDirs.nonEmpty) {
+      subDirs.foreach{x => testSkeleton(s"$path/$x/", skip)}
     }
   }
 
-   def testFile(path: String, f: File)= {
+   def testFile(path: String, f: File, skip: Boolean)= {
       val filename = path ++ f.getName()
       val string = new String(Files.readAllBytes(Paths.get(filename)))
       if (path.contains("/valid/")) {
-          "A successful compilation return the exit status 0 " ++ filename in {
-           (Parser.parse(string) match {
-               case Success(x) => {
-                val (errors, st) = SemanticChecker.semanticCheck(x)
-                errors shouldBe empty
-                val ir = Translator.translate(x, st)
-                val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
-                CodeGenerator.assemble(ir, waccName)
-                val (_output, _exit) = getExpects(waccName)
-                val (output, exit) = getOutputAndExit(waccName)
-                output shouldBe _output
-                exit shouldBe _exit
-                true
-               }
-               case Failure(msg) => {
-                false
-               }
-           }) shouldBe true
+          s"Compiling valid file ${f.getName()} should succeed" in {
+            skip match {
+              case true => {
+                println("Skipping " ++ "filename")
+                pending
+              }
+              case false => (
+                Parser.parse(string) match {
+                  case Success(x) => {
+                    val (errors, st) = SemanticChecker.semanticCheck(x)
+                    errors shouldBe empty
+                    val ir = Translator.translate(x, st)
+                    val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
+                    CodeGenerator.assemble(ir, waccName)
+                    val (_output, _exit) = getExpects(waccName)
+                    val (output, exit) = getOutputAndExit(waccName)
+                    output shouldBe _output
+                    exit shouldBe _exit
+                    true
+                  }
+                  case Failure(msg) => false
+                }) shouldBe true
+            }
         }
       } else if (path.contains("syntaxErr")) {
-        "A compilation that fails due to syntax errors return the exit status 100" ++ filename in {
-           (Parser.parse(string) match {
-               case Success(x) => {
-                false
-               }
-               case Failure(msg) => {
-                true
-               }
-           }) shouldBe true
+        s"Compiling invalid file ${f.getName()} with syntax error should fail" in {
+          skip match {
+            case true => pending
+            case false => (
+              Parser.parse(string) match {
+                case Success(x) => {
+                  false
+                }
+                case Failure(msg) => {
+                  true
+                }
+              }) shouldBe true
+          }
         }
       } else if (path.contains("semanticErr")) {
-        "A compilation that fails due to semantic errors return the exit status 200" ++ filename in {
-           (Parser.parse(string) match {
-               case Success(x) => {
-                SemanticChecker.semanticCheck(x)._1 should not be empty
-                true
-               }
-               case Failure(msg) => {
-                false
-               }
-           }) shouldBe true
+        s"Compiling invalid file ${f.getName()} with semantic error should fail" in {
+          skip match {
+            case true => pending
+            case false => (
+              Parser.parse(string) match {
+                case Success(x) => {
+                  val (errors, st) = SemanticChecker.semanticCheck(x)
+                  !errors.isEmpty
+                }
+                case Failure(msg) => {
+                  false
+                }
+              }) shouldBe true
+          }
         }
       }
   }
