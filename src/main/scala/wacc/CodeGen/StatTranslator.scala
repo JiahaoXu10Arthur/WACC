@@ -290,6 +290,20 @@ object StatTranslator {
     addInstr(StoreInstr(R8, RegIntOffset(R9, 0)))
   }
 
+  def getArrayElem(
+      arrayValue: ArrayElem
+  )(implicit st: SymbolTable, 
+             stateST: StateTable, 
+             ir: IR) = {
+  }
+
+  def getArrayElemPointer(
+      arrayValue: ArrayElem
+  )(implicit st: SymbolTable, 
+             stateST: StateTable, 
+             ir: IR) = {
+  }
+
   /* Special convention for arrLoad
      R3: Array pointer
      R10: Index
@@ -298,7 +312,7 @@ object StatTranslator {
       arrayValue: ArrayElem
   )(implicit st: SymbolTable, 
              stateST: StateTable, 
-             ir: IR) = {
+             ir: IR): Unit = {
 
     // find array pointer
     var array_loc = findVarLoc(arrayValue.ident.name, stateST)
@@ -306,11 +320,22 @@ object StatTranslator {
     // For each dimension
     for (i <- arrayValue.index) {
 
+      // Calculate index and push to stack
+      i match {
+        case i: ArrayElem => {
+          // previous array pointer is this index
+          loadArrayElem(i)
+        }
+        case _ => {
+          // calculate index from expr
+          translateExpr(i)
+        }
+      }
+
       // Move array pointer to R3
       addInstr(MovInstr(R3, array_loc))
 
       // Pop index to R10
-      translateExpr(i)
       addInstr(PopInstr(Seq(R10)))
 
       // branch to array load
@@ -319,6 +344,9 @@ object StatTranslator {
       // update array pointer
       array_loc = R3
     }
+    
+    // Push result
+    addInstr(PushInstr(Seq(R3)))
   }
 
   /* Special convention for arrStore

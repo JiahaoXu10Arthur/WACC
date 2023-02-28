@@ -1,5 +1,5 @@
 package wacc.IntegrationTests
- import java.io.File
+import java.io.File
 
 class PairsTests extends IntegrationTest {
   // testSkeleton("wacc_example/valid/pairs/")
