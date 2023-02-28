@@ -1,4 +1,5 @@
 Global / onChangedBuildSource := ReloadOnSourceChanges
+Test / parallelExecution := false
 
 // This is used by `sbt assembly` to generate your runnable jar file
 lazy val sbtAssemblySettings = baseAssemblySettings ++ Seq(
