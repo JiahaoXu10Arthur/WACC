@@ -16,15 +16,10 @@ object BackEndUtils {
         def exit: String = _exit
     }
 
-    def runCommand(cmd: ProcessBuilder): (Int, String, String) = {
+    def runCommand(cmd: ProcessBuilder): (Int, String) = {
       val stdoutStream = new ByteArrayOutputStream
-      val stderrStream = new ByteArrayOutputStream
-      val stdoutWriter = new PrintWriter(stdoutStream)
-      val stderrWriter = new PrintWriter(stderrStream)
-      val exitValue = cmd.!(ProcessLogger(stdoutWriter.println, stderrWriter.println))
-      stdoutWriter.close()
-      stderrWriter.close()
-      (exitValue, stdoutStream.toString, stderrStream.toString)
+      val exitValue = (cmd #> stdoutStream).!
+      (exitValue, stdoutStream.toString())
     }
 
     def getExpectStrings(filename: String): Expects = {
@@ -89,7 +84,7 @@ object BackEndUtils {
         val a = Seq(
             "qemu-arm" ,"-L", "/usr/arm-linux-gnueabi/", filename
         ) #< inputStream
-        val res@(exitCode, output, _) = runCommand(a)
+        val res@(exitCode, output) = runCommand(a)
 
         (output, exitCode.toString())
     }
