@@ -64,10 +64,11 @@ package wacc.IntegrationTests
                     val ir = Translator.translate(x, st)
                     val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
                     CodeGenerator.assemble(ir, waccName)
-                    val (_output, _exit) = getExpects(waccName)
-                    val (output, exit) = getOutputAndExit(waccName)
-                    output shouldBe _output
-                    exit shouldBe _exit
+                    val (expectOutput, expectExit) = getExpects(waccName)
+                    val (_output, exit) = getOutputAndExit(waccName)
+                    val output = replaceAddrs(_output,expectOutput)
+                    output shouldBe expectOutput
+                    exit shouldBe expectExit
                     true
                   }
                   case Failure(msg) => false

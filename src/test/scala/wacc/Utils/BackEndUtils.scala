@@ -59,8 +59,10 @@ object BackEndUtils {
     }
 
     def cutString(buff: ListBuffer[String]): String = {
-        val ignorable = " #"
-        buff.drop(1).dropRight(1).map(_.dropWhile(a => ignorable.indexOf(s"$a") >= 0)).mkString("\n")
+        val ignorable = "#"
+        val ignorable2 = " "
+        val empty = ""
+        buff.drop(1).dropRight(1).map(_.replaceFirst(ignorable, empty).replaceFirst(ignorable2, empty)).mkString("\n")
     }
 
     def getExpects(filename: String): (String, String) = {
@@ -89,13 +91,13 @@ object BackEndUtils {
         (output, exitCode.toString())
     }
 
-     def main(args: Array[String]): Unit = {
-        val filename = "/Users/paulodybala/Desktop/WACC_17/wacc_example/valid/basic/exit/exitBasic.wacc"
-        val (_output, _exit) = getExpects(filename)
-        val (output, exit) = getOutputAndExit(filename)
-
-        println(getExpects(filename))
-        println(getOutputAndExit(filename))
-     }
+    def replaceAddrs(_output: String, expect: String): String = {
+        val addrs = "#addrs#"
+        val addrsRegex = "0x[a-f0-9]{5}".r
+        var output = _output
+        if (expect.contains(addrs))
+            output = addrsRegex.replaceAllIn(output, addrs)
+        output
+    }
 }
 
