@@ -75,10 +75,7 @@ object StatTranslator {
     elemType match {
       case BoolType()     => 1
       case CharType()     => 1
-      case IntType()      => 4
-      case PairType(_, _) => 4
-      case ArrayType(_)   => 4
-      case _              => 0
+      case _ => 4
     }
   }
 
@@ -187,10 +184,8 @@ object StatTranslator {
     val _type = checkExprType(elem)
     val size = sizeOfElem(_type)
 
-    // If size == 0 -> pair elem is null, do not malloc
-    if (size != 0) {
-      translateMalloc(size)
-    }
+    // Malloc for pair elem
+    translateMalloc(size)
 
     // Load value of elem
     translateExpr(elem)
@@ -219,8 +214,9 @@ object StatTranslator {
     }
   }
 
-  private def getPairElem(pairValue: PairElem)(implicit stateST: StateTable, ir: IR) = {
-
+  private def getPairElem(pairValue: PairElem)(implicit st: SymbolTable,
+                                                        stateST: StateTable, 
+                                                        ir: IR): Unit = {
     // Get pair elem pointer
     getPairElemPointer(pairValue)
     addInstr(PopInstr(Seq(R8)))
@@ -233,9 +229,25 @@ object StatTranslator {
 
   }
 
-  private def getPairElemPointer(pairValue: PairElem)(implicit stateST: StateTable, ir: IR) = {
+  private def getPairElemPointer(pairValue: PairElem)(implicit st: SymbolTable,
+                                                               stateST: StateTable, 
+                                                               ir: IR): Unit = {
+    val innerValue = pairValue.lvalue
 
-    val location = findLvalueLoc(pairValue, stateST)
+    var location = findLvalueLoc(pairValue, stateST)
+
+    // pair is right associative, so extract first
+    innerValue match {
+      case innerValue: PairElem => {
+        getPairElemPointer(innerValue)
+
+        // TODO: Why are these added to get extract correct?
+        addInstr(PopInstr(Seq(R8)))
+        addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
+        location = R8
+      }
+      case _ =>
+    }
 
     // If pair on stack, move to R8
     val locReg = location match {
@@ -260,7 +272,9 @@ object StatTranslator {
     addInstr(PushInstr(Seq(R8)))
   }
 
-  private def storePairElem(pairValue: PairElem)(implicit stateST: StateTable, ir: IR) = {
+  private def storePairElem(pairValue: PairElem)(implicit st: SymbolTable, 
+                                                          stateST: StateTable, 
+                                                          ir: IR) = {
     // Assign value on stack now
 
     // Load pair elem pointer to stack
@@ -269,14 +283,11 @@ object StatTranslator {
     // Pop pair elem pointer to R9
     addInstr(PopInstr(Seq(R9)))
 
-    // Pop assign value ro R8
+    // Pop assign value to R8
     addInstr(PopInstr(Seq(R8)))
 
-    // Move assign value to fst/snd elem
-    pairValue.index match {
-      case "fst" => addInstr(StoreInstr(R8, RegIntOffset(R9, 0)))
-      case "snd" => addInstr(StoreInstr(R8, RegIntOffset(R9, 4)))
-    }
+    // Move assign value to pointer
+    addInstr(StoreInstr(R8, RegIntOffset(R9, 0)))
   }
 
   /* Special convention for arrLoad
