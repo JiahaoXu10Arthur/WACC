@@ -33,10 +33,6 @@ package wacc.IntegrationTests
         .map(_.getName).toList
   }
 
-  // println("Running all tests")
-  // testFile("wacc_example/valid/pairs/", new File("nestedPairRightExtract.wacc"))
-  // testSkeleton("wacc_example/")
-
   def testSkeleton(path: String, skip: Boolean = false) :Unit = {
     val allFiles = getListOfFiles(path)
     val subDirs = getListOfSubDirectories(path)

@@ -1,5 +1,5 @@
 package wacc.IntegrationTests
 
 class IfTests extends IntegrationTest {
-  testSkeleton("wacc_example/valid/if/", skip = false)
+  testSkeleton("wacc_example/valid/if/")
 }
