@@ -70,7 +70,7 @@ object Lexer {
     "!"
   ) ++ binaryOps ++ parentheses ++ squareBrackets
 
-  private val escLiterals = Set('0', 'b', 't', 'n', 'f', 'r', '\"', '\'', '\\')
+  private val escLiterals = Set('\"', '\'', '\\')
 
   def isAlphaOrUnderscore = predicate.Basic(c => c.isLetter || c == '_')
   def isALphaNumericOrUnderscore =
@@ -95,6 +95,14 @@ object Lexer {
       escapeSequences = EscapeDesc.plain.copy(
         escBegin = '\\',
         literals = escLiterals,
+        singleMap = Map(
+          '0' -> 0x00,
+          'b' -> 0x08,
+          't' -> 0x09,
+          'n' -> 0x0a,
+          'f' -> 0x0c,
+          'r' -> 0x0d
+        ),
         gapsSupported = false
       ),
       characterLiteralEnd = '\'',

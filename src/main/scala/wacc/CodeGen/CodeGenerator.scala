@@ -105,14 +105,28 @@ object CodeGenerator {
   }
 
   private def assembleCreateLabel(instr: CreateLabel): List[String] = instr.label match {
-    case StrLabel(name, value) => List(
+    case StrLabel(name, value) => {
+      List(
       s"@ length of ${asmLabel(instr.label)}",
       s".word ${value.length}",
       s"${asmLabel(instr.label)}:",
-      s".asciz \"${value}\""
-    )
+      s".asciz \"${value.flatMap{unescapeChar(_)}}\""
+    )}
     case SegmentLabel(name) => List(s"${asmLabel(instr.label)}")
     case _ => List(s"${asmLabel(instr.label)}:")
+  }
+
+  private def unescapeChar(c: Char): String = c match {
+    case 0x00 => "\\0"
+    case 0x08 => "\\b"
+    case 0x09 => "\\t"
+    case 0x0a => "\\n"
+    case 0x0c => "\\f"
+    case 0x0d => "\\r"
+    case '\\' => "\\"
+    case '\"' => "\\\""
+    case '\'' => "\\\'"
+    case c   => c.toString()
   }
 
   private def assembleExpr(instr: ExprInstr): String = instr match {
