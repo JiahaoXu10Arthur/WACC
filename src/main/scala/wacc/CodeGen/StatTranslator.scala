@@ -7,6 +7,7 @@ import wacc.SemanticChecker.SemanticTypes._
 
 import ExprTranslator._
 import IR._
+import Utils._
 
 object StatTranslator {
 
@@ -484,6 +485,8 @@ object StatTranslator {
 
     // Pop result to R0 for return
     addInstr(PopInstr(Seq(R0)))
+
+    endBlock()
   }
 
 

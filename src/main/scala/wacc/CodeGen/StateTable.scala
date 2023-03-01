@@ -3,15 +3,33 @@ package wacc.CodeGen
 import scala.collection.mutable
 import wacc.Instructions._
 
-class StateTable(st: Option[StateTable]) {
+class StateTable(stateT: Option[StateTable]) {
 
-  val encStateTable = st
+  /* Parameter Information */
+  val paramDictionary: mutable.Map[String, Location] = mutable.Map[String, Location]()
+  val usedParamReg = mutable.ListBuffer[Register]() ++= (stateT match {
+    case Some(upSt) => upSt.getUsedParamRegs()
+    case None => List()
+  })
+  var paramPtr: Int = stateT match {
+    case Some(upSt) => upSt.paramPtr
+    case None => 0
+  }
+
+  /* Variable Information */
+  val encStateTable = stateT
   val dictionary    = mutable.Map[String, Location]()
   val usedReg: mutable.ListBuffer[Register] =
     encStateTable match {
       case Some(upSt) => mutable.ListBuffer[Register]() ++= upSt.getUsedRegs()
       case None => mutable.ListBuffer[Register]()
     }
+  
+  /* Saved Registers Information */
+  var savedRegs = stateT match {
+    case Some(upSt) => upSt.getSavedRegs()
+    case None       => List()
+  }
 
   var fpPtr: Int =
     encStateTable match {
@@ -19,16 +37,7 @@ class StateTable(st: Option[StateTable]) {
       // First state table
       case None => 0
     }
-  
-  val paramDictionary: mutable.Map[String, Location] = mutable.Map[String, Location]()
-  val usedParamReg = mutable.ListBuffer[Register]() ++= (st match {
-    case Some(upSt) => upSt.getUsedParamRegs()
-    case None => List()
-  })
-  var paramPtr: Int = st match {
-    case Some(upSt) => upSt.paramPtr
-    case None => 0
-  }
+
 
   /* Add a key-value pair to dictionary */
   def add(name: String, location: Location) = {
@@ -51,26 +60,13 @@ class StateTable(st: Option[StateTable]) {
     }
   }
 
+  def modifySavedRegs(regs: Seq[Register]) = {
+    savedRegs = regs
+  }
+
   def updateParam(name: String, location: Location) = {
     paramDictionary(name) = location
   }
-  
-  // /* Remove a key-value pair specified by key from dictionary */
-  // def remove(name: String) = {
-  //   val location = lookUpAll(name)
-
-  //   // delete used register
-  //   location match {
-  //     case Some(loc) =>
-  //       loc match {
-  //         case loc: Register => usedReg -= loc
-  //         case _             =>
-  //       }
-  //     case _ =>
-  //   }
-
-  //   dictionary -= name
-  // }
 
   /* Look up a value according to key in this symbol table */
   def lookUp(name: String): Option[Location] = {
@@ -176,5 +172,7 @@ class StateTable(st: Option[StateTable]) {
   def getUsedRegs(): Seq[Register] = usedReg.toSeq
 
   def getUsedParamRegs(): Seq[Register] = usedParamReg.toSeq
+
+  def getSavedRegs(): Seq[Register] = savedRegs.toSeq
   
 }
