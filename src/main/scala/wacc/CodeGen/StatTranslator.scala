@@ -382,6 +382,17 @@ object StatTranslator {
     val para_len = callValue.args.size
     var index    = 0
 
+    // If this is inside a function with parameter, push caller saved regs first
+    val usedParam = stateST.getUsedParamRegs()
+    if (!usedParam.isEmpty) {
+      // addInstr(PushInstr(usedParam))
+
+      // Make R12 the secondary SP
+      addInstr(MovInstr(R12, SP))
+      // Update stateTable for parameters -> now on stack
+      stateST.updateParamToStack()
+    }
+
     while (index < para_len) {
 
       // Pop parameter to R8
@@ -411,6 +422,9 @@ object StatTranslator {
     // Create branch jump
     addInstr(BranchLinkInstr(WACCFuncLabel(callValue.ident.name)))
 
+    // Store the result in R8
+    addInstr(MovInstr(R8, R0))
+
     // Add stackSpace back for parameter
     val stackSpace = (para_len - paramReg.size) * 4
     if (stackSpace > 0) {
@@ -418,7 +432,15 @@ object StatTranslator {
     }
 
     // Push function return value
-    addInstr(PushInstr(Seq(R0)))
+    // addInstr(PushInstr(Seq(R0)))
+
+    if (!usedParam.isEmpty) {
+      // addInstr(PopInstr(usedParam))
+      stateST.updateParamBackToReg()
+    }
+
+    addInstr(PushInstr(Seq(R8)))
+
   }
 
   private def translateAssign(target: Lvalue, newValue: Rvalue)(implicit
@@ -483,7 +505,6 @@ object StatTranslator {
     translateExpr(expr)
     // Pop result to R0 for print
     addInstr(PopInstr(Seq(R0)))
-
     val _type = checkExprType(expr)
     val printType = _type match {
       case IntType()             => PrintInt

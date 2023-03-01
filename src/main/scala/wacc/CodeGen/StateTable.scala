@@ -19,6 +19,10 @@ class StateTable(st: Option[StateTable]) {
       // First state table
       case None => 0
     }
+  
+  val paramDictionary = mutable.Map[String, Location]()
+  val usedParamReg = mutable.ListBuffer[Register]()
+  var paramPtr = 0
 
   /* Add a key-value pair to dictionary */
   def add(name: String, location: Location) = {
@@ -29,6 +33,20 @@ class StateTable(st: Option[StateTable]) {
       case loc: Register => usedReg += loc
       case _             => updateFPPtr(nextFPPtr())
     }
+  }
+
+  def addParam(name: String, location: Location) = {
+    paramDictionary += (name -> location)
+
+    // add used register for parameter 
+    location match {
+      case loc: Register => usedParamReg += loc
+      case _             => updateParamPtr(nextParamPtr())
+    }
+  }
+
+  def updateParam(name: String, location: Location) = {
+    paramDictionary(name) = location
   }
   
   /* Remove a key-value pair specified by key from dictionary */
@@ -49,8 +67,17 @@ class StateTable(st: Option[StateTable]) {
   }
 
   /* Look up a value according to key in this symbol table */
-  def lookUp(name: String): Option[Location] =
-    dictionary.get(name)
+  def lookUp(name: String): Option[Location] = {
+    // First search in variable
+    val result = dictionary.get(name)
+
+    // If cannot find, search in parameter
+    result match {
+      case Some(_) => result
+      case None => paramDictionary.get(name)
+    }
+  }
+    
 
   /* Recursive look up all */
   def lookUpAllHelper(name: String, st: Option[StateTable]): Option[Location] =
@@ -78,6 +105,11 @@ class StateTable(st: Option[StateTable]) {
 
   private def nextFPPtr() = fpPtr + 4
 
+  def updateParamPtr(num: Int) =
+    paramPtr = num
+
+  private def nextParamPtr() = paramPtr - 4
+
   /* Return the next location for variable storage */
   def nextStoreLocation(): Location = {
 
@@ -92,9 +124,51 @@ class StateTable(st: Option[StateTable]) {
       val returnLoc = RegIntOffset(FP, fpPtr)
       returnLoc
     }
-
   }
 
-  def getUsedRegs(): List[Register] = usedReg.toList
+  /* Return the next location for parameter storage */
+  def nextParamLocation(): Location = {
+
+    // Find available register first
+    val unUsedReg = paramReg.filterNot(usedParamReg.toSet)
+
+    // If has unused reg
+    if (!unUsedReg.isEmpty) {
+      unUsedReg.head
+    } else {
+      // Go to storage
+      val returnLoc = RegIntOffset(FP, paramPtr)
+      returnLoc
+    }
+  }
+
+  // When function call inside a function with parameter
+  // we push the parameters to stack to allow caller saved register
+  def updateParamToStack() = {
+    for (key_value <- paramDictionary) {
+      (key_value) match {
+        case (name, R0) => updateParam(name, RegIntOffset(R12, 0)) 
+        case (name, R1) => updateParam(name, RegIntOffset(R12, 4))
+        case (name, R2) => updateParam(name, RegIntOffset(R12, 8))
+        case _ =>
+      }
+    }
+  }
+
+  // After calling, R0, R1, R2 should be changed back
+  def updateParamBackToReg() = {
+    for (key_value <- paramDictionary) {
+      (key_value) match {
+        case (name, RegIntOffset(R12, 0)) => updateParam(name, R0)
+        case (name, RegIntOffset(R12, 4)) => updateParam(name, R1)
+        case (name, RegIntOffset(R12, 8)) => updateParam(name, R2)
+        case _ =>
+      }
+    }
+  }
+
+  def getUsedRegs(): Seq[Register] = usedReg.toSeq
+
+  def getUsedParamRegs(): Seq[Register] = usedParamReg.toSeq
   
 }

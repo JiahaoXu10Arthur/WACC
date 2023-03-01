@@ -60,34 +60,31 @@ object FunctionTranslator {
     // First 3 parameters -> R0, R1, R2
     // More parameters -> On stack
     val para_len = func.params.size
-    var index    = 0
 
-    while (index < para_len) {
-      // First 3 parameters
-      if (index < paramReg.size) {
+    new_stateST.updateParamPtr((pushedRegNum + para_len - 4) * 4)
 
-        // Change it later, should have pool of usable register
-        val reg =
-          index match {
-            case 0 => R0
-            case 1 => R1
-            case 2 => R2
-          }
-        new_stateST.add(func.params(index).ident.name, reg)
-
-      } else {
-
-        // may need to check, does not need to specify where it is?
-        val offset = (pushedRegNum + para_len - index - 1) * 4
-
-        new_stateST.add(func.params(index).ident.name, RegIntOffset(FP, offset))
-      }
-
-      index += 1
-    }
+    func.params.foreach{param => 
+      val loc = new_stateST.nextParamLocation()
+      new_stateST.addParam(param.ident.name, loc)}
 		
+    val paramRegs = new_stateST.getUsedParamRegs()
+    val pushFlag = !paramRegs.isEmpty
+
 		// Translate function body
-		func.stats.foreach(s => {translateStatement(s)(s.symb, new_stateST, ir)})
+		func.stats.foreach(s => {
+      
+      if (pushFlag) {
+        addInstr(PushInstr(paramRegs))
+      }
+      
+      translateStatement(s)(s.symb, new_stateST, ir) 
+
+      if (pushFlag) {
+        addInstr(PopInstr(paramRegs))
+      }
+    })
+
+		// func.stats.foreach(s => {translateStatement(s)(s.symb, new_stateST, ir)})
 
     // val popFuncRegs    = Seq(FP, PC)
 
