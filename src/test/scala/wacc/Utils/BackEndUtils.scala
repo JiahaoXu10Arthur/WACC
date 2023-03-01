@@ -107,9 +107,10 @@ object BackEndUtils {
 
         if (expect.contains(runtimeErr)) {
             val start = output.indexOf(fatalErr)
-            if (start == -1) println(output)
-            val sub = output.substring(start)
-            output = output.replace(sub, runtimeErr)
+            if (start != -1) {
+                val sub = output.substring(start)
+                output = output.replace(sub, runtimeErr)
+            }
         }    
         output
     }
