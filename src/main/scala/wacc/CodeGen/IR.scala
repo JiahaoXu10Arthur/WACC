@@ -14,7 +14,6 @@ class IR(
   private val bLInstrsBuffer  = mutable.ListBuffer[List[Instruction]]()
   private val bLNamesBuffer   = mutable.ListBuffer[FuncLabel]()
   private var branchCounter   = 0
-  private val regsInUse       = mutable.ListBuffer[Register]()
 }
 
 object IR {

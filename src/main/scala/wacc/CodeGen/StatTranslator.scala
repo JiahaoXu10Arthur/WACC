@@ -312,7 +312,10 @@ object StatTranslator {
       }
 
       // Move array pointer to R3
-      addInstr(MovInstr(R3, array_loc))
+      array_loc match {
+        case array_loc: Register => addInstr(MovInstr(R3, array_loc))
+        case _ => addInstr(LoadInstr(R3, array_loc))
+      }
 
       // Pop index to R10
       addInstr(PopInstr(Seq(R10)))
@@ -356,7 +359,10 @@ object StatTranslator {
       addInstr(PopInstr(Seq(R8)))
 
       // Move array pointer to R3
-      addInstr(MovInstr(R3, array_loc))
+      array_loc match {
+        case array_loc: Register => addInstr(MovInstr(R3, array_loc))
+        case _ => addInstr(LoadInstr(R3, array_loc))
+      }
 
       // arrayStore - 4 Byte; arrayStoreB - 1 Byte
       val _type = checkLvalueType(arrayValue)
