@@ -22,4 +22,20 @@ object Utils {
     
     addInstr(PopInstr(popFuncRegs))
   }
+
+  def callerSavePush()(implicit stateST: StateTable, ir: IR) = {
+    val usedParam = stateST.getUsedParamRegs()
+    addInstr(Comment(s"Pushing param registers here! Number: ${usedParam.size}"))
+    if (!usedParam.isEmpty) {
+      addInstr(PushInstr(usedParam))
+    }
+  }
+
+  def callerSavePop()(implicit stateST: StateTable, ir: IR) = {
+    val usedParam = stateST.getUsedParamRegs()
+    addInstr(Comment(s"Poping param registers here! Number: ${usedParam.size}"))
+    if (!usedParam.isEmpty) {
+      addInstr(PopInstr(usedParam))
+    }
+  }
 }

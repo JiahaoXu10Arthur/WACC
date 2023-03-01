@@ -497,12 +497,9 @@ object StatTranslator {
     addInstr(PopInstr(Seq(R8)))
 
     addInstr(Comment("In translate print, after translating expression"))
+
     // Caller save parameter registers
-    val usedParam = stateST.getUsedParamRegs()
-    addInstr(Comment(s"Pushing param registers here! Number: ${usedParam.size}"))
-    if (!usedParam.isEmpty) {
-      addInstr(PushInstr(usedParam))
-    }
+    callerSavePush()
 
     // Move value from R8 to R0 for printing
     addInstr(MovInstr(R0, R8))
@@ -518,9 +515,8 @@ object StatTranslator {
     }
 
     translateBLink(printType)
-    if (!usedParam.isEmpty) {
-      addInstr(PopInstr(usedParam))
-    }
+    callerSavePop()
+
     addInstr(Comment("Done translating print"))
   }
 
@@ -529,7 +525,9 @@ object StatTranslator {
       expr: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
     translatePrint(expr)
+    callerSavePush()
     translateBLink(PrintLine)
+    callerSavePop()
   }
 
   /* Read will read value to R0 */
@@ -543,6 +541,8 @@ object StatTranslator {
       case CharType() => ReadChar
       case _          => null
     }
+
+    callerSavePush()
 
     lvalue match {
       case lvalue: Ident =>
@@ -585,7 +585,7 @@ object StatTranslator {
         storePairElem(lvalue)
 
     }
-
+    callerSavePop()
   }
 
   /* Free will free value in R0 */
@@ -600,12 +600,13 @@ object StatTranslator {
     }
 
     translateExpr(expr)
-
+    
+    callerSavePush()
     /* Pop pointer to r0 */
     addInstr(PopInstr(Seq(R0)))
-
     /* Jump to free */
     translateBLink(freeType)
+    callerSavePop()
   }
 
   private def translateBoolCond(expr: Expr)(implicit ir: IR) = {
