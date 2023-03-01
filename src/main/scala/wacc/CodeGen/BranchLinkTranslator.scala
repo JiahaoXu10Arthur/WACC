@@ -347,7 +347,7 @@ object BranchLinkTranslator {
   private def translateReadChar(
       blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
-    val readCharFormatStr = StrLabel(s"${blName.getName}_str0", "%c")
+    val readCharFormatStr = StrLabel(s"${blName.getName}_str0", " %c")
     val charByteOffset    = 1
 
     /* Adds format string to data section */
