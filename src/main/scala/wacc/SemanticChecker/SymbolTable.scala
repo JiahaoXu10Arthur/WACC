@@ -37,8 +37,8 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     var var_num = 0
     
     for (key_value <- dictionary) {
-      key_value._1 match {
-        case (_, VariableType()) => var_num += 1
+      key_value._2 match {
+        case VariableObj(_, _) => var_num += 1
         case _ =>
       }
     }
@@ -60,7 +60,6 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 		num
 	}
 		
-
 	// find variable number in all scope within function
   def findAllVarNum(): Int = {
     findAllVarNumHelper(this)

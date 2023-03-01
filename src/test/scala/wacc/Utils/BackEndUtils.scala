@@ -1,10 +1,11 @@
+package wacc.Utils
 import java.io._
 import scala.sys.process._
 import scala.io._
 import scala.util.control.Breaks._
 import scala.collection.mutable.ListBuffer
 
-object Test {
+object BackEndUtils {
 
     private final val WACCLENGTH = 5
     private final val INPUTLENGTH = 9
@@ -15,15 +16,10 @@ object Test {
         def exit: String = _exit
     }
 
-    def runCommand(cmd: ProcessBuilder): (Int, String, String) = {
+    def runCommand(cmd: ProcessBuilder): (Int, String) = {
       val stdoutStream = new ByteArrayOutputStream
-      val stderrStream = new ByteArrayOutputStream
-      val stdoutWriter = new PrintWriter(stdoutStream)
-      val stderrWriter = new PrintWriter(stderrStream)
-      val exitValue = cmd.!(ProcessLogger(stdoutWriter.println, stderrWriter.println))
-      stdoutWriter.close()
-      stderrWriter.close()
-      (exitValue, stdoutStream.toString, stderrStream.toString)
+      val exitValue = (cmd #> stdoutStream).!
+      (exitValue, stdoutStream.toString())
     }
 
     def getExpectStrings(filename: String): Expects = {
@@ -63,38 +59,60 @@ object Test {
     }
 
     def cutString(buff: ListBuffer[String]): String = {
-        val ignorable = " #"
-        buff.drop(1).dropRight(1).map(_.dropWhile(a => ignorable.indexOf(s"$a") >= 0)).mkString("\n")
+        val ignorable = "#"
+        val ignorable2 = " "
+        val empty = ""
+        buff.drop(1).dropRight(1).map(_.replaceFirst(ignorable, empty).replaceFirst(ignorable2, empty)).mkString("\n")
     }
 
     def getExpects(filename: String): (String, String) = {
-        val expects = getExpectStrings(filename)
+        val expects = getExpectStrings(filename ++ ".wacc")
 
-        (expects.output, expects.exit)
+        val output = expects.output
+        var exit = expects.exit
+
+        if (exit.isEmpty()) {
+            exit = "0"
+        }
+
+        (output, exit)
     }
 
-    def getOutputAndExit(filename: String): (Int, String) = {
-        val input = getExpectStrings(filename).input
+    def getOutputAndExit(filename: String): (String, String) = {
+        val input = getExpectStrings(filename ++ ".wacc").input
 
-        val name = filename.dropRight(WACCLENGTH)
-
-        ("arm-linux-gnueabi-gcc -o EXEName -mcpu=arm1176jzf-s -mtune=arm1176jzf-s" ++ name ++ ".s").!
+        ("arm-linux-gnueabi-gcc -o " ++ filename ++ " -mcpu=arm1176jzf-s -mtune=arm1176jzf-s " ++ filename ++ ".s").!
         val inputStream = new ByteArrayInputStream(input.getBytes())
         val a = Seq(
-            "qemu-arm" ,"-L", "/usr/arm-linux-gnueabi/", name
+            "qemu-arm" ,"-L", "/usr/arm-linux-gnueabi/", filename
         ) #< inputStream
-        val res@(exitCode, output, _) = runCommand(a)
+        val res@(exitCode, output) = runCommand(a)
 
-        (exitCode, output)
+        /* Removes generated executable */
+        s"rm $filename".!
+
+        (output, exitCode.toString())
     }
 
-     def main(args: Array[String]): Unit = {
-        val filename = "echoChar.wacc"
-        val (_output, _exit) = getExpects(filename)
-        val (output, exit) = getOutputAndExit(filename)
+    def replaceAddrs(_output: String, expect: String): String = {
+        val addrs = "#addrs#"
+        val addrsRegex = "0x[a-f0-9]{5}".r
 
-        println(getExpects(filename))
-        println(getOutputAndExit(filename))
-     }
+        val runtimeErr = "#runtime_error#"
+        val fatalErr = "fatal error:"
+
+        var output = _output
+        if (expect.contains(addrs))
+            output = addrsRegex.replaceAllIn(output, addrs)
+
+        if (expect.contains(runtimeErr)) {
+            val start = output.indexOf(fatalErr)
+            if (start != -1) {
+                val sub = output.substring(start)
+                output = output.replace(sub, runtimeErr)
+            }
+        }    
+        output
+    }
 }
 

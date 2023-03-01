@@ -12,7 +12,7 @@ class IRTest extends AnyFlatSpec {
 		val immutableIR = returnIR()
 		immutableIR.instrs shouldBe empty
 		immutableIR.strConsts shouldBe empty
-		immutableIR.bLNames shouldBe empty
+		immutableIR.bLInstrs shouldBe empty
 	}
 
 	"IR lists" should "increase size when add element" in {
@@ -20,12 +20,12 @@ class IRTest extends AnyFlatSpec {
 
 		addInstr(MovInstr(R8, R4))
 		addStrConst("String")
-		addBLName(DivisionLabel)
+		addBranchLink(DivisionLabel)
 
 		val immutableIR = returnIR()
 		immutableIR.instrs should have size 1
 		immutableIR.strConsts should have size 1
-		immutableIR.bLNames should have size 1
+		immutableIR.bLInstrs should have size 1
 	}
 	
 	"IR Instrs" should "take duplicate" in {
@@ -43,36 +43,11 @@ class IRTest extends AnyFlatSpec {
 
 		addStrConst("String")
 		addStrConst("String")
-		addBLName(DivisionLabel)
-		addBLName(DivisionLabel)
+		addBranchLink(DivisionLabel)
+		addBranchLink(DivisionLabel)
 
 		val immutableIR = returnIR()
 		immutableIR.strConsts should have size 1
-		immutableIR.bLNames should have size 1
+		immutableIR.bLInstrs should have size 1
 	}
-
-	"IR strConsts" should "retrieve index" in {
-		implicit val ir = new IR()
-
-		addStrConst("String")
-		addStrConst("Branch")
-
-		val immutableIR = returnIR()
-		immutableIR.findStrConstIndex("String") shouldBe 0
-		immutableIR.findStrConstIndex("Branch") shouldBe 1
-	}
-
-	"IR strConsts" should "retrieve index even have duplicate" in {
-		implicit val ir = new IR()
-
-		addStrConst("String")
-		addStrConst("String")
-		addStrConst("Branch")
-
-		val immutableIR = returnIR()
-		immutableIR.findStrConstIndex("String") shouldBe 0
-		immutableIR.findStrConstIndex("Branch") shouldBe 1
-	}
-
-
 }
