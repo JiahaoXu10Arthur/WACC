@@ -44,6 +44,7 @@ object FunctionTranslator {
 
 		// Function does not inherit main's state table
 		val new_stateST = new StateTable(None)
+    new_stateST.modifySavedRegs(regsForUse.toSeq)
 
     // variable stack space
     val stackSpace = (regNum - variableReg.size) * 4
@@ -74,24 +75,7 @@ object FunctionTranslator {
       translateStatement(s)(s.symb, new_stateST, ir) 
       addInstr(Comment(s"Statement translated, var num ${new_stateST.getUsedRegs().size}"))
     })
-
-		// func.stats.foreach(s => {translateStatement(s)(s.symb, new_stateST, ir)})
-
-    val popFuncRegs    = Seq(FP, PC)
-
-    addInstr(MovInstr(SP, FP))
-    // Add stack space if too many variables
-    if (stackSpace > 0) {
-      addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
-    }
-    // Pop Register on stack
-		if (!regsForUse.isEmpty){
-			addInstr(PopInstr(regsForUse.toSeq))
-		}
-    
-    addInstr(PopInstr(popFuncRegs))
   }
-
 
 
 }
