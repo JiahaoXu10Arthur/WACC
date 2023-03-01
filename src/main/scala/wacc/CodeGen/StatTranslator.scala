@@ -626,18 +626,25 @@ object StatTranslator {
   /* Free can be appied to array and pair */
   private def translateFree(expr: Expr)(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
 
+    callerSavePush()
+
+    /* Pop pointer to r0 */
+    translateExpr(expr)
+    addInstr(PopInstr(Seq(R0)))
+
+    // Check free pair or array
     val _type = checkExprType(expr)
     val freeType = _type match {
       case PairType(_, _) => FreePair
-      case ArrayType(_)   => FreeLabel
+      case ArrayType(_)   => {
+        // array pointers are shifted forward by 4 bytes
+        // correct it back to original pointer before free
+        addInstr(SubInstr(R0, R0, Immediate(4)))
+        FreeLabel
+      }
       case _              => null
     }
 
-    translateExpr(expr)
-    
-    callerSavePush()
-    /* Pop pointer to r0 */
-    addInstr(PopInstr(Seq(R0)))
     /* Jump to free */
     translateBLink(freeType)
     callerSavePop()
