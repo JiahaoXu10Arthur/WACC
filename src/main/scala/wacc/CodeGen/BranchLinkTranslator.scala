@@ -43,8 +43,7 @@ object BranchLinkTranslator {
       blName: FuncLabel,
       loadByte: Boolean = false
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction], ir: IR): Unit = {
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
+    lableCreation("", blName, true)
     instrsBuffer += CmpInstr(R10, Immediate(0))
     instrsBuffer += CondMovInstr(LtCond, R1, R10)
     instrsBuffer += CondBranchLinkInstr(LtCond, CheckBound)
@@ -72,8 +71,7 @@ object BranchLinkTranslator {
       blName: FuncLabel,
       storeByte: Boolean = false
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction], ir: IR): Unit = {
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
+    lableCreation("", blName, true)
     instrsBuffer += CmpInstr(R10, Immediate(0))
     instrsBuffer += CondMovInstr(LtCond, R1, R10)
     instrsBuffer += CondBranchLinkInstr(LtCond, CheckBound)
@@ -96,8 +94,7 @@ object BranchLinkTranslator {
   private def translateFreePair(
       blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction], ir: IR): Unit = {
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
+    lableCreation("", blName, true)
     instrsBuffer += MovInstr(R8, R0)
     /* Pair null check */
     instrsBuffer += CmpInstr(R8, Immediate(0))
@@ -126,19 +123,7 @@ object BranchLinkTranslator {
     val errorStr =
       StrLabel(s"${blName.getName}_str0", "fatal error: array index %d out of bounds\n")
 
-    /* Adds error string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(errorStr)
-
-    /* Adds error check to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += LoadInstr(R0, errorStr)
-    instrsBuffer += BranchLinkInstr(PrintFormatted)
-    instrsBuffer += MovInstr(R0, Immediate(0))
-    instrsBuffer += BranchLinkInstr(FileFlush)
-    instrsBuffer += MovInstr(R0, Immediate(ErrorExitCode))
-    instrsBuffer += BranchLinkInstr(ExitLabel)
+    errorCheckCreation(blName, errorStr, PrintFormatted, true)
   }
 
   private def translateCheckNull(
@@ -150,17 +135,7 @@ object BranchLinkTranslator {
     /* Since translation uses PrintStr, we translate PrintStr as well */
     addBranchLink(PrintStr)
 
-    /* Adds error string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(errorStr)
-
-    /* Adds error check to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += LoadInstr(R0, errorStr)
-    instrsBuffer += BranchLinkInstr(PrintStr)
-    instrsBuffer += MovInstr(R0, Immediate(ErrorExitCode))
-    instrsBuffer += BranchLinkInstr(ExitLabel)
+    errorCheckCreation(blName, errorStr, PrintStr)
   }
 
   private def translateCheckDivZero(
@@ -168,21 +143,11 @@ object BranchLinkTranslator {
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction], ir: IR): Unit = {
     val errorStr =
       StrLabel(s"${blName.getName}_str0", "fatal error: division or modulo by zero\n")
-
+      
     /* Since translation uses PrintStr, we translate PrintStr as well */
     addBranchLink(PrintStr)
 
-    /* Adds error string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(errorStr)
-
-    /* Adds error check to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += LoadInstr(R0, errorStr)
-    instrsBuffer += BranchLinkInstr(PrintStr)
-    instrsBuffer += MovInstr(R0, Immediate(ErrorExitCode))
-    instrsBuffer += BranchLinkInstr(ExitLabel)
+    errorCheckCreation(blName, errorStr, PrintStr)
   }
 
   private def translateCheckOverflow(
@@ -194,17 +159,9 @@ object BranchLinkTranslator {
     /* Since translation uses PrintStr, we translate PrintStr as well */
     addBranchLink(PrintStr)
 
-    /* Adds error string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(errorStr)
+    errorCheckCreation(blName, errorStr, PrintStr)
 
-    /* Adds error check to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += LoadInstr(R0, errorStr)
-    instrsBuffer += BranchLinkInstr(PrintStr)
-    instrsBuffer += MovInstr(R0, Immediate(ErrorExitCode))
-    instrsBuffer += BranchLinkInstr(ExitLabel)
+    addPrintFunction(errorStr,PrintStr, false)
   }
 
   private def translatePrintBool(
@@ -213,142 +170,106 @@ object BranchLinkTranslator {
     val falseStr  = StrLabel(s"${blName.getName}_str0", "false")
     val trueStr   = StrLabel(s"${blName.getName}_str1", "true")
     val formatStr = StrLabel(s"${blName.getName}_str2", "%.*s")
-
+    
     /* Adds format string to data section */
     instrsBuffer += CreateLabel(SegmentLabel("data"))
     instrsBuffer += CreateLabel(falseStr)
     instrsBuffer += CreateLabel(trueStr)
     instrsBuffer += CreateLabel(formatStr)
-
+    
     val trueLabel  = JumpLabel(s"${blName.getName}0")
     val printLabel = JumpLabel(s"${blName.getName}1")
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
+    lableCreation("text", blName, true)
     instrsBuffer += CmpInstr(R0, Immediate(0))
     instrsBuffer += CondBranchInstr(NeqCond, trueLabel)
-
+    
     /* Prints false */
     instrsBuffer += LoadInstr(R2, falseStr)
     instrsBuffer += BranchInstr(printLabel)
-
+    
     /* Prints true */
     instrsBuffer += CreateLabel(trueLabel)
     instrsBuffer += LoadInstr(R2, trueStr)
-
+    
     /* Prints string */
     instrsBuffer += CreateLabel(printLabel)
     instrsBuffer += LoadInstr(R1, RegIntOffset(R2, ArrayLenOffset))
-    instrsBuffer += LoadInstr(R0, formatStr)
-    instrsBuffer += BranchLinkInstr(PrintFormatted)
-    instrsBuffer += MovInstr(R0, Immediate(0))
-    instrsBuffer += BranchLinkInstr(FileFlush)
-    instrsBuffer += PopInstr(Seq(PC))
-  }
 
+    addPrintFunction(formatStr, PrintFormatted)
+  }
+  
   private def translatePrintInt(
-      blName: FuncLabel
+    blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
     val intFormatStr = StrLabel(s"${blName.getName}_str0", "%d")
-
+      
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(intFormatStr)
-
+    lableCreation("data", intFormatStr, false)
+      
     /* Adds print_int function to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
+    lableCreation("text", blName, true)
     instrsBuffer += MovInstr(R1, R0)
-    instrsBuffer += LoadInstr(R0, intFormatStr)
-    instrsBuffer += BranchLinkInstr(PrintFormatted)
-    instrsBuffer += MovInstr(R0, Immediate(0))
-    instrsBuffer += BranchLinkInstr(FileFlush)
-    instrsBuffer += PopInstr(Seq(PC))
+
+    addPrintFunction(intFormatStr, PrintFormatted)
   }
 
   private def translatePrintChar(
-      blName: FuncLabel
+    blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
     val charFormatStr = StrLabel(s"${blName.getName}_str0", "%c")
-
+    
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(charFormatStr)
-
+    lableCreation("data", charFormatStr, false)
+    
     /* Adds print_char function to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
+    lableCreation("text", blName, true)
     instrsBuffer += MovInstr(R1, R0)
-    instrsBuffer += LoadInstr(R0, charFormatStr)
-    instrsBuffer += BranchLinkInstr(PrintFormatted)
-    instrsBuffer += MovInstr(R0, Immediate(0))
-    instrsBuffer += BranchLinkInstr(FileFlush)
-    instrsBuffer += PopInstr(Seq(PC))
+    addPrintFunction(charFormatStr, PrintFormatted)
   }
 
   private def translatePrintLine(
-      blName: FuncLabel
+    blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
     val lineFormatStr = StrLabel(s"${blName.getName}_str0", "")
-
+    
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(lineFormatStr)
-
+    lableCreation("data", lineFormatStr, false)
+      
     /* Adds print_line function to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
-    instrsBuffer += LoadInstr(R0, lineFormatStr)
-    instrsBuffer += BranchLinkInstr(Puts)
-    instrsBuffer += MovInstr(R0, Immediate(0))
-    instrsBuffer += BranchLinkInstr(FileFlush)
-    instrsBuffer += PopInstr(Seq(PC))
-  }
+    lableCreation("text", blName, true)
 
+    addPrintFunction(lineFormatStr, Puts)
+  }
+  
   private def translatePrintPointer(
-      blName: FuncLabel
+    blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
     val pointerFormatStr = StrLabel(s"${blName.getName}_str0", "%p")
-
+    
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(pointerFormatStr)
-
+    lableCreation("data", pointerFormatStr, false)
+    
     /* Adds print_pointer function to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
+    lableCreation("text", blName, true)
     instrsBuffer += MovInstr(R1, R0)
-    instrsBuffer += LoadInstr(R0, pointerFormatStr)
-    instrsBuffer += BranchLinkInstr(PrintFormatted)
-    instrsBuffer += MovInstr(R0, Immediate(0))
-    instrsBuffer += BranchLinkInstr(FileFlush)
-    instrsBuffer += PopInstr(Seq(PC))
+
+    addPrintFunction(pointerFormatStr, PrintFormatted)
   }
 
   private def translatePrintStr(
-      blName: FuncLabel
+    blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
     val strFormatStr = StrLabel(s"${blName.getName}_str0", "%.*s")
-
+    
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(strFormatStr)
-
+    lableCreation("data", strFormatStr, false)
+      
     /* Adds print_str function to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
+    lableCreation("text", blName, true)
     instrsBuffer += MovInstr(R2, R0)
     instrsBuffer += LoadInstr(R1, RegIntOffset(R0, ArrayLenOffset))
-    instrsBuffer += LoadInstr(R0, strFormatStr)
-    instrsBuffer += BranchLinkInstr(PrintFormatted)
-    instrsBuffer += MovInstr(R0, Immediate(0))
-    instrsBuffer += BranchLinkInstr(FileFlush)
-    instrsBuffer += PopInstr(Seq(PC))
+
+    addPrintFunction(strFormatStr, PrintFormatted)
   }
 
   private def translateReadChar(
@@ -358,43 +279,89 @@ object BranchLinkTranslator {
     val charByteOffset    = 1
 
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(readCharFormatStr)
-
+    lableCreation("data", readCharFormatStr, false)
     /* Adds read_char function to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
-    instrsBuffer += StoreByteInstr(R0, RegIntOffset(SP, -charByteOffset), true) // Push R0 to stack
-    instrsBuffer += MovInstr(R1, SP)                                            // Pass address of R0 to scanf
-    instrsBuffer += LoadInstr(R0, readCharFormatStr)
-    instrsBuffer += BranchLinkInstr(ScanFormatted)
-    instrsBuffer += LoadSignedByteInstr(R0, RegIntOffset(SP, 0)) // Pop R0 from stack
-    instrsBuffer += AddInstr(SP, SP, Immediate(charByteOffset))
-    instrsBuffer += PopInstr(Seq(PC))
+    lableCreation("text", blName, true)
+    readFunction(readCharFormatStr, charByteOffset)
   }
-
+  
   private def translateReadInt(
-      blName: FuncLabel
+    blName: FuncLabel
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
     val readIntFormatStr = StrLabel(s"${blName.getName}_str0", "%d")
     val intByteSize      = 4
 
     /* Adds format string to data section */
-    instrsBuffer += CreateLabel(SegmentLabel("data"))
-    instrsBuffer += CreateLabel(readIntFormatStr)
-
+    lableCreation("data", readIntFormatStr, false)
+    
     /* Adds read_int function to text section */
-    instrsBuffer += CreateLabel(SegmentLabel("text"))
-    instrsBuffer += CreateLabel(blName)
-    instrsBuffer += PushInstr(Seq(LR))
-    instrsBuffer += StoreInstr(R0, RegIntOffset(SP, -intByteSize), true) // Push R0 to stack
-    instrsBuffer += MovInstr(R1, SP)                                     // Pass address of R0 to scanf
-    instrsBuffer += LoadInstr(R0, readIntFormatStr)
-    instrsBuffer += BranchLinkInstr(ScanFormatted)
-    instrsBuffer += LoadInstr(R0, RegIntOffset(SP, 0)) // Pop R0 from stack
-    instrsBuffer += AddInstr(SP, SP, Immediate(intByteSize))
-    instrsBuffer += PopInstr(Seq(PC))
+    lableCreation("text", blName, true)
+    readFunction(readIntFormatStr, intByteSize)
   }
 
+  private def lableCreation(
+    label: String,
+    format: Label,
+    push: Boolean
+  )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+    if (!label.isEmpty())
+      instrsBuffer += CreateLabel(SegmentLabel(label))
+    instrsBuffer += CreateLabel(format)
+    if (push)
+      instrsBuffer += PushInstr(Seq(LR))
+  }
+
+  private def loadAndBranch(
+    loadFormat: StrLabel,
+    branchFormat: FuncLabel
+  )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+    instrsBuffer += LoadInstr(R0, loadFormat)
+    instrsBuffer += BranchLinkInstr(branchFormat)
+  }
+
+  private def addPrintFunction(
+    loadFormat: StrLabel,
+    branchFormat: FuncLabel,
+    pop: Boolean = true
+  )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+    loadAndBranch(loadFormat, branchFormat)
+    instrsBuffer += MovInstr(R0, Immediate(0))
+    instrsBuffer += BranchLinkInstr(FileFlush)
+    if (pop)
+      instrsBuffer += PopInstr(Seq(PC))
+  }
+
+  private def errorCheckCreation(
+    blName: FuncLabel,
+    errorStr: StrLabel,
+    print: FuncLabel,
+    flush: Boolean = false
+  )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+    /* Adds error string to data section */
+    lableCreation("data", errorStr, false)
+
+    /* Adds error check to text section */
+    instrsBuffer += CreateLabel(SegmentLabel("text"))
+    instrsBuffer += CreateLabel(blName)
+    loadAndBranch(errorStr, print)
+    if (flush) {
+      instrsBuffer += MovInstr(R0, Immediate(0))
+      instrsBuffer += BranchLinkInstr(FileFlush)
+    }
+    instrsBuffer += MovInstr(R0, Immediate(ErrorExitCode))
+    instrsBuffer += BranchLinkInstr(ExitLabel)
+  }
+    
+  private def readFunction (
+    format: StrLabel,offset: Int
+  )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
+    instrsBuffer += StoreByteInstr(R0, RegIntOffset(SP, -offset), true) // Push R0 to stack
+    instrsBuffer += MovInstr(R1, SP)                                            // Pass address of R0 to scanf
+    loadAndBranch(format, ScanFormatted)
+    instrsBuffer += LoadSignedByteInstr(R0, RegIntOffset(SP, 0)) // Pop R0 from stack
+    instrsBuffer += AddInstr(SP, SP, Immediate(offset))
+    instrsBuffer += PopInstr(Seq(PC))
+  }
+    
 }
+  
