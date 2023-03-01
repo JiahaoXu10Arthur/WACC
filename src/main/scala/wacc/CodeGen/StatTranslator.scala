@@ -41,21 +41,15 @@ object StatTranslator {
   /* Translate for Conditional branch link */
   def translateCondBLink(cond: CondCode, blName: FuncLabel)(implicit ir: IR) = {
 
-    addInstr(PushInstr(paramReg))
-
     addBranchLink(blName)
     addInstr(CondBranchLinkInstr(cond, blName))
-
-    addInstr(PopInstr(paramReg))
   }
 
   /* Translate for Branch link */
   def translateBLink(blName: FuncLabel)(implicit ir: IR) = {
     addBranchLink(blName)
 
-    addInstr(PushInstr(paramReg))
     addInstr(BranchLinkInstr(blName))
-    addInstr(PopInstr(paramReg))
   }
 
   /* Find variable by name in stateTable to find its location */

@@ -1,5 +1,7 @@
 package wacc.IntegrationTests
 
+import java.io.File
+
 class ArrayTests extends IntegrationTest {
   // "Array Integration tests" in pending
   // testSkeleton("wacc_example/valid/array/")
