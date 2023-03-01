@@ -2,6 +2,7 @@ package wacc.CodeGen
 
 import wacc.Ast._
 import wacc.SemanticChecker.SymbolTable
+import wacc.SemanticChecker.SemanticTypes._
 import wacc.Instructions._
 
 import StatTranslator._
@@ -25,8 +26,8 @@ object ExprTranslator {
       case Eq(expr1, expr2)  => translateCmp(expr1, expr2, EqCond, NeqCond)
       case Neq(expr1, expr2) => translateCmp(expr1, expr2, NeqCond, EqCond)
 
-      case And(expr1, expr2) => translateAnd(expr1, expr2) // need to be further considered
-      case Or(expr1, expr2)  => translateOr(expr1, expr2)  // need to be further considered
+      case And(expr1, expr2) => translateAnd(expr1, expr2)
+      case Or(expr1, expr2)  => translateOr(expr1, expr2)
       case Not(expr)         => translateNot(expr)
       case Neg(expr)         => translateNeg(expr)
       case Len(expr)         => translateLen(expr)
@@ -38,8 +39,8 @@ object ExprTranslator {
       case CharLit(value)  => translateChar(value)
       case StrLit(value)   => translateStr(value)
       case PairLit()       => translatePairLit()
-      case Ident(name)     => translateIdent(name)
-      case expr: ArrayElem => loadArrayElem(expr) // need to be further considered
+      case expr: Ident     => translateIdent(expr)
+      case expr: ArrayElem => loadArrayElem(expr)
     }
 
   /* Assume Move to R8 */
@@ -80,12 +81,18 @@ object ExprTranslator {
   }
 
   /* Assume Move to R8 */
-  private def translateIdent(name: String)(implicit ir: IR, stateST: StateTable) = {
-    val loc = findVarLoc(name, stateST)
+  private def translateIdent(ident: Ident)(implicit st: SymbolTable, ir: IR, stateST: StateTable) = {
+    val loc = findVarLoc(ident.name, stateST)
 
     loc match {
       case loc: Register => addInstr(MovInstr(R8, loc))
-      case _             => addInstr(LoadInstr(R8, loc))
+      case _             => {
+        val size = sizeOfElem(checkExprType(ident))
+        size match {
+          case 1 => addInstr(LoadSignedByteInstr(R8, loc))
+          case 4 => addInstr(LoadInstr(R8, loc))
+        }
+      }
     }
 
     addInstr(PushInstr(Seq(R8)))

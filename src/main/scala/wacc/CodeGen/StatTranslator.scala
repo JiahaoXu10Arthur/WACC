@@ -95,7 +95,13 @@ object StatTranslator {
     val loc = stateST.nextStoreLocation()
     loc match {
       case loc: Register => addInstr(MovInstr(loc, R8))
-      case _             => addInstr(StoreInstr(R8, loc))
+      case _             => {
+        val size = sizeOfElem(checkExprType(ident))
+        size match {
+          case 1 => addInstr(StoreByteInstr(R8, loc))
+          case 4 => addInstr(StoreInstr(R8, loc))
+        }
+      }
     }
 
     // Add the location of variable to stateTable
@@ -137,7 +143,6 @@ object StatTranslator {
       size_factor match {
         case 1 => addInstr(StoreByteInstr(R8, RegIntOffset(R12, i * size_factor)))
         case 4 => addInstr(StoreInstr(R8, RegIntOffset(R12, i * size_factor)))
-        case _ =>
       }
 
     }
@@ -184,14 +189,16 @@ object StatTranslator {
     // Pop result
     addInstr(PopInstr(Seq(R8)))
 
-    // store value of elem
-    addInstr(StoreInstr(R8, RegIntOffset(R12, 0)))
+    size match {
+      case 1 => addInstr(StoreByteInstr(R8, RegIntOffset(R12, 0)))
+      case 4 => addInstr(StoreInstr(R8, RegIntOffset(R12, 0)))
+    }
 
     // Push Pair elem pointer
     addInstr(PushInstr(Seq(R12)))
   }
 
-  private def storeIdent(ident: Ident)(implicit stateST: StateTable, ir: IR) = {
+  private def storeIdent(ident: Ident)(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
     // assign value now on stack
 
     // Pop assign value to R8
@@ -202,7 +209,13 @@ object StatTranslator {
 
     target_loc match {
       case target_loc: Register => addInstr(MovInstr(target_loc, R8))
-      case _                    => addInstr(StoreInstr(R8, target_loc))
+      case _             => {
+        val size = sizeOfElem(checkExprType(ident))
+        size match {
+          case 1 => addInstr(StoreByteInstr(R8, target_loc))
+          case 4 => addInstr(StoreInstr(R8, target_loc))
+        }
+      }
     }
   }
 
@@ -213,8 +226,14 @@ object StatTranslator {
     getPairElemPointer(pairValue)
     addInstr(PopInstr(Seq(R8)))
 
-    // Load actual pair elem
-    addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
+    val _type = checkLvalueType(pairValue)
+    sizeOfElem(_type) match {
+      case 1 => addInstr(LoadSignedByteInstr(R8, RegIntOffset(R8, 0)))
+      case 4 => addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
+    }
+
+    // // Load actual pair elem
+    // addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
 
     // Push result
     addInstr(PushInstr(Seq(R8)))
@@ -237,6 +256,7 @@ object StatTranslator {
         addInstr(PopInstr(Seq(R8)))
         addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
         location = R8
+        
       case _ =>
     }
 
@@ -321,8 +341,16 @@ object StatTranslator {
       // Pop index to R10
       addInstr(PopInstr(Seq(R10)))
 
+      // arrayLoad - 4 Byte; arrayLoadB - 1 Byte
+      val _type = checkLvalueType(arrayValue)
+      val loadBranchName =
+        sizeOfElem(_type) match {
+          case 1 => ArrayLoadB
+          case 4 => ArrayLoad
+        }
+
       // branch to array load
-      translateBLink(ArrayLoad)
+      translateBLink(loadBranchName)
 
       // update array pointer
       array_loc = R3

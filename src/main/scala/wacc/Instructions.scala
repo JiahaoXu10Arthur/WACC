@@ -143,6 +143,7 @@ object Instructions {
   case object ArrayStore  extends Label("_arrStore") with FuncLabel
   case object ArrayStoreB extends Label("_arrStoreB") with FuncLabel
   case object ArrayLoad   extends Label("_arrLoad") with FuncLabel
+  case object ArrayLoadB   extends Label("_arrLoadB") with FuncLabel
   case object FreePair    extends Label("_freepair") with FuncLabel
 
   /* standard library functions */

@@ -13,6 +13,7 @@ object BranchLinkTranslator {
 
     blName match {
       case ArrayLoad     => translateArrayLoad(blName)
+      case ArrayLoadB     => translateArrayLoad(blName, loadByte = true)
       case ArrayStore    => translateArrayStore(blName)
       case ArrayStoreB   => translateArrayStore(blName, storeByte = true)
       case CheckBound    => translateCheckBound(blName)
@@ -39,7 +40,8 @@ object BranchLinkTranslator {
 	LR (R14) is used as general register, and return into R3
    */
   private def translateArrayLoad(
-      blName: FuncLabel
+      blName: FuncLabel,
+      loadByte: Boolean = false
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction], ir: IR): Unit = {
     instrsBuffer += CreateLabel(blName)
     instrsBuffer += PushInstr(Seq(LR))
@@ -50,7 +52,12 @@ object BranchLinkTranslator {
     instrsBuffer += CmpInstr(R10, LR)
     instrsBuffer += CondMovInstr(GteCond, R1, R10)
     instrsBuffer += CondBranchLinkInstr(GteCond, CheckBound)
-    instrsBuffer += LoadInstr(R3, RegShiftOffset(R3, R10, LSL(2)))
+    instrsBuffer += (
+      if (loadByte)
+        LoadSignedByteInstr(R3, RegRegOffset(R3, R10))
+      else
+        LoadInstr(R3, RegShiftOffset(R3, R10, LSL(2)))
+    )
     instrsBuffer += PopInstr(Seq(PC))
 
     /* Since translation uses CheckBound, we translate CheckBound as well */
