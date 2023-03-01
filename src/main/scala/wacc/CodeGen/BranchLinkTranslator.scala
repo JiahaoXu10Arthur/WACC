@@ -356,9 +356,12 @@ object BranchLinkTranslator {
     format: StrLabel,offset: Int
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
     instrsBuffer += StoreByteInstr(R0, RegIntOffset(SP, -offset), true) // Push R0 to stack
-    instrsBuffer += MovInstr(R1, SP)                                            // Pass address of R0 to scanf
+    instrsBuffer += MovInstr(R1, SP) // Pass address of R0 to scanf
     loadAndBranch(format, ScanFormatted)
-    instrsBuffer += LoadSignedByteInstr(R0, RegIntOffset(SP, 0)) // Pop R0 from stack
+    if (offset == 1) // Pop R0 from stack
+      instrsBuffer += LoadSignedByteInstr(R0, RegIntOffset(SP, 0)) 
+    else if (offset == 4)
+      instrsBuffer += LoadInstr(R0, RegIntOffset(SP, 0))
     instrsBuffer += AddInstr(SP, SP, Immediate(offset))
     instrsBuffer += PopInstr(Seq(PC))
   }
