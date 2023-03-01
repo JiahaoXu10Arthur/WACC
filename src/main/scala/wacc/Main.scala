@@ -35,8 +35,6 @@ object Main {
             println(s"Compile ${args.head} successful!")
 
             val ir = Translator.translate(x, st)
-            // ir.instrs.foreach(ins => println(ins))
-            // ir.strConsts.foreach(str => println(str))
 
             println(CodeGenerator.assemble(ir, waccName))
 
