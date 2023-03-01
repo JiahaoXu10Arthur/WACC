@@ -35,7 +35,6 @@ semantic_test:
     - sbt "Test / testOnly *SemanticChecker*"
     - echo "TEST SUCCESSFUL!"
 
-
 backend_unit_test:
   stage: unit_tests
   script:
@@ -80,20 +79,5 @@ integration_test:
         - target/test-reports/TEST-wacc.IntegrationTests.SkipTests.xml
         - target/test-reports/TEST-wacc.IntegrationTests.VariablesTests.xml
         - target/test-reports/TEST-wacc.IntegrationTests.WhileTests.xml
-
-
-back_unit_test:
-  stage: backEndTest
-  script:
-    - echo "Running back end unit test..."
-    - sbt "Test / testOnly *CodeGen"
-    - echo "test successful!"
-
-back_int_test:
-  stage: backEndTest
-  script:
-    - echo "Running back end integration test..."
-    - sbt "Test / testOnly *IntegrationTests"
-    - echo "test successful!"
 
     
