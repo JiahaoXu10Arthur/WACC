@@ -65,37 +65,33 @@ object FunctionTranslator {
 
     func.params.foreach{param => 
       val loc = new_stateST.nextParamLocation()
-      new_stateST.addParam(param.ident.name, loc)}
+      new_stateST.addParam(param.ident.name, loc)
+    }
 		
     val paramRegs = new_stateST.getUsedParamRegs()
-    val pushFlag = !paramRegs.isEmpty
+    addInstr(Comment(s"Parameter nums ${paramRegs.size}"))
 
 		// Translate function body
 		func.stats.foreach(s => {
-      
-      if (pushFlag) {
-        addInstr(PushInstr(paramRegs))
-      }
-      
       translateStatement(s)(s.symb, new_stateST, ir) 
-
-      if (pushFlag) {
-        addInstr(PopInstr(paramRegs))
-      }
+      addInstr(Comment(s"Statement translated, var num ${new_stateST.getUsedRegs().size}"))
     })
 
 		// func.stats.foreach(s => {translateStatement(s)(s.symb, new_stateST, ir)})
 
-    // val popFuncRegs    = Seq(FP, PC)
+    val popFuncRegs    = Seq(FP, PC)
 
+    addInstr(MovInstr(SP, FP))
     // Add stack space if too many variables
     if (stackSpace > 0) {
       addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
     }
-
-    // addInstr(MovInstr(SP, FP))
-    // addInstr(PopInstr(popFuncRegs))
-
+    // Pop Register on stack
+		if (!regsForUse.isEmpty){
+			addInstr(PopInstr(regsForUse.toSeq))
+		}
+    
+    addInstr(PopInstr(popFuncRegs))
   }
 
 

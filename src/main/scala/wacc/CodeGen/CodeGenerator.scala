@@ -44,6 +44,7 @@ object CodeGenerator {
       case instr: StackInstr  => assembleStack(instr)
       case instr: StatInstr   => assembleStat(instr)
       case instr: CreateLabel => assembleCreateLabel(instr).mkString("\n")
+      case Comment(value)     => s"@$value"
       case _                  => "@not implemented yet!"
     }
 

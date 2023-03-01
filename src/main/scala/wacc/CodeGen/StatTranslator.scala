@@ -99,6 +99,7 @@ object StatTranslator {
 
     // Add the location of variable to stateTable
     stateST.add(ident.name, loc)
+    addInstr(Comment(s"Declared variable: current variables num ${stateST.getUsedRegs().size}"))
   }
 
   private def declareArrayLit(
@@ -382,13 +383,14 @@ object StatTranslator {
     val para_len = callValue.args.size
     var index    = 0
 
+    addInstr(Comment("start of translate call"))
     // If this is inside a function with parameter, push caller saved regs first
     val usedParam = stateST.getUsedParamRegs()
     if (!usedParam.isEmpty) {
-      // addInstr(PushInstr(usedParam))
+      addInstr(PushInstr(usedParam))
 
       // Make R12 the secondary SP
-      addInstr(MovInstr(R12, SP))
+      addInstr(MovInstr(SFP, SP))
       // Update stateTable for parameters -> now on stack
       stateST.updateParamToStack()
     }
@@ -435,12 +437,12 @@ object StatTranslator {
     // addInstr(PushInstr(Seq(R0)))
 
     if (!usedParam.isEmpty) {
-      // addInstr(PopInstr(usedParam))
+      addInstr(PopInstr(usedParam))
       stateST.updateParamBackToReg()
     }
 
     addInstr(PushInstr(Seq(R8)))
-
+    addInstr(Comment("end of translate call"))
   }
 
   private def translateAssign(target: Lvalue, newValue: Rvalue)(implicit
@@ -482,29 +484,26 @@ object StatTranslator {
 
     // Pop result to R0 for return
     addInstr(PopInstr(Seq(R0)))
-
-    translateReturnPop()
   }
 
-  /* Add pop after return */
-  def translateReturnPop()(implicit ir: IR) = {
-    addInstr(MovInstr(SP, FP))
-    
-    val regsInUse = getRegsInUse()
-
-    // Pop Register on stack
-		if (!regsInUse.isEmpty){
-			addInstr(PopInstr(regsInUse.toSeq))
-		}
-    
-    addInstr(PopInstr(Seq(FP, PC)))
-  }
 
   /* Print will print value in R0 */
   private def translatePrint(expr: Expr)(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+    // Translate expression and store result in R8
     translateExpr(expr)
-    // Pop result to R0 for print
-    addInstr(PopInstr(Seq(R0)))
+    addInstr(PopInstr(Seq(R8)))
+
+    addInstr(Comment("In translate print, after translating expression"))
+    // Caller save parameter registers
+    val usedParam = stateST.getUsedParamRegs()
+    addInstr(Comment(s"Pushing param registers here! Number: ${usedParam.size}"))
+    if (!usedParam.isEmpty) {
+      addInstr(PushInstr(usedParam))
+    }
+
+    // Move value from R8 to R0 for printing
+    addInstr(MovInstr(R0, R8))
+
     val _type = checkExprType(expr)
     val printType = _type match {
       case IntType()             => PrintInt
@@ -516,6 +515,10 @@ object StatTranslator {
     }
 
     translateBLink(printType)
+    if (!usedParam.isEmpty) {
+      addInstr(PopInstr(usedParam))
+    }
+    addInstr(Comment("Done translating print"))
   }
 
   /* Println will print value in R0 */
@@ -662,6 +665,7 @@ object StatTranslator {
       stateST: StateTable,
       ir: IR
   ) = {
+    addInstr(Comment("Start of translate while"))
     // Allocate new branch name
     val branch_0 = JumpLabel(s"${getBranchCounter()}")
     incBranchCounter()

@@ -20,9 +20,15 @@ class StateTable(st: Option[StateTable]) {
       case None => 0
     }
   
-  val paramDictionary = mutable.Map[String, Location]()
-  val usedParamReg = mutable.ListBuffer[Register]()
-  var paramPtr = 0
+  val paramDictionary: mutable.Map[String, Location] = mutable.Map[String, Location]()
+  val usedParamReg = mutable.ListBuffer[Register]() ++= (st match {
+    case Some(upSt) => upSt.getUsedParamRegs()
+    case None => List()
+  })
+  var paramPtr: Int = st match {
+    case Some(upSt) => upSt.paramPtr
+    case None => 0
+  }
 
   /* Add a key-value pair to dictionary */
   def add(name: String, location: Location) = {
@@ -40,7 +46,7 @@ class StateTable(st: Option[StateTable]) {
 
     // add used register for parameter 
     location match {
-      case loc: Register => usedParamReg += loc
+      case location: Register => usedParamReg += location
       case _             => updateParamPtr(nextParamPtr())
     }
   }
@@ -49,22 +55,22 @@ class StateTable(st: Option[StateTable]) {
     paramDictionary(name) = location
   }
   
-  /* Remove a key-value pair specified by key from dictionary */
-  def remove(name: String) = {
-    val location = lookUpAll(name)
+  // /* Remove a key-value pair specified by key from dictionary */
+  // def remove(name: String) = {
+  //   val location = lookUpAll(name)
 
-    // delete used register
-    location match {
-      case Some(loc) =>
-        loc match {
-          case loc: Register => usedReg -= loc
-          case _             =>
-        }
-      case _ =>
-    }
+  //   // delete used register
+  //   location match {
+  //     case Some(loc) =>
+  //       loc match {
+  //         case loc: Register => usedReg -= loc
+  //         case _             =>
+  //       }
+  //     case _ =>
+  //   }
 
-    dictionary -= name
-  }
+  //   dictionary -= name
+  // }
 
   /* Look up a value according to key in this symbol table */
   def lookUp(name: String): Option[Location] = {
