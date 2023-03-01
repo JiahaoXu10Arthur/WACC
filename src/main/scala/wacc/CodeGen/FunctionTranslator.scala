@@ -29,8 +29,6 @@ object FunctionTranslator {
       regsForUse ++= variableReg
     }
 
-    updateRegsInUse(regsForUse.toList)
-
 		// Create function label
 		addInstr(CreateLabel(WACCFuncLabel(func.ident.name)))
 

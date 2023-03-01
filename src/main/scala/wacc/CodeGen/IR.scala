@@ -52,10 +52,4 @@ object IR {
   def findStrConstIndex(str: String)(implicit ir: IR): Int =
     ir.strConstsBuffer.indexOf(str)
 
-  def updateRegsInUse(used: Seq[Register])(implicit ir: IR) = 
-    ir.regsInUse ++= used
-  
-  def getRegsInUse()(implicit ir: IR): Seq[Register] = 
-    ir.regsInUse.toList
-
 }
