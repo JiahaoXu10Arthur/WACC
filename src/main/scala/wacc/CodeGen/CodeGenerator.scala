@@ -18,7 +18,7 @@ object CodeGenerator {
     }
     writer.println(assembleInstr(TextTag))
     /* Translate instructions */
-    writer.println(assembleTag(GlobalTag))
+    writer.println(assembleInstr(GlobalTag))
     for (instr <- ir.instrs) {
       val asm = assembleInstr(instr)
       writer.println(asm)
@@ -45,10 +45,9 @@ object CodeGenerator {
       case instr: StatInstr   => assembleStat(instr)
       case instr: CreateLabel => assembleCreateLabel(instr).mkString("\n")
       case Comment(value)     => s"@$value"
-      case instr: Tag         => assembleTag(instr)
+      case instr: Tag         => s".${instr.getName}"
     }
 
-  private def assembleTag(tag: Tag): String = s".${tag.getName}"
 
   private def asmLabel(label: Label): String = label match {
     case SegmentLabel(name)    => s".$name"
@@ -160,6 +159,7 @@ object CodeGenerator {
       s"cmp $reg1Str, $oprStr$shiftStr"
   }
 
+  // Generates the assembly for an expression instruction with 4 parameters
   private def exprAsmGen(
     name: String,
     destReg: Register,
@@ -195,6 +195,7 @@ object CodeGenerator {
       memoryAsmGen("ldrsb", dest, srcLoc, writeBack)
   }
 
+  // Generates the assembly for a memory instruction
   private def memoryAsmGen(
     name: String,
     reg: Register, 
