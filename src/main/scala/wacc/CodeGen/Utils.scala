@@ -1,8 +1,10 @@
 package wacc.CodeGen
 
+import wacc.Ast._
 import wacc.Instructions._
 import wacc.CodeGen.IR._
 import wacc.CodeGen.StateTable
+import wacc.SemanticChecker.SemanticTypes._
 
 object Utils {
   def endBlock()(implicit stateT: StateTable, ir: IR): Unit = {
@@ -23,6 +25,28 @@ object Utils {
     
     addInstr(PopInstr(popFuncRegs))
   }
+
+  /* Find variable by name in stateTable to find its location */
+  def findVarLoc(identifier: String, stateST: StateTable): Location =
+    stateST.lookUpAll(identifier) match {
+      case Some(location) => location
+      case _              => null
+    }
+
+  /* Find variable by name in stateTable to find its location */
+  def findLvalueLoc(lvalue: Lvalue, stateST: StateTable): Location =
+    lvalue match {
+      case Ident(name)             => findVarLoc(name, stateST)
+      case ArrayElem(ident, index) => findVarLoc(ident.name, stateST)
+      case PairElem(index, lvalue) => findLvalueLoc(lvalue, stateST)
+    }
+
+  def sizeOfElem(elemType: Type): Int =
+    elemType match {
+      case BoolType() => 1
+      case CharType() => 1
+      case _          => 4
+    }
 
   def callerSavePush()(implicit stateST: StateTable, ir: IR) = {
     val usedParam = stateST.getUsedParamRegs()
