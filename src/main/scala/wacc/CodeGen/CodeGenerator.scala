@@ -45,6 +45,8 @@ object CodeGenerator {
       case instr: StatInstr   => assembleStat(instr)
       case instr: CreateLabel => assembleCreateLabel(instr).mkString("\n")
       case Comment(value)     => s"@$value"
+      case Tag(name)          => name
+      case _                  => "@not implemented yet!"
     }
 
   private def asmLabel(label: Label): String = label match {

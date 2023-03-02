@@ -41,6 +41,9 @@ object FunctionTranslator {
     func.stats.foreach { s =>
       translateStatement(s)(s.symb, new_stateST, ir)
     }
+
+    /* Adds LTORG tag */
+    addInstr(Tag(".ltorg"))
   }
 
 }

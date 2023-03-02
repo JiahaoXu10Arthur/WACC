@@ -41,7 +41,6 @@ object StatTranslator {
 
   /* Translate for Conditional branch link */
   def translateCondBLink(cond: CondCode, blName: FuncLabel)(implicit ir: IR) = {
-
     addBranchLink(blName)
     addInstr(CondBranchLinkInstr(cond, blName))
   }
@@ -49,7 +48,6 @@ object StatTranslator {
   /* Translate for Branch link */
   def translateBLink(blName: FuncLabel)(implicit ir: IR) = {
     addBranchLink(blName)
-
     addInstr(BranchLinkInstr(blName))
   }
 
@@ -58,13 +56,7 @@ object StatTranslator {
       stateST: StateTable,
       ir: IR
   ) = {
-    initValue match {
-      case initValue: Expr     => translateExpr(initValue)
-      case initValue: ArrayLit => declareArrayLit(initValue)
-      case initValue: NewPair  => declareNewPair(initValue)
-      case initValue: PairElem => getPairElem(initValue)
-      case initValue: Call     => translateCall(initValue)
-    }
+    transSelector(initValue)
 
     // Pop result
     addInstr(PopInstr(Seq(R8)))
@@ -84,7 +76,6 @@ object StatTranslator {
 
     // Add the location of variable to stateTable
     stateST.add(ident.name, loc)
-    addInstr(Comment(s"Declared variable: current variables num ${stateST.getUsedRegs().size}"))
   }
 
   private def declareArrayLit(
@@ -122,7 +113,6 @@ object StatTranslator {
         case 1 => addInstr(StoreByteInstr(R8, RegIntOffset(R12, i * size_factor)))
         case 4 => addInstr(StoreInstr(R8, RegIntOffset(R12, i * size_factor)))
       }
-
     }
 
     // Push Array pointer
@@ -177,8 +167,6 @@ object StatTranslator {
   }
 
   private def storeIdent(ident: Ident)(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
-    // assign value now on stack
-
     // Pop assign value to R8
     addInstr(PopInstr(Seq(R8)))
 
@@ -210,9 +198,6 @@ object StatTranslator {
       case 4 => addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
     }
 
-    // // Load actual pair elem
-    // addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
-
     // Push result
     addInstr(PushInstr(Seq(R8)))
 
@@ -230,7 +215,6 @@ object StatTranslator {
       case innerValue: PairElem =>
         getPairElemPointer(innerValue)
 
-        // TODO: Why are these added to get extract correct?
         addInstr(PopInstr(Seq(R8)))
         addInstr(LoadInstr(R8, RegIntOffset(R8, 0)))
         location = R8
@@ -263,7 +247,6 @@ object StatTranslator {
   private def storePairElem(
       pairValue: PairElem
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
-    // Assign value on stack now
 
     // Load pair elem pointer to stack
     getPairElemPointer(pairValue)
@@ -341,8 +324,6 @@ object StatTranslator {
       arrayValue: ArrayElem
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
 
-    // New value on stack
-
     // Find array pointer
     var array_loc = findVarLoc(arrayValue.ident.name, stateST)
 
@@ -388,7 +369,6 @@ object StatTranslator {
     val para_len = callValue.args.size
     var index    = 0
 
-    addInstr(Comment("start of translate call"))
     // If this is inside a function with parameter, push caller saved regs first
     val usedParam = stateST.getUsedParamRegs()
     if (!usedParam.isEmpty) {
@@ -438,16 +418,12 @@ object StatTranslator {
       addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
     }
 
-    // Push function return value
-    // addInstr(PushInstr(Seq(R0)))
-
     if (!usedParam.isEmpty) {
       addInstr(PopInstr(usedParam))
       stateST.updateParamBackToReg()
     }
 
     addInstr(PushInstr(Seq(R8)))
-    addInstr(Comment("end of translate call"))
   }
 
   private def translateAssign(target: Lvalue, newValue: Rvalue)(implicit
@@ -455,13 +431,7 @@ object StatTranslator {
       stateST: StateTable,
       ir: IR
   ) = {
-    newValue match {
-      case initValue: Expr     => translateExpr(initValue)
-      case initValue: ArrayLit => declareArrayLit(initValue)
-      case initValue: NewPair  => declareNewPair(initValue)
-      case initValue: PairElem => getPairElem(initValue)
-      case initValue: Call     => translateCall(initValue)
-    }
+    transSelector(newValue)
 
     // New value now on stack
 
@@ -470,7 +440,6 @@ object StatTranslator {
       case target: ArrayElem => storeArrayElem(target)
       case target: PairElem  => storePairElem(target)
     }
-
   }
 
   /* Exit will return value in R0 */
@@ -500,8 +469,6 @@ object StatTranslator {
     translateExpr(expr)
     addInstr(PopInstr(Seq(R8)))
 
-    addInstr(Comment("In translate print, after translating expression"))
-
     // Caller save parameter registers
     callerSavePush()
 
@@ -520,8 +487,6 @@ object StatTranslator {
 
     translateBLink(printType)
     callerSavePop()
-
-    addInstr(Comment("Done translating print"))
   }
 
   /* Println will print value in R0 */
@@ -651,8 +616,6 @@ object StatTranslator {
     // if true, branch to stat1 (if true branch)
     addInstr(CondBranchInstr(checkCondCode(expr), branch_0))
 
-    // Somewhere create Branch1 later --> translate stat1 there
-
     // if false, continue executing stat2 (else branch)
     /* Create new state table */
     val new_stateST2 = new StateTable(Some(stateST))
@@ -680,7 +643,6 @@ object StatTranslator {
       stateST: StateTable,
       ir: IR
   ) = {
-    addInstr(Comment("Start of translate while"))
     // Allocate new branch name
     val branch_0 = JumpLabel(s"${getBranchCounter()}")
     incBranchCounter()
@@ -704,8 +666,6 @@ object StatTranslator {
 
     translateBoolCond(expr)
 
-    // may need to specially check when expr: bool
-
     // If condition is true, jump back to branch 2
     addInstr(CondBranchInstr(checkCondCode(expr), branch_1))
 
@@ -728,5 +688,19 @@ object StatTranslator {
     /* Create new state table */
     val new_stateST = new StateTable(Some(stateST))
     stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
+  }
+  
+  private def transSelector(value: Rvalue)(implicit
+      st: SymbolTable,
+      stateST: StateTable,
+      ir: IR
+  ) = {
+    value match {
+      case initValue: Expr     => translateExpr(initValue)
+      case initValue: ArrayLit => declareArrayLit(initValue)
+      case initValue: NewPair  => declareNewPair(initValue)
+      case initValue: PairElem => getPairElem(initValue)
+      case initValue: Call     => translateCall(initValue)
+    }
   }
 }
