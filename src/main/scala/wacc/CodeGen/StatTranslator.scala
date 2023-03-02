@@ -292,15 +292,19 @@ object StatTranslator {
     // For each dimension
     for (i <- arrayValue.index) {
 
-      // Calculate index and push to stack
-      i match {
-        case i: ArrayElem =>
-          // previous array pointer is this index
-          loadArrayElem(i)
-        case _ =>
-          // calculate index from expr
-          translateExpr(i)
-      }
+      // // Calculate index and push to stack
+      // i match {
+      //   case i: ArrayElem =>
+      //     // previous array pointer is this index
+      //     loadArrayElem(i)
+      //     addInstr(MovInstr(R10, R3))
+      //   case _ =>
+      //     // calculate index from expr
+      //     translateExpr(i)
+      //     addInstr(PopInstr(Seq(R10)))
+      // }
+
+      translateExpr(i)
 
       // Move array pointer to R3
       array_loc match {
@@ -326,8 +330,8 @@ object StatTranslator {
       array_loc = R3
     }
 
-    // Push result
-    addInstr(PushInstr(Seq(R3)))
+    // Move array pointer to OpR1 for push
+    addInstr(MovInstr(OpR1, R3))
   }
 
   /* Special convention for arrStore

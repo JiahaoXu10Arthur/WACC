@@ -4,7 +4,10 @@ import wacc.Ast._
 import wacc.Instructions._
 import wacc.CodeGen.IR._
 import wacc.CodeGen.StateTable
+import wacc.SemanticChecker.SymbolTable
 import wacc.SemanticChecker.SemanticTypes._
+
+import ExprTranslator.{translateExpr}
 
 object Utils {
   def endBlock(restoreSP: Boolean)(implicit stateT: StateTable, ir: IR): Unit = {
@@ -28,6 +31,28 @@ object Utils {
 		}
     
     addInstr(PopInstr(popFuncRegs))
+  }
+
+  /* Translate Expr and pop result to given register */
+  def translateExprTo(expr: Expr, 
+                      reg: Register)(implicit st: SymbolTable, 
+                                              stateST: StateTable, 
+                                              ir: IR) = {
+    translateExpr(expr)
+    addInstr(PopInstr(Seq(reg)))                              
+  }
+
+  /* Translate two Expr and pop them to corresponding register */
+  def translateTwoExprTo(expr1: Expr, 
+                         expr2: Expr,
+                         reg1: Register,
+                         reg2: Register)(implicit st: SymbolTable, 
+                                              stateST: StateTable, 
+                                              ir: IR) = {
+    translateExpr(expr1)
+    translateExpr(expr2)
+    addInstr(PopInstr(Seq(reg2)))
+    addInstr(PopInstr(Seq(reg1)))                                
   }
 
   /* Find variable by name in stateTable to find its location */

@@ -10,9 +10,14 @@ import IR._
 import Utils._
 
 object ExprTranslator {
+
+  val trueCond = Immediate(1)
+  val falseCond = Immediate(0)
+  val ptrSize = 4
+
   def translateExpr(
       expr: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR): Unit =
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IR): Unit = {
     expr match {
       case Add(expr1, expr2) => translateAdd(expr1, expr2)
       case Sub(expr1, expr2) => translateSub(expr1, expr2)
@@ -32,7 +37,7 @@ object ExprTranslator {
       case Not(expr)         => translateNot(expr)
       case Neg(expr)         => translateNeg(expr)
       case Len(expr)         => translateLen(expr)
-      case Ord(expr)         => translateExpr(expr)
+      case Ord(expr)         => translateExprTo(expr, OpR1)
       case Chr(expr)         => translateChr(expr)
 
       case IntLit(value)   => translateInt(value)
@@ -43,42 +48,38 @@ object ExprTranslator {
       case expr: Ident     => translateIdent(expr)
       case expr: ArrayElem => loadArrayElem(expr)
     }
+    
+    // Result will be load to OpR1, push result
+    addInstr(PushInstr(Seq(OpR1)))
+  }
 
   /* Assume Move to R8 */
   private def translateInt(value: Int)(implicit ir: IR) = {
     if (value >= 0) {
-      addInstr(MovInstr(R8, Immediate(value)))
+      addInstr(MovInstr(OpR1, Immediate(value)))
     } else {
       // use load for negative value
-      addInstr(LoadInstr(R8, Immediate(value)))
+      addInstr(LoadInstr(OpR1, Immediate(value)))
     }
-
-    addInstr(PushInstr(Seq(R8)))
   }
 
   /* Assume Move to R8 */
   private def translateBool(value: Boolean)(implicit ir: IR) = {
     value match {
-      case true  => addInstr(MovInstr(R8, Immediate(1)))
-      case false => addInstr(MovInstr(R8, Immediate(0)))
+      case true  => addInstr(MovInstr(OpR1, trueCond))
+      case false => addInstr(MovInstr(OpR1, falseCond))
     }
-
-    addInstr(PushInstr(Seq(R8)))
   }
 
   /* Assume Move to R8 */
   private def translateChar(value: Char)(implicit ir: IR) = {
-    addInstr(MovInstr(R8, Immediate(value.toInt)))
-
-    addInstr(PushInstr(Seq(R8)))
+    addInstr(MovInstr(OpR1, Immediate(value.toInt)))
   }
 
   /* Assume Move to R8 */
   private def translatePairLit()(implicit ir: IR) = {
     // null --> #0
-    addInstr(MovInstr(R8, Immediate(0)))
-
-    addInstr(PushInstr(Seq(R8)))
+    addInstr(MovInstr(OpR1, Immediate(0)))
   }
 
   /* Assume Move to R8 */
@@ -86,17 +87,15 @@ object ExprTranslator {
     val loc = findVarLoc(ident.name, stateST)
 
     loc match {
-      case loc: Register => addInstr(MovInstr(R8, loc))
+      case loc: Register => addInstr(MovInstr(OpR1, loc))
       case _             => {
         val size = sizeOfElem(checkExprType(ident))
         size match {
-          case 1 => addInstr(LoadSignedByteInstr(R8, loc))
-          case 4 => addInstr(LoadInstr(R8, loc))
+          case 1 => addInstr(LoadSignedByteInstr(OpR1, loc))
+          case 4 => addInstr(LoadInstr(OpR1, loc))
         }
       }
     }
-
-    addInstr(PushInstr(Seq(R8)))
   }
 
   /* Assume Move to R8 */
@@ -107,9 +106,7 @@ object ExprTranslator {
     // get index of this string
     val strId = findStrConstIndex(value)
 
-    addInstr(LoadInstr(R8, StrLabel(s"str$strId", value)))
-
-    addInstr(PushInstr(Seq(R8)))
+    addInstr(LoadInstr(OpR1, StrLabel(s"str$strId", value)))
   }
 
   private def translateAdd(
@@ -117,23 +114,14 @@ object ExprTranslator {
       expr2: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
 
-    translateExpr(expr1)
-    translateExpr(expr2)
+    // Translate Expr1 to OpR1, Expr2 to OpR2
+    translateTwoExprTo(expr1, expr2, OpR1, OpR2)
 
-    // Expr2 store in R9
-    addInstr(PopInstr(Seq(R9)))
-
-    // Expr1 store in R8
-    addInstr(PopInstr(Seq(R8)))
-
-    // Result store in R8
-    addInstr(AddInstr(R8, R8, R9))
+    // Result store in OpR1
+    addInstr(AddInstr(OpR1, OpR1, OpR2))
 
     // Check overflow
     translateCondBLink(VsCond, CheckOverflow)
-
-    // Push Result
-    addInstr(PushInstr(Seq(R8)))
   }
 
   private def translateSub(
@@ -141,23 +129,14 @@ object ExprTranslator {
       expr2: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
 
-    translateExpr(expr1)
-    translateExpr(expr2)
+    // Translate Expr1 to OpR1, Expr2 to OpR2
+    translateTwoExprTo(expr1, expr2, OpR1, OpR2)
 
-    // Expr2 store in R9
-    addInstr(PopInstr(Seq(R9)))
-
-    // Expr1 store in R8
-    addInstr(PopInstr(Seq(R8)))
-
-    // Result store in R8
-    addInstr(SubInstr(R8, R8, R9))
+    // Result store in OpR1
+    addInstr(SubInstr(OpR1, OpR1, OpR2))
 
     // Check overflow
     translateCondBLink(VsCond, CheckOverflow)
-
-    // Push Result
-    addInstr(PushInstr(Seq(R8)))
   }
 
   private def translateMul(
@@ -165,24 +144,15 @@ object ExprTranslator {
       expr2: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
 
-    translateExpr(expr1)
-    translateExpr(expr2)
+    // Translate Expr1 to OpR1, Expr2 to OpR2
+    translateTwoExprTo(expr1, expr2, OpR1, OpR2)
 
-    // Expr2 store in R9
-    addInstr(PopInstr(Seq(R9)))
-
-    // Expr1 store in R8
-    addInstr(PopInstr(Seq(R8)))
-
-    // Result store in R8
-    addInstr(MulInstr(R8, R9, R8, R9))
+    // Result store in OpR1
+    addInstr(MulInstr(OpR1, OpR2, OpR1, OpR2))
 
     // Check overflow
-    addInstr(CmpInstr(R9, R8, Some(ASR(31))))
+    addInstr(CmpInstr(OpR2, OpR1, Some(ASR(31))))
     translateCondBLink(NeqCond, CheckOverflow)
-
-    // Push Result
-    addInstr(PushInstr(Seq(R8)))
   }
 
   private def translateDiv(
@@ -190,14 +160,8 @@ object ExprTranslator {
       expr2: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
 
-    translateExpr(expr1)
-    translateExpr(expr2)
-
-    // Expr2 store in R1
-    addInstr(PopInstr(Seq(R1)))
-
-    // Expr1 store in R0
-    addInstr(PopInstr(Seq(R0)))
+    // Div calling convention - store in R0 and R1
+    translateTwoExprTo(expr1, expr2, R0, R1)
 
     // Check not div by 0
     addInstr(CmpInstr(R1, Immediate(0)))
@@ -206,8 +170,8 @@ object ExprTranslator {
     // Perform division
     translateBLink(DivisionLabel)
 
-    // Push result
-    addInstr(PushInstr(Seq(R0)))
+    // Move result to OpR1 for push
+    addInstr(MovInstr(OpR1, R0))
   }
 
   private def translateMod(
@@ -215,14 +179,8 @@ object ExprTranslator {
       expr2: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
 
-    translateExpr(expr1)
-    translateExpr(expr2)
-
-    // Expr2 store in R1
-    addInstr(PopInstr(Seq(R1)))
-
-    // Expr1 store in R0
-    addInstr(PopInstr(Seq(R0)))
+    // Div calling convention - store in R0 and R1
+    translateTwoExprTo(expr1, expr2, R0, R1)
 
     // Check not div by 0
     addInstr(CmpInstr(R1, Immediate(0)))
@@ -231,8 +189,8 @@ object ExprTranslator {
     // Perform division
     translateBLink(DivisionLabel)
 
-    // Push result
-    addInstr(PushInstr(Seq(R1)))
+    // Move result to OpR1 for push
+    addInstr(MovInstr(OpR1, R1))
   }
 
   private def translateCmp(expr1: Expr, expr2: Expr, trueCode: CondCode, falseCode: CondCode)(implicit
@@ -240,23 +198,16 @@ object ExprTranslator {
       stateST: StateTable,
       ir: IR
   ) = {
-    translateExpr(expr1)
-    translateExpr(expr2)
 
-    // Expr2 store in R9
-    addInstr(PopInstr(Seq(R9)))
-
-    // Expr1 store in R8
-    addInstr(PopInstr(Seq(R8)))
+    // Translate Expr1 to OpR1, Expr2 to OpR2
+    translateTwoExprTo(expr1, expr2, OpR1, OpR2)
 
     // Compare expr1, expr2
-    addInstr(CmpInstr(R8, R9))
+    addInstr(CmpInstr(OpR1, OpR2))
 
     // Two checker
-    addInstr(CondMovInstr(trueCode, R8, Immediate(1)))
-    addInstr(CondMovInstr(falseCode, R8, Immediate(0)))
-
-    addInstr(PushInstr(Seq(R8)))
+    addInstr(CondMovInstr(trueCode, OpR1, trueCond))
+    addInstr(CondMovInstr(falseCode, OpR1, falseCond))
   }
 
   private def translateAnd(
@@ -264,12 +215,11 @@ object ExprTranslator {
       expr2: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
 
-    // Expr1 store in R8
-    translateExpr(expr1)
-    addInstr(PopInstr(Seq(R8)))
+    // Expr1 store in OpR1
+    translateExprTo(expr1, OpR1)
 
     // Check if expr1 is true
-    addInstr(CmpInstr(R8, Immediate(1)))
+    addInstr(CmpInstr(OpR1, trueCond))
 
     // Allocate new branch name
     val branch_0 = JumpLabel(s"${getBranchCounter()}")
@@ -278,35 +228,30 @@ object ExprTranslator {
     // If expr1 false, shortcut to L0
     addInstr(CondBranchInstr(NeqCond, branch_0))
 
-    // Expr2 store in R9
-    translateExpr(expr2)
-    addInstr(PopInstr(Seq(R9)))
+    // Expr2 store in OpR2
+    translateExprTo(expr2, OpR2)
 
     // Check if expr2 is true
-    addInstr(CmpInstr(R9, Immediate(1)))
+    addInstr(CmpInstr(OpR2, trueCond))
 
     // .L0:
     addInstr(CreateLabel(branch_0))
 
     // If both true, true
-    addInstr(CondMovInstr(EqCond, R8, Immediate(1))) // R8 here should be loc2, but ref compiler used r8
+    addInstr(CondMovInstr(EqCond, OpR1, trueCond)) // R8 here should be loc2, but ref compiler used r8
     // If one of it false, false
-    addInstr(CondMovInstr(NeqCond, R8, Immediate(0))) // R8 here should be loc2, but ref compiler used r8
-
-    // Push result
-    addInstr(PushInstr(Seq(R8)))
+    addInstr(CondMovInstr(NeqCond, OpR1, falseCond)) // R8 here should be loc2, but ref compiler used r8
   }
 
   private def translateOr(
       expr1: Expr,
       expr2: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
-    // Expr1 store in R8
-    translateExpr(expr1)
-    addInstr(PopInstr(Seq(R8)))
+    // Expr1 store in OpR1
+    translateExprTo(expr1, OpR1)
 
     // Check if expr1 is true
-    addInstr(CmpInstr(R8, Immediate(1)))
+    addInstr(CmpInstr(OpR1, trueCond))
 
     // Allocate new branch name
     val branch_0 = JumpLabel(s"${getBranchCounter()}")
@@ -315,81 +260,60 @@ object ExprTranslator {
     // If expr1 true, shortcut to L0
     addInstr(CondBranchInstr(EqCond, branch_0))
 
-    // Expr2 store in R9
-    translateExpr(expr2)
-    addInstr(PopInstr(Seq(R9)))
+    // Expr2 store in OpR2
+    translateExprTo(expr2, OpR2)
 
     // Check if expr2 is true
-    addInstr(CmpInstr(R9, Immediate(1)))
+    addInstr(CmpInstr(OpR2, trueCond))
 
     // .L0:
     addInstr(CreateLabel(branch_0))
 
     // If either true, true
-    addInstr(CondMovInstr(EqCond, R8, Immediate(1))) // R8 here should be loc2, but ref compiler used r8
+    addInstr(CondMovInstr(EqCond, OpR1, trueCond)) // R8 here should be loc2, but ref compiler used r8
     // If both false, false
-    addInstr(CondMovInstr(NeqCond, R8, Immediate(0))) // R8 here should be loc2, but ref compiler used r8
-
-    // Push result
-    addInstr(PushInstr(Seq(R8)))
+    addInstr(CondMovInstr(NeqCond, OpR1, falseCond)) // R8 here should be loc2, but ref compiler used r8
   }
 
   private def translateNot(
       expr: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
-    // Expr store in R8
-    translateExpr(expr)
-    addInstr(PopInstr(Seq(R8)))
+    // Expr store in OpR1
+    translateExprTo(expr, OpR1)
 
     // Check expr true or false
-    addInstr(CmpInstr(R8, Immediate(1)))
-    addInstr(CondMovInstr(NeqCond, R8, Immediate(1)))
-    addInstr(CondMovInstr(EqCond, R8, Immediate(0)))
-
-    // Push result
-    addInstr(PushInstr(Seq(R8)))
+    addInstr(CmpInstr(OpR1, trueCond))
+    addInstr(CondMovInstr(NeqCond, OpR1, trueCond))
+    addInstr(CondMovInstr(EqCond, OpR1, falseCond))
   }
 
   private def translateNeg(
       expr: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+    // Expr store in OpR1
+    translateExprTo(expr, OpR1)
 
-    // Expr store in R8
-    translateExpr(expr)
-    addInstr(PopInstr(Seq(R8)))
-
-    addInstr(RsbsInstr(R8, R8, Immediate(0)))
+    addInstr(RsbsInstr(OpR1, OpR1, Immediate(0)))
     translateCondBLink(VsCond, CheckOverflow)
-
-    // Push result
-    addInstr(PushInstr(Seq(R8)))
   }
 
   private def translateLen(
       expr: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
-    // Expr store in R8
-    translateExpr(expr)
-    addInstr(PopInstr(Seq(R8)))
+    // Expr store in OpR1
+    translateExprTo(expr, OpR1)
 
-    addInstr(LoadInstr(R8, RegIntOffset(R8, -4))) // load from a[0] → len a
-
-    // Push result
-    addInstr(PushInstr(Seq(R8)))
+    addInstr(LoadInstr(OpR1, RegIntOffset(OpR1, -ptrSize))) // load from a[0] → len a
   }
 
   private def translateChr(
       expr: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
-    // Expr store in R8
-    translateExpr(expr)
-    addInstr(PopInstr(Seq(R8)))
+    // Expr store in OpR1
+    translateExprTo(expr, OpR1)
 
     // Translate to char ASCII
-    addInstr(AndInstr(R8, R8, Immediate(127)))
-
-    // Push result
-    addInstr(PushInstr(Seq(R8)))
+    addInstr(AndInstr(OpR1, OpR1, Immediate(127)))
   }
 
 }
