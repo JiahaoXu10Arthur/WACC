@@ -30,6 +30,10 @@ class StateTable(stateT: Option[StateTable]) {
     case Some(upSt) => upSt.getSavedRegs()
     case None       => List()
   }
+  var varNum = stateT match {
+    case Some(upSt) => upSt.getVarNum()
+    case None       => 0
+  }
 
   var fpPtr: Int =
     encStateTable match {
@@ -62,6 +66,10 @@ class StateTable(stateT: Option[StateTable]) {
 
   def modifySavedRegs(regs: Seq[Register]) = {
     savedRegs = regs
+  }
+
+  def modifyPushedRegNum(num: Int) = {
+    varNum = num
   }
 
   def updateParam(name: String, location: Location) = {
@@ -174,5 +182,7 @@ class StateTable(stateT: Option[StateTable]) {
   def getUsedParamRegs(): Seq[Register] = usedParamReg.toSeq
 
   def getSavedRegs(): Seq[Register] = savedRegs.toSeq
+
+  def getVarNum(): Int = varNum
   
 }

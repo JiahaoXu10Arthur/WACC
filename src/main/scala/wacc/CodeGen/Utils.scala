@@ -8,7 +8,8 @@ object Utils {
   def endBlock()(implicit stateT: StateTable, ir: IR): Unit = {
     val popFuncRegs    = Seq(FP, PC)
     val savedRegs      = stateT.getSavedRegs()
-    val stackSpace     = (savedRegs.size - variableReg.size) * 4
+    val regNum         = stateT.getVarNum()
+    val stackSpace     = (regNum - variableReg.size) * 4
 
     addInstr(MovInstr(SP, FP))
     // Add stack space if too many variables
