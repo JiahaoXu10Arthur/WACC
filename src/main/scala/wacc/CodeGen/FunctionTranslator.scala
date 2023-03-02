@@ -76,6 +76,9 @@ object FunctionTranslator {
       translateStatement(s)(s.symb, new_stateST, ir) 
       addInstr(Comment(s"Statement translated, var num ${new_stateST.getUsedRegs().size}"))
     })
+
+    // Add the ltorg tag at the end
+    addInstr(Tag(".ltorg"))
   }
 
 

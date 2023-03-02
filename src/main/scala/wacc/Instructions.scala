@@ -117,6 +117,7 @@ object Instructions {
 
   case class CreateLabel(label: Label) extends Instruction
   case class Comment(value: String) extends Instruction
+  case class Tag(name: String) extends Instruction
 
   sealed trait CondCode
   case object EqCond  extends CondCode
