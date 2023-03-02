@@ -45,7 +45,6 @@ object CodeGenerator {
       case instr: StatInstr   => assembleStat(instr)
       case instr: CreateLabel => assembleCreateLabel(instr).mkString("\n")
       case Comment(value)     => s"@$value"
-      case _                  => "@not implemented yet!"
     }
 
   private def asmLabel(label: Label): String = label match {
@@ -54,7 +53,7 @@ object CodeGenerator {
     case JumpLabel(name)       => s".L$name"
     case label: FuncLabel      => s"${label.getName}"
     case WACCFuncLabel(name)   => s"wacc_$name"
-    case _                     => s"@unsupported label creation"
+    case _                     => s"@unsupported label creation!"
   }
 
   private def asmReg(reg: Register): String = reg match {
@@ -131,9 +130,9 @@ object CodeGenerator {
 
   private def assembleExpr(instr: ExprInstr): String = instr match {
     case AddInstr(destReg, reg1, opr, shifter) =>
-      exprAsmGen("add", destReg, reg1, opr, shifter)
+      exprAsmGen("adds", destReg, reg1, opr, shifter)
     case SubInstr(destReg, reg1, opr, shifter) =>
-      exprAsmGen("sub", destReg, reg1, opr, shifter)
+      exprAsmGen("subs", destReg, reg1, opr, shifter)
     case RsbsInstr(destReg, srcReg, opr, shifter) =>
       exprAsmGen("rsbs", destReg, srcReg, opr, shifter)
     case MulInstr(destRegLo, destRegHi, reg1, reg2, shifter) =>
@@ -156,7 +155,6 @@ object CodeGenerator {
         case Some(shift) => s", ${asmShift(shift)}"
       }
       s"cmp $reg1Str, $oprStr$shiftStr"
-    case _ => "not implemented yet"
   }
 
   private def exprAsmGen(
