@@ -46,8 +46,8 @@ object FunctionTranslator {
       translateStatement(s)(s.symb, new_stateST, ir)
     }
 
-    /* Adds LTORG tag */
-    addInstr(Tag(".ltorg"))
+    // Add the ltorg tag at the end
+    addInstr(LtorgTag)
   }
 
 }

@@ -124,7 +124,16 @@ object Instructions {
 
   case class CreateLabel(label: Label) extends Instruction
   case class Comment(value: String) extends Instruction
-  case class Tag(name: String) extends Instruction
+
+  sealed class Tag(name: String) extends Instruction {
+    def getName: String = name
+  }
+
+  case object DataTag extends Tag("data")
+  case object TextTag extends Tag("text")
+  case object GlobalTag extends Tag("global main")
+  case object LtorgTag extends Tag("ltorg")
+
 
   sealed trait CondCode
   case object EqCond  extends CondCode

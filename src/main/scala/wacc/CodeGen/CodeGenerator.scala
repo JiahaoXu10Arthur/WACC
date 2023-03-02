@@ -11,14 +11,14 @@ object CodeGenerator {
     val asmFile = new File(s"$fileName.s")
     val writer  = new PrintWriter(asmFile)
     /* String constant pool generation */
-    writer.println(".data")
+    writer.println(assembleInstr(DataTag))
     for (str <- ir.strConsts) {
       val asmStrConst = assembleInstr(str)
       writer.println(asmStrConst)
     }
-    writer.println(".text")
+    writer.println(assembleInstr(TextTag))
     /* Translate instructions */
-    writer.println(".global main")
+    writer.println(assembleInstr(GlobalTag))
     for (instr <- ir.instrs) {
       val asm = assembleInstr(instr)
       writer.println(asm)
@@ -45,9 +45,9 @@ object CodeGenerator {
       case instr: StatInstr   => assembleStat(instr)
       case instr: CreateLabel => assembleCreateLabel(instr).mkString("\n")
       case Comment(value)     => s"@$value"
-      case Tag(name)          => name
-      case _                  => "@not implemented yet!"
+      case instr: Tag         => s".${instr.getName}"
     }
+
 
   private def asmLabel(label: Label): String = label match {
     case SegmentLabel(name)    => s".$name"
@@ -159,6 +159,7 @@ object CodeGenerator {
       s"cmp $reg1Str, $oprStr$shiftStr"
   }
 
+  // Generates the assembly for an expression instruction with 4 parameters
   private def exprAsmGen(
     name: String,
     destReg: Register,
@@ -194,6 +195,7 @@ object CodeGenerator {
       memoryAsmGen("ldrsb", dest, srcLoc, writeBack)
   }
 
+  // Generates the assembly for a memory instruction
   private def memoryAsmGen(
     name: String,
     reg: Register, 
