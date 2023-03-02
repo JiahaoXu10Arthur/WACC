@@ -1,6 +1,6 @@
 package wacc
 
-import parsley.{Success, Failure}
+import parsley.{ Failure, Success }
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -11,14 +11,14 @@ import wacc.CodeGen.CodeGenerator
 import wacc.Error.Errors.errorsMkString
 
 object Main {
-  private final val SUCCESS = 0
-  private final val SYNTAX_ERR = 100
-  private final val SEMANTIC_ERR = 200
-  private final val WACC_FILE_DROP_LEN = 5
+  final private val SUCCESS            = 0
+  final private val SYNTAX_ERR         = 100
+  final private val SEMANTIC_ERR       = 200
+  final private val WACC_FILE_DROP_LEN = 5
 
   def main(args: Array[String]): Unit = {
     val filename = args.head
-    val string = new String(Files.readAllBytes(Paths.get(filename)))
+    val string   = new String(Files.readAllBytes(Paths.get(filename)))
     val waccName = filename.substring(filename.lastIndexOf("/") + 1).dropRight(WACC_FILE_DROP_LEN)
 
     println("===== COMPILING =====")
@@ -26,35 +26,29 @@ object Main {
     /* Syntax Check */
     Parser.parse(string) match {
       /* Syntax check success */
-      case Success(x) => {
+      case Success(x) =>
         /* Semantic Check: keeps the symbol table */
         val (errors, st) = SemanticChecker.semanticCheck(x)
         errors match {
           /* Semantic check success */
-          case errors if errors.isEmpty => {
+          case errors if errors.isEmpty =>
             println(s"Compile ${args.head} successful!")
-
-            val ir = Translator.translate(x, st)
-
-            println(CodeGenerator.assemble(ir, waccName))
-
+            val ir   = Translator.translate(x, st)
+            val path = CodeGenerator.assemble(ir, waccName)
+            println(s"Assembly file generated at $path")
             System.exit(SUCCESS)
-          }
 
           /* Error detected, semantic error */
-          case errors => {
+          case errors =>
             println(errorsMkString(errors, filename))
             println(s"Exiting with code $SEMANTIC_ERR...")
             System.exit(SEMANTIC_ERR)
-          }
         }
-      }
       /* Syntax check failed, syntax error */
-      case Failure(err) => {
+      case Failure(err) =>
         println(errorsMkString(Seq(err), filename))
         println(s"Exiting with code $SYNTAX_ERR...")
         System.exit(SYNTAX_ERR)
-      }
     }
 
   }
