@@ -490,7 +490,7 @@ object StatTranslator {
     // Pop result to R0 for return
     addInstr(PopInstr(Seq(R0)))
 
-    endBlock()
+    endBlock(restoreSP = true)
   }
 
 
