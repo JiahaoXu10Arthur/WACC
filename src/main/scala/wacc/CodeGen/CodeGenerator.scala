@@ -16,8 +16,8 @@ object CodeGenerator {
       val asmStrConst = assembleInstr(str)
       writer.println(asmStrConst)
     }
-    writer.println(assembleInstr(TextTag))
     /* Translate instructions */
+    writer.println(assembleInstr(TextTag))
     writer.println(assembleInstr(GlobalTag))
     for (instr <- ir.instrs) {
       val asm = assembleInstr(instr)
@@ -25,12 +25,10 @@ object CodeGenerator {
     }
 
     /* Translate branchlink widgets */
-    for (instrs <- ir.bLInstrs)
-      for (instr <- instrs) {
+    for (instr <- ir.bLInstrs.flatten) {
         val asm = assembleInstr(instr)
         writer.println(asm)
-      }
-
+    }
     writer.close()
     asmFile.createNewFile()
     asmFile.getAbsolutePath()

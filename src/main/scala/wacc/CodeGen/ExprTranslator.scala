@@ -11,9 +11,13 @@ import Utils._
 
 object ExprTranslator {
 
-  val trueCond = Immediate(1)
-  val falseCond = Immediate(0)
-  val ptrSize = 4
+  private final val TrueImm = Immediate(1)
+  private final val FalseImm = Immediate(0)
+  private final val NullImm = Immediate(0)
+  private final val ChrImm = Immediate(127)
+  private final val PtrSize = 4
+  private final val CharSize = 1
+  private final val IntSize = 4
 
   def translateExpr(
       expr: Expr
@@ -66,8 +70,8 @@ object ExprTranslator {
   /* Assume Move to R8 */
   private def translateBool(value: Boolean)(implicit ir: IR) = {
     value match {
-      case true  => addInstr(MovInstr(OpR1, trueCond))
-      case false => addInstr(MovInstr(OpR1, falseCond))
+      case true  => addInstr(MovInstr(OpR1, TrueImm))
+      case false => addInstr(MovInstr(OpR1, FalseImm))
     }
   }
 
@@ -78,8 +82,7 @@ object ExprTranslator {
 
   /* Assume Move to R8 */
   private def translatePairLit()(implicit ir: IR) = {
-    // null --> #0
-    addInstr(MovInstr(OpR1, Immediate(0)))
+    addInstr(MovInstr(OpR1, NullImm))
   }
 
   /* Assume Move to R8 */
@@ -91,8 +94,8 @@ object ExprTranslator {
       case _             => {
         val size = sizeOfElem(checkExprType(ident))
         size match {
-          case 1 => addInstr(LoadSignedByteInstr(OpR1, loc))
-          case 4 => addInstr(LoadInstr(OpR1, loc))
+          case CharSize => addInstr(LoadSignedByteInstr(OpR1, loc))
+          case _        => addInstr(LoadInstr(OpR1, loc))
         }
       }
     }
@@ -151,7 +154,7 @@ object ExprTranslator {
     addInstr(MulInstr(OpR1, OpR2, OpR1, OpR2))
 
     // Check overflow
-    addInstr(CmpInstr(OpR2, OpR1, Some(ASR(31))))
+    addInstr(CmpInstr(OpR2, OpR1, Some(ASR(31)))) //TODO: What is 31?
     translateCondBLink(NeqCond, CheckOverflow)
   }
 
@@ -163,7 +166,7 @@ object ExprTranslator {
     // Div calling convention - store in R0 and R1
     translateTwoExprTo(expr1, expr2, R0, R1)
 
-    // Check not div by 0
+    // Division by 0 check
     addInstr(CmpInstr(R1, Immediate(0)))
     translateCondBLink(EqCond, CheckDivZero)
 
@@ -182,7 +185,7 @@ object ExprTranslator {
     // Div calling convention - store in R0 and R1
     translateTwoExprTo(expr1, expr2, R0, R1)
 
-    // Check not div by 0
+    // Divison by 0 check
     addInstr(CmpInstr(R1, Immediate(0)))
     translateCondBLink(EqCond, CheckDivZero)
 
@@ -206,8 +209,8 @@ object ExprTranslator {
     addInstr(CmpInstr(OpR1, OpR2))
 
     // Two checker
-    addInstr(CondMovInstr(trueCode, OpR1, trueCond))
-    addInstr(CondMovInstr(falseCode, OpR1, falseCond))
+    addInstr(CondMovInstr(trueCode, OpR1, TrueImm))
+    addInstr(CondMovInstr(falseCode, OpR1, FalseImm))
   }
 
   private def translateAnd(
@@ -219,7 +222,7 @@ object ExprTranslator {
     translateExprTo(expr1, OpR1)
 
     // Check if expr1 is true
-    addInstr(CmpInstr(OpR1, trueCond))
+    addInstr(CmpInstr(OpR1, TrueImm))
 
     // Allocate new branch name
     val branch_0 = JumpLabel(s"${getBranchCounter()}")
@@ -232,15 +235,15 @@ object ExprTranslator {
     translateExprTo(expr2, OpR2)
 
     // Check if expr2 is true
-    addInstr(CmpInstr(OpR2, trueCond))
+    addInstr(CmpInstr(OpR2, TrueImm))
 
     // .L0:
     addInstr(CreateLabel(branch_0))
 
     // If both true, true
-    addInstr(CondMovInstr(EqCond, OpR1, trueCond)) // R8 here should be loc2, but ref compiler used r8
+    addInstr(CondMovInstr(EqCond, OpR1, TrueImm)) // R8 here should be loc2, but ref compiler used r8
     // If one of it false, false
-    addInstr(CondMovInstr(NeqCond, OpR1, falseCond)) // R8 here should be loc2, but ref compiler used r8
+    addInstr(CondMovInstr(NeqCond, OpR1, FalseImm)) // R8 here should be loc2, but ref compiler used r8
   }
 
   private def translateOr(
@@ -251,7 +254,7 @@ object ExprTranslator {
     translateExprTo(expr1, OpR1)
 
     // Check if expr1 is true
-    addInstr(CmpInstr(OpR1, trueCond))
+    addInstr(CmpInstr(OpR1, TrueImm))
 
     // Allocate new branch name
     val branch_0 = JumpLabel(s"${getBranchCounter()}")
@@ -264,15 +267,15 @@ object ExprTranslator {
     translateExprTo(expr2, OpR2)
 
     // Check if expr2 is true
-    addInstr(CmpInstr(OpR2, trueCond))
+    addInstr(CmpInstr(OpR2, TrueImm))
 
     // .L0:
     addInstr(CreateLabel(branch_0))
 
     // If either true, true
-    addInstr(CondMovInstr(EqCond, OpR1, trueCond)) // R8 here should be loc2, but ref compiler used r8
+    addInstr(CondMovInstr(EqCond, OpR1, TrueImm)) // R8 here should be loc2, but ref compiler used r8
     // If both false, false
-    addInstr(CondMovInstr(NeqCond, OpR1, falseCond)) // R8 here should be loc2, but ref compiler used r8
+    addInstr(CondMovInstr(NeqCond, OpR1, FalseImm)) // R8 here should be loc2, but ref compiler used r8
   }
 
   private def translateNot(
@@ -282,9 +285,9 @@ object ExprTranslator {
     translateExprTo(expr, OpR1)
 
     // Check expr true or false
-    addInstr(CmpInstr(OpR1, trueCond))
-    addInstr(CondMovInstr(NeqCond, OpR1, trueCond))
-    addInstr(CondMovInstr(EqCond, OpR1, falseCond))
+    addInstr(CmpInstr(OpR1, TrueImm))
+    addInstr(CondMovInstr(NeqCond, OpR1, TrueImm))
+    addInstr(CondMovInstr(EqCond, OpR1, FalseImm))
   }
 
   private def translateNeg(
@@ -303,7 +306,7 @@ object ExprTranslator {
     // Expr store in OpR1
     translateExprTo(expr, OpR1)
 
-    addInstr(LoadInstr(OpR1, RegIntOffset(OpR1, -ptrSize))) // load from a[0] → len a
+    addInstr(LoadInstr(OpR1, RegIntOffset(OpR1, -PtrSize))) // load from a[0] → len a
   }
 
   private def translateChr(
@@ -313,7 +316,7 @@ object ExprTranslator {
     translateExprTo(expr, OpR1)
 
     // Translate to char ASCII
-    addInstr(AndInstr(OpR1, OpR1, Immediate(127)))
+    addInstr(AndInstr(OpR1, OpR1, ChrImm))
   }
 
 }

@@ -11,14 +11,12 @@ import ExprTranslator.{translateExpr}
 
 object Utils {
   def calculateSaveRegs(varNum: Int): Seq[Register] = {
-    var saveRegs: Seq[Register] = Seq()
     if (varNum <= variableReg.size) {
-      saveRegs = (0 until varNum).map(i => variableReg(i))
+      (0 until varNum).map(i => variableReg(i))
     }
     else {
-      saveRegs = variableReg
+      variableReg
     }
-    saveRegs
   }
 
   def beginBlock()(implicit stateT: StateTable, ir: IR): Unit = {

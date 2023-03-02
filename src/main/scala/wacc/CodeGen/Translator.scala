@@ -11,37 +11,33 @@ import Utils.{beginBlock, endBlock, calculateSaveRegs}
 
 object Translator {
 
+  private final val DefaultExitCode = 0
   implicit var branchCounter = 0
 
   def translate(p: Program, mainST: SymbolTable): IR = {
     // Initialize implicit value
-    implicit val ir      = new IR()
-    branchCounter = 0
-
-    // Main:
-    addInstr(CreateLabel(Main))
+    implicit val ir = new IR()
     val varNum = mainST.findAllVarNum()
     val varRegs = calculateSaveRegs(varNum)
     val pushRegs = varRegs ++ reservedReg
+    branchCounter = 0
 
     /* Update state table */
     implicit val stateST = new StateTable(None)
     stateST.modifySavedRegs(pushRegs)
     stateST.modifyVarNum(varNum)
 
+    /* Translates Main body */
+    addInstr(CreateLabel(Main))
     beginBlock()
-
-    // Translate Main
     p.stats.foreach(s => translateStatement(s)(s.symb, stateST, ir))
-
-    // Mov return code 0
-    addInstr(MovInstr(R0, Immediate(0)))
-
+    addInstr(MovInstr(R0, Immediate(DefaultExitCode)))
     endBlock(restoreSP = false)
 
-    // Firstly reading the headeres of the functions
+    /* Translate functions */
     p.funcs.foreach(f => translateFunction(f))
 
+    /* Return the intermediate representation for code generation */
     returnIR()
   }
 }
