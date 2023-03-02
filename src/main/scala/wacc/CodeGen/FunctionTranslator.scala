@@ -12,6 +12,8 @@ object FunctionTranslator {
   def translateFunction(
       func: Func
   )(implicit ir: IR): Unit = {
+    val ptrSize = 4
+
     val pushFuncRegs = Seq(FP, LR)
     val varNum       = func.symb.findAllVarNum()
     val varRegs      = calculateSaveRegs(varNum)
@@ -22,11 +24,13 @@ object FunctionTranslator {
     new_stateST.modifySavedRegs(varRegs)
     new_stateST.modifyVarNum(varNum)
 
-    // Store parameter
     // First 3 parameters -> R0, R1, R2
     // More parameters -> On stack
-    val para_len = func.params.size
-    new_stateST.updateParamPtr((pushedRegNum + para_len - 4) * 4)
+    val paraNum = func.params.size
+    // Caculate how many stack space needed for more parameters
+    new_stateST.updateParamPtr((pushedRegNum + paraNum - (paramReg.size + 1)) * ptrSize)
+
+    // Store function parameters
     func.params.foreach { param =>
       val loc = new_stateST.nextParamLocation()
       new_stateST.addParam(param.ident.name, loc)

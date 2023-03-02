@@ -60,8 +60,6 @@ object Instructions {
   val Param3 = R2
 
   /* Array/Pair registers */
-  val APtr = R3  // Array pointer
-  val AIdx = R10 // Array index 
   val MPtr = R12 // Memory allocation pointer
 
   val paramReg    = List(R0, R1, R2)
