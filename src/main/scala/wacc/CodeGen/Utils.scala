@@ -7,6 +7,41 @@ import wacc.CodeGen.StateTable
 import wacc.SemanticChecker.SemanticTypes._
 
 object Utils {
+  def calculateSaveRegs(varNum: Int): Seq[Register] = {
+    var saveRegs: Seq[Register] = Seq()
+    if (varNum <= variableReg.size) {
+      saveRegs = (0 until varNum).map(i => variableReg(i))
+    }
+    else {
+      saveRegs = variableReg
+    }
+    saveRegs
+  }
+
+  def beginBlock()(implicit stateT: StateTable, ir: IR): Unit = {
+    val pushFuncRegs = Seq(FP, LR)
+    val varRegs      = stateT.getSavedRegs()
+    val varNum       = stateT.getVarNum()
+
+    // Push register
+    addInstr(PushInstr(pushFuncRegs))
+    if (!varRegs.isEmpty) {
+      addInstr(PushInstr(varRegs))
+    }
+    
+    addInstr(MovInstr(FP, SP))
+
+    // variable stack space
+    val stackSpace = (varNum - variableReg.size) * 4
+    // Add stack space if too many variables
+    if (stackSpace > 0) {
+      addInstr(SubInstr(SP, SP, Immediate(stackSpace)))
+      // Update stateTable fp pointer
+      stateT.updateFPPtr(stackSpace * -1)
+    }
+
+  }
+
   def endBlock(restoreSP: Boolean)(implicit stateT: StateTable, ir: IR): Unit = {
     val popFuncRegs    = Seq(FP, PC)
     val savedRegs      = stateT.getSavedRegs()
