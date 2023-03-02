@@ -8,6 +8,7 @@ import wacc.SemanticChecker.SymbolTable
 import StatTranslator._
 import FunctionTranslator._
 import IR._
+import Utils.endBlock
 
 object Translator {
 
@@ -22,7 +23,6 @@ object Translator {
     addInstr(CreateLabel(Main))
 
 		val pushFuncRegs   = Seq(FP, LR)
-    val popFuncRegs    = Seq(FP, PC)
     val regsForUse = new ListBuffer[Register]()
 
     val varNum = mainST.findAllVarNum()
@@ -52,20 +52,17 @@ object Translator {
       stateST.updateFPPtr(stackSpace * -1)
     }
 
+    /* Update state table */
+    stateST.modifySavedRegs(pushRegs)
+    stateST.modifyVarNum(varNum)
+
     // Translate Main
     p.stats.foreach(s => translateStatement(s)(s.symb, stateST, ir))
-
-    // Add stack space if too many variables
-    if (stackSpace > 0) {
-      addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
-    }
 
     // Mov return code 0
     addInstr(MovInstr(R0, Immediate(0)))
 
-    // Pop register
-    addInstr(PopInstr(pushRegs))
-    addInstr(PopInstr(popFuncRegs))
+    endBlock(restoreSP = false)
 
     // Firstly reading the headeres of the functions
     p.funcs.foreach(f => translateFunction(f))

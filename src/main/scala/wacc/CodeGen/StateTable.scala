@@ -68,7 +68,7 @@ class StateTable(stateT: Option[StateTable]) {
     savedRegs = regs
   }
 
-  def modifyPushedRegNum(num: Int) = {
+  def modifyVarNum(num: Int) = {
     varNum = num
   }
 

@@ -45,7 +45,7 @@ object FunctionTranslator {
 		// Function does not inherit main's state table
 		val new_stateST = new StateTable(None)
     new_stateST.modifySavedRegs(regsForUse.toSeq)
-    new_stateST.modifyPushedRegNum(regNum)
+    new_stateST.modifyVarNum(regNum)
 
     // variable stack space
     val stackSpace = (regNum - variableReg.size) * 4

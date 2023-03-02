@@ -7,13 +7,17 @@ import wacc.CodeGen.StateTable
 import wacc.SemanticChecker.SemanticTypes._
 
 object Utils {
-  def endBlock()(implicit stateT: StateTable, ir: IR): Unit = {
+  def endBlock(restoreSP: Boolean)(implicit stateT: StateTable, ir: IR): Unit = {
     val popFuncRegs    = Seq(FP, PC)
     val savedRegs      = stateT.getSavedRegs()
     val regNum         = stateT.getVarNum()
     val stackSpace     = (regNum - variableReg.size) * 4
 
-    addInstr(MovInstr(SP, FP))
+    if (restoreSP) {
+      // Restore SP
+      addInstr(MovInstr(SP, FP))
+    }
+    
     // Add stack space if too many variables
     if (stackSpace > 0) {
       addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
