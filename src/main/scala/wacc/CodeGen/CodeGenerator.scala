@@ -11,14 +11,14 @@ object CodeGenerator {
     val asmFile = new File(s"$fileName.s")
     val writer  = new PrintWriter(asmFile)
     /* String constant pool generation */
-    writer.println(".data")
+    writer.println(DataTag)
     for (str <- ir.strConsts) {
       val asmStrConst = assembleInstr(str)
       writer.println(asmStrConst)
     }
-    writer.println(".text")
+    writer.println(assembleInstr(TextTag))
     /* Translate instructions */
-    writer.println(".global main")
+    writer.println(assembleTag(GlobalTag))
     for (instr <- ir.instrs) {
       val asm = assembleInstr(instr)
       writer.println(asm)
@@ -45,9 +45,10 @@ object CodeGenerator {
       case instr: StatInstr   => assembleStat(instr)
       case instr: CreateLabel => assembleCreateLabel(instr).mkString("\n")
       case Comment(value)     => s"@$value"
-      case Tag(name)          => name
-      case _                  => "@not implemented yet!"
+      case instr: Tag         => assembleTag(instr)
     }
+
+  private def assembleTag(tag: Tag): String = s".${tag.getName}"
 
   private def asmLabel(label: Label): String = label match {
     case SegmentLabel(name)    => s".$name"
