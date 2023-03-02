@@ -69,12 +69,10 @@ object FunctionTranslator {
     }
 		
     val paramRegs = new_stateST.getUsedParamRegs()
-    addInstr(Comment(s"Parameter nums ${paramRegs.size}"))
 
 		// Translate function body
 		func.stats.foreach(s => {
       translateStatement(s)(s.symb, new_stateST, ir) 
-      addInstr(Comment(s"Statement translated, var num ${new_stateST.getUsedRegs().size}"))
     })
 
     // Add the ltorg tag at the end

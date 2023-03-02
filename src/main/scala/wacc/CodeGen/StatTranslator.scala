@@ -84,7 +84,6 @@ object StatTranslator {
 
     // Add the location of variable to stateTable
     stateST.add(ident.name, loc)
-    addInstr(Comment(s"Declared variable: current variables num ${stateST.getUsedRegs().size}"))
   }
 
   private def declareArrayLit(
@@ -388,7 +387,6 @@ object StatTranslator {
     val para_len = callValue.args.size
     var index    = 0
 
-    addInstr(Comment("start of translate call"))
     // If this is inside a function with parameter, push caller saved regs first
     val usedParam = stateST.getUsedParamRegs()
     if (!usedParam.isEmpty) {
@@ -447,7 +445,6 @@ object StatTranslator {
     }
 
     addInstr(PushInstr(Seq(R8)))
-    addInstr(Comment("end of translate call"))
   }
 
   private def translateAssign(target: Lvalue, newValue: Rvalue)(implicit
@@ -500,8 +497,6 @@ object StatTranslator {
     translateExpr(expr)
     addInstr(PopInstr(Seq(R8)))
 
-    addInstr(Comment("In translate print, after translating expression"))
-
     // Caller save parameter registers
     callerSavePush()
 
@@ -520,8 +515,6 @@ object StatTranslator {
 
     translateBLink(printType)
     callerSavePop()
-
-    addInstr(Comment("Done translating print"))
   }
 
   /* Println will print value in R0 */
@@ -680,7 +673,6 @@ object StatTranslator {
       stateST: StateTable,
       ir: IR
   ) = {
-    addInstr(Comment("Start of translate while"))
     // Allocate new branch name
     val branch_0 = JumpLabel(s"${getBranchCounter()}")
     incBranchCounter()
