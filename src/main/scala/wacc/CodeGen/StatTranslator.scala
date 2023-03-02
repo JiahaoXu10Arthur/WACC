@@ -2,8 +2,8 @@ package wacc.CodeGen
 
 import wacc.Ast._
 import wacc.SemanticChecker.SymbolTable
-import wacc.Instructions._
 import wacc.SemanticChecker.SemanticTypes._
+import wacc.Instructions._
 
 import ExprTranslator._
 import IR._
@@ -52,28 +52,6 @@ object StatTranslator {
 
     addInstr(BranchLinkInstr(blName))
   }
-
-  /* Find variable by name in stateTable to find its location */
-  def findVarLoc(identifier: String, stateST: StateTable): Location =
-    stateST.lookUpAll(identifier) match {
-      case Some(location) => location
-      case _              => null
-    }
-
-  /* Find variable by name in stateTable to find its location */
-  def findLvalueLoc(lvalue: Lvalue, stateST: StateTable): Location =
-    lvalue match {
-      case Ident(name)             => findVarLoc(name, stateST)
-      case ArrayElem(ident, index) => findVarLoc(ident.name, stateST)
-      case PairElem(index, lvalue) => findLvalueLoc(lvalue, stateST)
-    }
-
-  def sizeOfElem(elemType: Type): Int =
-    elemType match {
-      case BoolType() => 1
-      case CharType() => 1
-      case _          => 4
-    }
 
   private def translateDeclare(ident: Ident, initValue: Rvalue)(implicit
       st: SymbolTable,
@@ -299,14 +277,6 @@ object StatTranslator {
     // Move assign value to pointer
     addInstr(StoreInstr(R8, RegIntOffset(R9, 0)))
   }
-
-  def getArrayElem(
-      arrayValue: ArrayElem
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {}
-
-  def getArrayElemPointer(
-      arrayValue: ArrayElem
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {}
 
   /* Special convention for arrLoad
      R3: Array pointer

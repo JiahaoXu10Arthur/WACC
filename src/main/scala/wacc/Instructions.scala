@@ -49,11 +49,20 @@ object Instructions {
   val LR  = R14
   val PC  = R15
 
+  /* Value storage register */
+  val OpRet = R0 // For branchLink convention
+  val OpR1  = R8
+  val OpR2  = R9
+
+  /* Parameter storage register */
+  val Param1 = R0
+  val Param2 = R1
+  val Param3 = R2
+
   /* Array/Pair registers */
   val APtr = R3  // Array pointer
   val AIdx = R10 // Array index 
   val MPtr = R12 // Memory allocation pointer
-
 
   val paramReg    = List(R0, R1, R2)
   val variableReg = List(R4, R5, R6, R7)

@@ -7,6 +7,7 @@ import wacc.Instructions._
 
 import StatTranslator._
 import IR._
+import Utils._
 
 object ExprTranslator {
   def translateExpr(
