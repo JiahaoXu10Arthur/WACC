@@ -131,32 +131,11 @@ object CodeGenerator {
 
   private def assembleExpr(instr: ExprInstr): String = instr match {
     case AddInstr(destReg, reg1, opr, shifter) =>
-      val destStr = asmReg(destReg)
-      val reg1Str = asmReg(reg1)
-      val oprStr  = asmOp(opr)
-      val shiftStr = shifter match {
-        case None        => ""
-        case Some(shift) => s", ${asmShift(shift)}"
-      }
-      s"adds $destStr, $reg1Str, $oprStr$shiftStr"
+      exprAsmGen("add", destReg, reg1, opr, shifter)
     case SubInstr(destReg, reg1, opr, shifter) =>
-      val destStr = asmReg(destReg)
-      val reg1Str = asmReg(reg1)
-      val oprStr  = asmOp(opr)
-      val shiftStr = shifter match {
-        case None        => ""
-        case Some(shift) => s", ${asmShift(shift)}"
-      }
-      s"subs $destStr, $reg1Str, $oprStr$shiftStr"
+      exprAsmGen("sub", destReg, reg1, opr, shifter)
     case RsbsInstr(destReg, srcReg, opr, shifter) =>
-      val destStr = asmReg(destReg)
-      val srcStr  = asmReg(srcReg)
-      val oprStr  = asmOp(opr)
-      val shiftStr = shifter match {
-        case None        => ""
-        case Some(shift) => s", ${asmShift(shift)}"
-      }
-      s"rsbs $destStr, $srcStr, $oprStr$shiftStr"
+      exprAsmGen("rsbs", destReg, srcReg, opr, shifter)
     case MulInstr(destRegLo, destRegHi, reg1, reg2, shifter) =>
       val destLoStr = asmReg(destRegLo)
       val destHiStr = asmReg(destRegHi)
@@ -168,14 +147,7 @@ object CodeGenerator {
       }
       s"smull $destLoStr, $destHiStr, $reg1Str, $reg2Str$shiftStr"
     case AndInstr(destReg, reg1, opr, shifter) =>
-      val destStr = asmReg(destReg)
-      val reg1Str = asmReg(reg1)
-      val oprStr  = asmOp(opr)
-      val shiftStr = shifter match {
-        case None        => ""
-        case Some(shift) => s", ${asmShift(shift)}"
-      }
-      s"and $destStr, $reg1Str, $oprStr$shiftStr"
+      exprAsmGen("and", destReg, reg1, opr, shifter)
     case CmpInstr(reg1, opr, shifter) =>
       val reg1Str = asmReg(reg1)
       val oprStr  = asmOp(opr)
@@ -187,6 +159,23 @@ object CodeGenerator {
     case _ => "not implemented yet"
   }
 
+  private def exprAsmGen(
+    name: String,
+    destReg: Register,
+    srcReg: Register,
+    opr: Operand,
+    shifter: Option[Shifter]): String = {
+
+    val destStr = asmReg(destReg)
+    val srcStr  = asmReg(srcReg)
+    val oprStr  = asmOp(opr)
+    val shiftStr = shifter match {
+      case None        => ""
+      case Some(shift) => s", ${asmShift(shift)}"
+    }
+    s"$name $destStr, $srcStr, $oprStr$shiftStr"
+  }
+
   private def assembleJump(instr: JumpInstr): String = instr match {
     case BranchLinkInstr(label)           => s"bl ${asmLabel(label)}"
     case BranchInstr(label)               => s"b ${asmLabel(label)}"
@@ -196,17 +185,22 @@ object CodeGenerator {
 
   private def assembleMemory(instr: MemoryInstr): String = instr match {
     case StoreInstr(srcReg, destLoc, wb) =>
-      val wbStr = if (wb) "!" else ""
-      s"str ${asmReg(srcReg)}, ${asmMemOp(destLoc)}$wbStr"
+      memoryAsmGen("str", srcReg, destLoc, wb)
     case StoreByteInstr(srcReg, destLoc, writeBack) =>
-      val wbStr = if (writeBack) "!" else ""
-      s"strb ${asmReg(srcReg)}, ${asmMemOp(destLoc)}$wbStr"
+      memoryAsmGen("strb", srcReg, destLoc, writeBack)
     case LoadInstr(dest, srcLoc, wb) =>
-      val wbStr = if (wb) "!" else ""
-      s"ldr ${asmReg(dest)}, ${asmMemOp(srcLoc)}$wbStr"
+      memoryAsmGen("ldr", dest, srcLoc, wb)
     case LoadSignedByteInstr(dest, srcLoc, writeBack) =>
+      memoryAsmGen("ldrsb", dest, srcLoc, writeBack)
+  }
+
+  private def memoryAsmGen(
+    name: String,
+    reg: Register, 
+    opr: Operand, 
+    writeBack: Boolean): String = {
       val wbStr = if (writeBack) "!" else ""
-      s"ldrsb ${asmReg(dest)}, ${asmMemOp(srcLoc)}$wbStr"
+      s"$name ${asmReg(reg)}, ${asmMemOp(opr)}$wbStr"
   }
 
   private def asmMemOp(op: Operand): String = op match {
@@ -225,7 +219,8 @@ object CodeGenerator {
   private def assembleStat(instr: StatInstr): String = instr match {
     case MovInstr(destReg, opr@Immediate(n)) if n > MovImmMax =>
       s"ldr ${asmReg(destReg)}, ${asmMemOp(opr)}"
-    case MovInstr(destReg, opr) => s"mov ${asmReg(destReg)}, ${asmOp(opr)}"
+    case MovInstr(destReg, opr) => 
+      s"mov ${asmReg(destReg)}, ${asmOp(opr)}"
     case CondMovInstr(cond, destReg, opr) =>
       s"mov${asmCond(cond)} ${asmReg(destReg)}, ${asmOp(opr)}"
   }
