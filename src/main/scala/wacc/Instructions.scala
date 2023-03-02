@@ -49,13 +49,17 @@ object Instructions {
   val LR  = R14
   val PC  = R15
 
+  /* Array/Pair registers */
+  val APtr = R3  // Array pointer
+  val AIdx = R10 // Array index 
+  val MPtr = R12 // Memory allocation pointer
+
+
   val paramReg    = List(R0, R1, R2)
   val variableReg = List(R4, R5, R6, R7)
   val reservedReg = List(R8, R10, R12)
 
-  sealed trait Instruction {
-    def assemble(): String = "not implemented yet"
-  }
+  sealed trait Instruction
 
   sealed trait ExprInstr extends Instruction
   case class AddInstr(
