@@ -11,7 +11,7 @@ object CodeGenerator {
     val asmFile = new File(s"$fileName.s")
     val writer  = new PrintWriter(asmFile)
     /* String constant pool generation */
-    writer.println(DataTag)
+    writer.println(assembleInstr(DataTag))
     for (str <- ir.strConsts) {
       val asmStrConst = assembleInstr(str)
       writer.println(asmStrConst)
