@@ -10,7 +10,7 @@ package wacc.IntegrationTests
  import wacc.SyntaxChecker.Parser
  import wacc.SemanticChecker.SemanticChecker
  import wacc.CodeGen.Translator
- import wacc.CodeGen.CodeGenerator
+ import wacc.CodeGen.ArmAsmGenerator
  import wacc.Utils.BackEndUtils._
  
  class IntegrationTest extends AnyWordSpec {
@@ -59,7 +59,7 @@ package wacc.IntegrationTests
                     errors shouldBe empty
                     val ir = Translator.translate(x, st)
                     val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
-                    CodeGenerator.assemble(ir, waccName)
+                    ArmAsmGenerator.assemble(ir, waccName)
                     val (expectOutput, expectExit) = getExpects(waccName)
                     val (_output, exit) = getOutputAndExit(waccName)
                     val output = replaceAddrs(_output,expectOutput)
