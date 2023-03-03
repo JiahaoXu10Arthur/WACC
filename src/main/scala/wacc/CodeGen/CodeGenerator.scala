@@ -5,7 +5,6 @@ import wacc.Instructions._
 import wacc.CodeGen.IR
 
 object CodeGenerator {
-  private final val MovImmMax = 255
 
   def assemble(ir: IR, fileName: String): String = {
     val asmFile = new File(s"$fileName.s")

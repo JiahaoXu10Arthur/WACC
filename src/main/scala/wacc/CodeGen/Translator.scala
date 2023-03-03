@@ -10,8 +10,6 @@ import IR._
 import Utils.{beginBlock, endBlock, calculateSaveRegs}
 
 object Translator {
-
-  private final val DefaultExitCode = 0
   implicit var branchCounter = 0
 
   def translate(p: Program, mainST: SymbolTable): IR = {
@@ -31,7 +29,7 @@ object Translator {
     addInstr(CreateLabel(Main))
     beginBlock()
     p.stats.foreach(s => translateStatement(s)(s.symb, stateST, ir))
-    addInstr(MovInstr(R0, Immediate(DefaultExitCode)))
+    addInstr(MovInstr(R0, DefaultExitCodeImm))
     endBlock(restoreSP = false)
 
     /* Translate functions */

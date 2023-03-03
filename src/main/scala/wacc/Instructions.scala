@@ -66,6 +66,28 @@ object Instructions {
   val variableReg = List(R4, R5, R6, R7)
   val reservedReg = List(R8, R10, R12)
 
+  /* Constant */
+  final val TrueImm = Immediate(1)
+  final val FalseImm = Immediate(0)
+  final val NullImm = Immediate(0)
+  final val ChrImm = Immediate(127)
+  final val MulShiftConst = ASR(31)
+  final val FFlushStreamImm = Immediate(0)
+  final val DefaultExitCodeImm = Immediate(0)
+  final val ErrorExitCode = Immediate(255)
+  
+
+  final val ByteSize = 1
+  final val PtrSize = 4
+  final val DefaultSize = 4
+  final val PairSize = 8
+  final val PairFstIdx = 0
+  final val PairSndIdx = 4
+  
+  final val ArrayLenOffset = -4
+  final val MovImmMax = 255
+  
+  
   sealed trait Instruction
 
   sealed trait ExprInstr extends Instruction

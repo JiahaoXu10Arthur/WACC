@@ -11,14 +11,6 @@ import Utils._
 
 object ExprTranslator {
 
-  private final val TrueImm = Immediate(1)
-  private final val FalseImm = Immediate(0)
-  private final val NullImm = Immediate(0)
-  private final val ChrImm = Immediate(127)
-  private final val PtrSize = 4
-  private final val CharSize = 1
-  private final val IntSize = 4
-
   def translateExpr(
       expr: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR): Unit = {
@@ -88,17 +80,9 @@ object ExprTranslator {
   /* Assume Move to R8 */
   private def translateIdent(ident: Ident)(implicit st: SymbolTable, ir: IR, stateST: StateTable) = {
     val loc = findVarLoc(ident.name, stateST)
-
-    loc match {
-      case loc: Register => addInstr(MovInstr(OpR1, loc))
-      case _             => {
-        val size = sizeOfElem(checkExprType(ident))
-        size match {
-          case CharSize => addInstr(LoadSignedByteInstr(OpR1, loc))
-          case _        => addInstr(LoadInstr(OpR1, loc))
-        }
-      }
-    }
+    val size = sizeOfElem(checkExprType(ident))
+    // Load value from loc
+    locMovLoad(size, OpR1, loc)
   }
 
   /* Assume Move to R8 */
@@ -154,7 +138,7 @@ object ExprTranslator {
     addInstr(MulInstr(OpR1, OpR2, OpR1, OpR2))
 
     // Check overflow
-    addInstr(CmpInstr(OpR2, OpR1, Some(ASR(31)))) //TODO: What is 31?
+    addInstr(CmpInstr(OpR2, OpR1, Some(MulShiftConst))) //TODO: What is 31?
     translateCondBLink(NeqCond, CheckOverflow)
   }
 
@@ -318,5 +302,4 @@ object ExprTranslator {
     // Translate to char ASCII
     addInstr(AndInstr(OpR1, OpR1, ChrImm))
   }
-
 }
