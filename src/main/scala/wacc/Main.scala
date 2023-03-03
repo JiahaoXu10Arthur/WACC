@@ -6,8 +6,7 @@ import java.nio.file.Paths
 
 import wacc.SyntaxChecker.Parser
 import wacc.SemanticChecker.SemanticChecker
-import wacc.CodeGen.Translator
-import wacc.CodeGen.CodeGenerator
+import wacc.CodeGen.CodeGenerator.generateAssembly
 import wacc.Error.Errors.errorsMkString
 
 object Main {
@@ -26,15 +25,14 @@ object Main {
     /* Syntax Check */
     Parser.parse(string) match {
       /* Syntax check success */
-      case Success(x) =>
+      case Success(ast) =>
         /* Semantic Check: keeps the symbol table */
-        val (errors, st) = SemanticChecker.semanticCheck(x)
+        val (errors, st) = SemanticChecker.semanticCheck(ast)
         errors match {
           /* Semantic check success */
           case errors if errors.isEmpty =>
             println(s"Compile ${args.head} successful!")
-            val ir   = Translator.translate(x, st)
-            val path = CodeGenerator.assemble(ir, waccName)
+            val path = generateAssembly(ast, st, waccName)
             println(s"Assembly file generated at $path")
             System.exit(SUCCESS)
 

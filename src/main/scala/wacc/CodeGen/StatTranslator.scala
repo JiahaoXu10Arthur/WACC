@@ -6,7 +6,7 @@ import wacc.SemanticChecker.SemanticTypes._
 import wacc.Instructions._
 
 import ExprTranslator._
-import IR._
+import IRBuilder._
 import Utils._
 
 object StatTranslator {
@@ -19,7 +19,7 @@ object StatTranslator {
 
   def translateStatement(
       stat: Stat
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR): Unit =
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit =
     stat match {
       case Declare(type1, ident, initValue) => translateDeclare(ident, initValue)
       case Assign(target, newValue)         => translateAssign(target, newValue)
@@ -36,7 +36,7 @@ object StatTranslator {
     }
 
   /* Translate for malloc part */
-  def translateMalloc(size: Int)(implicit ir: IR) = {
+  def translateMalloc(size: Int)(implicit ir: IRBuilder) = {
     // Allocate memory
     addInstr(MovInstr(OpRet, Immediate(size)))
     addInstr(BranchLinkInstr(MallocLabel))
@@ -46,13 +46,13 @@ object StatTranslator {
   }
 
   /* Translate for Conditional branch link */
-  def translateCondBLink(cond: CondCode, blName: FuncLabel)(implicit ir: IR) = {
+  def translateCondBLink(cond: CondCode, blName: FuncLabel)(implicit ir: IRBuilder) = {
     addBranchLink(blName)
     addInstr(CondBranchLinkInstr(cond, blName))
   }
 
   /* Translate for Branch link */
-  def translateBLink(blName: FuncLabel)(implicit ir: IR) = {
+  def translateBLink(blName: FuncLabel)(implicit ir: IRBuilder) = {
     addBranchLink(blName)
     addInstr(BranchLinkInstr(blName))
   }
@@ -60,7 +60,7 @@ object StatTranslator {
   private def translateDeclare(ident: Ident, initValue: Rvalue)(implicit
       st: SymbolTable,
       stateST: StateTable,
-      ir: IR
+      ir: IRBuilder
   ) = {
 
     transRValue(initValue)
@@ -87,7 +87,7 @@ object StatTranslator {
 
   private def declareArrayLit(
       arrayValue: ArrayLit
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     val arr_len = arrayValue.values.size
     // Array store len + 1 elems -> +1 for store length
     val arr_size = (arr_len + 1) * ptrSize
@@ -126,7 +126,7 @@ object StatTranslator {
 
   private def declareNewPair(
       pairValue: NewPair
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     declareNewPairLit(pairValue.expr1)
     declareNewPairLit(pairValue.expr2)
 
@@ -149,7 +149,7 @@ object StatTranslator {
 
   private def declareNewPairLit(
       elem: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     val _type = checkExprType(elem)
     val size  = sizeOfElem(_type)
@@ -169,7 +169,7 @@ object StatTranslator {
     addInstr(PushInstr(Seq(MPtr)))
   }
 
-  private def storeIdent(ident: Ident)(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  private def storeIdent(ident: Ident)(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     // Pop assign value to OpR1
     addInstr(PopInstr(Seq(OpR1)))
 
@@ -190,7 +190,7 @@ object StatTranslator {
 
   private def getPairElem(
       pairValue: PairElem
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR): Unit = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit = {
     // Get pair elem pointer
     getPairElemPointer(pairValue)
     addInstr(PopInstr(Seq(OpR1)))
@@ -208,7 +208,7 @@ object StatTranslator {
 
   private def getPairElemPointer(
       pairValue: PairElem
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR): Unit = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit = {
     val innerValue = pairValue.lvalue
 
     var location = findLvalueLoc(pairValue, stateST)
@@ -250,7 +250,7 @@ object StatTranslator {
 
   private def storePairElem(
       pairValue: PairElem
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     // Load pair elem pointer to stack
     getPairElemPointer(pairValue)
@@ -271,7 +271,7 @@ object StatTranslator {
      R14: General purpose */
   def loadArrayElem(
       arrayValue: ArrayElem
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR): Unit = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit = {
 
     // find array pointer
     var array_loc = findVarLoc(arrayValue.ident.name, stateST)
@@ -317,7 +317,7 @@ object StatTranslator {
   // Now only find example of 1 dimension array assign
   private def storeArrayElem(
       arrayValue: ArrayElem
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     // Find array pointer
     var array_loc = findVarLoc(arrayValue.ident.name, stateST)
@@ -356,7 +356,7 @@ object StatTranslator {
 
   private def translateCall(
       callValue: Call
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     // If this is inside a function with parameter, push caller saved regs first
     val usedParam = stateST.getUsedParamRegs()
@@ -420,7 +420,7 @@ object StatTranslator {
   private def translateAssign(target: Lvalue, newValue: Rvalue)(implicit
       st: SymbolTable,
       stateST: StateTable,
-      ir: IR
+      ir: IRBuilder
   ) = {
     transRValue(newValue)
 
@@ -434,7 +434,7 @@ object StatTranslator {
   }
 
   /* Exit will return value in R0 */
-  private def translateExit(expr: Expr)(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  private def translateExit(expr: Expr)(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     // Pop result to R0 for exit
     translateExprTo(expr, OpRet)
 
@@ -442,7 +442,7 @@ object StatTranslator {
   }
 
   /* Return will return value in R0 */
-  private def translateReturn(expr: Expr)(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  private def translateReturn(expr: Expr)(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     // Pop result to R0 for return
     translateExprTo(expr, OpRet)
 
@@ -451,7 +451,7 @@ object StatTranslator {
 
 
   /* Print will print value in R0 */
-  private def translatePrint(expr: Expr)(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  private def translatePrint(expr: Expr)(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     // Translate expression and store result in OpR1
     translateExprTo(expr, OpR1)
 
@@ -478,7 +478,7 @@ object StatTranslator {
   /* Println will print value in R0 */
   private def translatePrintln(
       expr: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     translatePrint(expr)
     callerSavePush()
     translateBLink(PrintLine)
@@ -488,7 +488,7 @@ object StatTranslator {
   /* Read will read value to R0 */
   private def translateRead(
       lvalue: Lvalue
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     val _type = checkLvalueType(lvalue)
     val readType = _type match {
@@ -546,7 +546,7 @@ object StatTranslator {
 
   /* Free will free value in R0 */
   /* Free can be appied to array and pair */
-  private def translateFree(expr: Expr)(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  private def translateFree(expr: Expr)(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     callerSavePush()
 
@@ -572,7 +572,7 @@ object StatTranslator {
   }
 
   /* For Bool or Ident condition, add compare instr */
-  private def translateBoolCond(expr: Expr)(implicit ir: IR) = {
+  private def translateBoolCond(expr: Expr)(implicit ir: IRBuilder) = {
     // Pop cond extr to OpR1
     addInstr(PopInstr(Seq(OpR1)))
 
@@ -588,7 +588,7 @@ object StatTranslator {
   private def translateIf(expr: Expr, stats1: List[Stat], stats2: List[Stat])(implicit
       st: SymbolTable,
       stateST: StateTable,
-      ir: IR
+      ir: IRBuilder
   ) = {
     // Translate condition
     translateExpr(expr)
@@ -630,7 +630,7 @@ object StatTranslator {
   private def translateWhile(expr: Expr, stats: List[Stat])(implicit
       st: SymbolTable,
       stateST: StateTable,
-      ir: IR
+      ir: IRBuilder
   ) = {
     // Allocate new branch name
     val branch_0 = JumpLabel(s"${getBranchCounter()}")
@@ -674,7 +674,7 @@ object StatTranslator {
     }
 
   /* New scope will have new state table */
-  private def translateBegin(stats: List[Stat])(implicit stateST: StateTable, ir: IR) = {
+  private def translateBegin(stats: List[Stat])(implicit stateST: StateTable, ir: IRBuilder) = {
     /* Create new state table */
     val new_stateST = new StateTable(Some(stateST))
     stats.foreach(s => translateStatement(s)(s.symb, new_stateST, ir))
@@ -684,7 +684,7 @@ object StatTranslator {
   private def transRValue(value: Rvalue)(implicit
       st: SymbolTable,
       stateST: StateTable,
-      ir: IR
+      ir: IRBuilder
   ) = {
     value match {
       case initValue: Expr     => translateExpr(initValue)

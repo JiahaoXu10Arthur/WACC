@@ -6,7 +6,7 @@ import wacc.SemanticChecker.SemanticTypes._
 import wacc.Instructions._
 
 import StatTranslator._
-import IR._
+import IRBuilder._
 import Utils._
 
 object ExprTranslator {
@@ -21,7 +21,7 @@ object ExprTranslator {
 
   def translateExpr(
       expr: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR): Unit = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit = {
     expr match {
       case Add(expr1, expr2) => translateAdd(expr1, expr2)
       case Sub(expr1, expr2) => translateSub(expr1, expr2)
@@ -58,7 +58,7 @@ object ExprTranslator {
   }
 
   /* Assume Move to R8 */
-  private def translateInt(value: Int)(implicit ir: IR) = {
+  private def translateInt(value: Int)(implicit ir: IRBuilder) = {
     if (value >= 0) {
       addInstr(MovInstr(OpR1, Immediate(value)))
     } else {
@@ -68,7 +68,7 @@ object ExprTranslator {
   }
 
   /* Assume Move to R8 */
-  private def translateBool(value: Boolean)(implicit ir: IR) = {
+  private def translateBool(value: Boolean)(implicit ir: IRBuilder) = {
     value match {
       case true  => addInstr(MovInstr(OpR1, TrueImm))
       case false => addInstr(MovInstr(OpR1, FalseImm))
@@ -76,17 +76,17 @@ object ExprTranslator {
   }
 
   /* Assume Move to R8 */
-  private def translateChar(value: Char)(implicit ir: IR) = {
+  private def translateChar(value: Char)(implicit ir: IRBuilder) = {
     addInstr(MovInstr(OpR1, Immediate(value.toInt)))
   }
 
   /* Assume Move to R8 */
-  private def translatePairLit()(implicit ir: IR) = {
+  private def translatePairLit()(implicit ir: IRBuilder) = {
     addInstr(MovInstr(OpR1, NullImm))
   }
 
   /* Assume Move to R8 */
-  private def translateIdent(ident: Ident)(implicit st: SymbolTable, ir: IR, stateST: StateTable) = {
+  private def translateIdent(ident: Ident)(implicit st: SymbolTable, ir: IRBuilder, stateST: StateTable) = {
     val loc = findVarLoc(ident.name, stateST)
 
     loc match {
@@ -102,7 +102,7 @@ object ExprTranslator {
   }
 
   /* Assume Move to R8 */
-  private def translateStr(value: String)(implicit ir: IR) = {
+  private def translateStr(value: String)(implicit ir: IRBuilder) = {
     // add str to constant pool
     addStrConst(value)
 
@@ -115,7 +115,7 @@ object ExprTranslator {
   private def translateAdd(
       expr1: Expr,
       expr2: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     // Translate Expr1 to OpR1, Expr2 to OpR2
     translateTwoExprTo(expr1, expr2, OpR1, OpR2)
@@ -130,7 +130,7 @@ object ExprTranslator {
   private def translateSub(
       expr1: Expr,
       expr2: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     // Translate Expr1 to OpR1, Expr2 to OpR2
     translateTwoExprTo(expr1, expr2, OpR1, OpR2)
@@ -145,7 +145,7 @@ object ExprTranslator {
   private def translateMul(
       expr1: Expr,
       expr2: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     // Translate Expr1 to OpR1, Expr2 to OpR2
     translateTwoExprTo(expr1, expr2, OpR1, OpR2)
@@ -161,7 +161,7 @@ object ExprTranslator {
   private def translateDiv(
       expr1: Expr,
       expr2: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     // Div calling convention - store in R0 and R1
     translateTwoExprTo(expr1, expr2, R0, R1)
@@ -180,7 +180,7 @@ object ExprTranslator {
   private def translateMod(
       expr1: Expr,
       expr2: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     // Div calling convention - store in R0 and R1
     translateTwoExprTo(expr1, expr2, R0, R1)
@@ -199,7 +199,7 @@ object ExprTranslator {
   private def translateCmp(expr1: Expr, expr2: Expr, trueCode: CondCode, falseCode: CondCode)(implicit
       st: SymbolTable,
       stateST: StateTable,
-      ir: IR
+      ir: IRBuilder
   ) = {
 
     // Translate Expr1 to OpR1, Expr2 to OpR2
@@ -216,7 +216,7 @@ object ExprTranslator {
   private def translateAnd(
       expr1: Expr,
       expr2: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     // Expr1 store in OpR1
     translateExprTo(expr1, OpR1)
@@ -249,7 +249,7 @@ object ExprTranslator {
   private def translateOr(
       expr1: Expr,
       expr2: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     // Expr1 store in OpR1
     translateExprTo(expr1, OpR1)
 
@@ -280,7 +280,7 @@ object ExprTranslator {
 
   private def translateNot(
       expr: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     // Expr store in OpR1
     translateExprTo(expr, OpR1)
 
@@ -292,7 +292,7 @@ object ExprTranslator {
 
   private def translateNeg(
       expr: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     // Expr store in OpR1
     translateExprTo(expr, OpR1)
 
@@ -302,7 +302,7 @@ object ExprTranslator {
 
   private def translateLen(
       expr: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     // Expr store in OpR1
     translateExprTo(expr, OpR1)
 
@@ -311,7 +311,7 @@ object ExprTranslator {
 
   private def translateChr(
       expr: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     // Expr store in OpR1
     translateExprTo(expr, OpR1)
 

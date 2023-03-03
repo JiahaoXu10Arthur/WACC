@@ -2,7 +2,7 @@ package wacc.CodeGen
 
 import wacc.Ast._
 import wacc.Instructions._
-import wacc.CodeGen.IR._
+import wacc.CodeGen.IRBuilder._
 import wacc.CodeGen.StateTable
 import wacc.SemanticChecker.SymbolTable
 import wacc.SemanticChecker.SemanticTypes._
@@ -19,7 +19,7 @@ object Utils {
     }
   }
 
-  def beginBlock()(implicit stateT: StateTable, ir: IR): Unit = {
+  def beginBlock()(implicit stateT: StateTable, ir: IRBuilder): Unit = {
     val pushFuncRegs = Seq(FP, LR)
     val varRegs      = stateT.getSavedRegs()
     val varNum       = stateT.getVarNum()
@@ -43,7 +43,7 @@ object Utils {
 
   }
 
-  def endBlock(restoreSP: Boolean)(implicit stateT: StateTable, ir: IR): Unit = {
+  def endBlock(restoreSP: Boolean)(implicit stateT: StateTable, ir: IRBuilder): Unit = {
     val popFuncRegs    = Seq(FP, PC)
     val savedRegs      = stateT.getSavedRegs()
     val regNum         = stateT.getVarNum()
@@ -70,7 +70,7 @@ object Utils {
   def translateExprTo(expr: Expr, 
                       reg: Register)(implicit st: SymbolTable, 
                                               stateST: StateTable, 
-                                              ir: IR) = {
+                                              ir: IRBuilder) = {
     translateExpr(expr)
     addInstr(PopInstr(Seq(reg)))                              
   }
@@ -81,7 +81,7 @@ object Utils {
                          reg1: Register,
                          reg2: Register)(implicit st: SymbolTable, 
                                               stateST: StateTable, 
-                                              ir: IR) = {
+                                              ir: IRBuilder) = {
     translateExpr(expr1)
     translateExpr(expr2)
     addInstr(PopInstr(Seq(reg2)))
@@ -110,7 +110,7 @@ object Utils {
       case _          => 4
     }
 
-  def callerSavePush()(implicit stateST: StateTable, ir: IR) = {
+  def callerSavePush()(implicit stateST: StateTable, ir: IRBuilder) = {
     val usedParam = stateST.getUsedParamRegs()
     addInstr(Comment(s"Pushing param registers here! Number: ${usedParam.size}"))
     if (!usedParam.isEmpty) {
@@ -118,7 +118,7 @@ object Utils {
     }
   }
 
-  def callerSavePop()(implicit stateST: StateTable, ir: IR) = {
+  def callerSavePop()(implicit stateST: StateTable, ir: IRBuilder) = {
     val usedParam = stateST.getUsedParamRegs()
     addInstr(Comment(s"Poping param registers here! Number: ${usedParam.size}"))
     if (!usedParam.isEmpty) {

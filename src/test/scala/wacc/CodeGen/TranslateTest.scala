@@ -17,19 +17,27 @@ class TranslateTest extends AnyFlatSpec {
     val ir2 = Translator.translate(prog2, st2)
     val (prog3, st3) = buildExitProgram(exitCode3)
     val ir3 = Translator.translate(prog3, st3)
-    ir1.instrs should contain (BranchLinkInstr(ExitLabel))
-    ir2.instrs should contain (BranchLinkInstr(ExitLabel))
-    ir3.instrs should contain (BranchLinkInstr(ExitLabel))
+    ir1.segments should not be empty
+    ir2.segments should not be empty
+    ir3.segments should not be empty
+    val ir1Instrs = ir1.segments.head.instrs
+    val ir2Instrs = ir2.segments.head.instrs
+    val ir3Instrs = ir3.segments.head.instrs
+
+    /* IR instructions contains exit instructions*/
+    ir1Instrs should contain (BranchLinkInstr(ExitLabel))
+    ir2Instrs should contain (BranchLinkInstr(ExitLabel))
+    ir3Instrs should contain (BranchLinkInstr(ExitLabel))
     /* IR instructions contains Mov / Ldr instructions to move constants */
-    (ir1.instrs.foldLeft(false){(acc, instr) => acc || (instr match {
+    (ir1Instrs.foldLeft(false){(acc, instr) => acc || (instr match {
       case MovInstr(_, Immediate(exitCode1)) => true
       case _ => false
     })}) shouldBe true
-    (ir2.instrs.foldLeft(false){(acc, instr) => acc || (instr match {
+    (ir2Instrs.foldLeft(false){(acc, instr) => acc || (instr match {
       case MovInstr(_, Immediate(exitCode2)) => true
       case _ => false
     })}) shouldBe true
-    (ir3.instrs.foldLeft(false){(acc, instr) => acc || (instr match {
+    (ir3Instrs.foldLeft(false){(acc, instr) => acc || (instr match {
       case LoadInstr(_, Immediate(exitCode3), _) => true
       case _ => false
     })}) shouldBe true
@@ -50,11 +58,24 @@ class TranslateTest extends AnyFlatSpec {
     val ir4 = Translator.translate(prog4, st4)
     val (prog5, st5) = buildPrintlnProgram(intExpr)
     val ir5 = Translator.translate(prog5, st5)
-    ir1.bLInstrs.flatten should contain (CreateLabel(PrintInt))
-    ir2.bLInstrs.flatten should contain (CreateLabel(PrintChar))
-    ir3.bLInstrs.flatten should contain (CreateLabel(PrintBool))
-    ir4.bLInstrs.flatten should contain (CreateLabel(PrintStr))
-    ir5.bLInstrs.flatten should contain (CreateLabel(PrintLine))
+    ir1.segments should not be empty
+    ir2.segments should not be empty
+    ir3.segments should not be empty
+    ir4.segments should not be empty
+    ir5.segments should not be empty
+    val ir1Instrs = ir1.segments.map{x => x.instrs}.flatten
+    val ir2Instrs = ir2.segments.map{x => x.instrs}.flatten
+    val ir3Instrs = ir3.segments.map{x => x.instrs}.flatten
+    val ir4Instrs = ir4.segments.map{x => x.instrs}.flatten
+    val ir5Instrs = ir5.segments.map{x => x.instrs}.flatten
+
+
+    /* IR instructions contains print instructions*/
+    ir1Instrs should contain (CreateLabel(PrintInt))
+    ir2Instrs should contain (CreateLabel(PrintChar))
+    ir3Instrs should contain (CreateLabel(PrintBool))
+    ir4Instrs should contain (CreateLabel(PrintStr))
+    ir5Instrs should contain (CreateLabel(PrintLine))
   }
 
   "Arithmetic expressions" should "contain correct arithmetic instructions" in {
@@ -76,14 +97,26 @@ class TranslateTest extends AnyFlatSpec {
     val ir5 = Translator.translate(prog5, st5)
     val (prog6, st6) = buildIntExprProgram(complexExpr)
     val ir6 = Translator.translate(prog6, st6)
-    ir1.instrs.map(x => x.getClass()) should contain (classOf[AddInstr])
-    ir2.instrs.map(x => x.getClass()) should contain (classOf[SubInstr])
-    ir3.instrs.map(x => x.getClass()) should contain (classOf[MulInstr])
-    ir6.instrs.map(x => x.getClass()) should contain (classOf[AddInstr])
-    ir6.instrs.map(x => x.getClass()) should contain (classOf[SubInstr])
-    ir6.instrs.map(x => x.getClass()) should contain (classOf[MulInstr])
-    ir4.instrs should contain (BranchLinkInstr(DivisionLabel))
-    ir5.instrs should contain (BranchLinkInstr(DivisionLabel))
+    ir1.segments should not be empty
+    ir2.segments should not be empty
+    ir3.segments should not be empty
+    ir4.segments should not be empty
+    ir5.segments should not be empty
+    ir6.segments should not be empty
+    val ir1Instrs = ir1.segments.map{x => x.instrs}.flatten
+    val ir2Instrs = ir2.segments.map{x => x.instrs}.flatten
+    val ir3Instrs = ir3.segments.map{x => x.instrs}.flatten
+    val ir4Instrs = ir4.segments.map{x => x.instrs}.flatten
+    val ir5Instrs = ir5.segments.map{x => x.instrs}.flatten
+    val ir6Instrs = ir6.segments.map{x => x.instrs}.flatten
+    ir1Instrs.map(x => x.getClass()) should contain (classOf[AddInstr])
+    ir2Instrs.map(x => x.getClass()) should contain (classOf[SubInstr])
+    ir3Instrs.map(x => x.getClass()) should contain (classOf[MulInstr])
+    ir6Instrs.map(x => x.getClass()) should contain (classOf[AddInstr])
+    ir6Instrs.map(x => x.getClass()) should contain (classOf[SubInstr])
+    ir6Instrs.map(x => x.getClass()) should contain (classOf[MulInstr])
+    ir4Instrs should contain (BranchLinkInstr(DivisionLabel))
+    ir5Instrs should contain (BranchLinkInstr(DivisionLabel))
   }
 
   "Comparison expressions" should "contain correct comparison instructions" in {
@@ -105,24 +138,40 @@ class TranslateTest extends AnyFlatSpec {
     val ir5 = Translator.translate(prog5, st5)
     val (prog6, st6) = buildBoolExprProgram(geqExpr)
     val ir6 = Translator.translate(prog6, st6)
-    ir1.instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
-    ir2.instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
-    ir3.instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
-    ir4.instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
-    ir5.instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
-    ir6.instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
+    ir1.segments should not be empty
+    ir2.segments should not be empty
+    ir3.segments should not be empty
+    ir4.segments should not be empty
+    ir5.segments should not be empty
+    ir6.segments should not be empty
+    val ir1Instrs = ir1.segments.map{x => x.instrs}.flatten
+    val ir2Instrs = ir2.segments.map{x => x.instrs}.flatten
+    val ir3Instrs = ir3.segments.map{x => x.instrs}.flatten
+    val ir4Instrs = ir4.segments.map{x => x.instrs}.flatten
+    val ir5Instrs = ir5.segments.map{x => x.instrs}.flatten
+    val ir6Instrs = ir6.segments.map{x => x.instrs}.flatten
+    ir1Instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
+    ir2Instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
+    ir3Instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
+    ir4Instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
+    ir5Instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
+    ir6Instrs.map(x => x.getClass()) should contain (classOf[CmpInstr])
   }
 
   "Branch statements" should "contain jump labels" in {
     val (prog1, st1) = buildIfProgram("true", "print true", "print false")
     val (prog2, st2) = buildWhileProgram("true", "print true")
     val ir1 = Translator.translate(prog1, st1)
-    (ir1.instrs.foldLeft(0){(acc, instr) => acc + (instr match {
+    ir1.segments should not be empty
+    val ir1Instrs = ir1.segments.map{x => x.instrs}.flatten
+    (ir1Instrs.foldLeft(0){(acc, instr) => acc + (instr match {
       case CreateLabel(JumpLabel(_)) => 1
       case _ => 0
     })}) should be >= 2
     val ir2 = Translator.translate(prog2, st2)
-    (ir2.instrs.foldLeft(0){(acc, instr) => acc + (instr match {
+    ir2.segments should not be empty
+    val ir2Instrs = ir2.segments.map{x => x.instrs}.flatten
+    (ir2Instrs.foldLeft(0){(acc, instr) => acc + (instr match {
       case CondBranchInstr(_, JumpLabel(_)) => 1
       case _ => 0
     })}) should be >= 1

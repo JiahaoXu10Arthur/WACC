@@ -4,14 +4,14 @@ import wacc.Ast._
 import wacc.Instructions._
 
 import StatTranslator._
-import IR._
+import IRBuilder._
 import Utils.{beginBlock, calculateSaveRegs}
 
 object FunctionTranslator {
 
   def translateFunction(
       func: Func
-  )(implicit ir: IR): Unit = {
+  )(implicit ir: IRBuilder): Unit = {
     val ptrSize = 4
     val pushFuncRegs = Seq(FP, LR)
     val varNum       = func.symb.findAllVarNum()

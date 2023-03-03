@@ -6,7 +6,7 @@ import wacc.SemanticChecker.SymbolTable
 
 import StatTranslator._
 import FunctionTranslator._
-import IR._
+import IRBuilder._
 import Utils.{beginBlock, endBlock, calculateSaveRegs}
 
 object Translator {
@@ -16,7 +16,7 @@ object Translator {
 
   def translate(p: Program, mainST: SymbolTable): IR = {
     // Initialize implicit value
-    implicit val ir = new IR()
+    implicit val ir = new IRBuilder()
     val varNum = mainST.findAllVarNum()
     val varRegs = calculateSaveRegs(varNum)
     val pushRegs = varRegs ++ reservedReg
@@ -28,6 +28,7 @@ object Translator {
     stateST.modifyVarNum(varNum)
 
     /* Translates Main body */
+    addInstr(GlobalTag)
     addInstr(CreateLabel(Main))
     beginBlock()
     p.stats.foreach(s => translateStatement(s)(s.symb, stateST, ir))

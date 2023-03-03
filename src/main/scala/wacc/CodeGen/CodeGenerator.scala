@@ -2,33 +2,32 @@ package wacc.CodeGen
 
 import java.io._
 import wacc.Instructions._
-import wacc.CodeGen.IR
+import wacc.Ast._
+import wacc.SemanticChecker.SymbolTable
 
 object CodeGenerator {
   private final val MovImmMax = 255
 
+  def generateAssembly(ast: Program, st: SymbolTable, waccName: String): String = {
+    CodeGenerator.assemble(Translator.translate(ast, st), waccName)
+  }
+
   def assemble(ir: IR, fileName: String): String = {
     val asmFile = new File(s"$fileName.s")
     val writer  = new PrintWriter(asmFile)
-    /* String constant pool generation */
-    writer.println(assembleInstr(DataTag))
-    for (str <- ir.strConsts) {
-      val asmStrConst = assembleInstr(str)
-      writer.println(asmStrConst)
-    }
-    /* Translate instructions */
-    writer.println(assembleInstr(TextTag))
-    writer.println(assembleInstr(GlobalTag))
-    for (instr <- ir.instrs) {
-      val asm = assembleInstr(instr)
-      writer.println(asm)
-    }
-
-    /* Translate branchlink widgets */
-    for (instr <- ir.bLInstrs.flatten) {
+    for (segment <- ir.segments) {
+      /* Translate literals */
+      for (literal <- segment.literals) {
+        val asmLiteral = assembleInstr(literal)
+        writer.println(asmLiteral)
+      }
+      /* Translate instructions */
+      for (instr <- segment.instrs) {
         val asm = assembleInstr(instr)
         writer.println(asm)
+      }
     }
+
     writer.close()
     asmFile.createNewFile()
     asmFile.getAbsolutePath()
@@ -42,8 +41,8 @@ object CodeGenerator {
       case instr: StackInstr  => assembleStack(instr)
       case instr: StatInstr   => assembleStat(instr)
       case instr: CreateLabel => assembleCreateLabel(instr).mkString("\n")
-      case Comment(value)     => s"@$value"
       case instr: Tag         => s".${instr.getName}"
+      case Comment(value)     => s"@$value"
     }
 
 
