@@ -141,6 +141,12 @@ object Utils {
     }
   }
 
+  def getJumpLabel()(implicit ir: IR): JumpLabel = {
+    val retLabel = JumpLabel(s"${getBranchCounter()}")
+    incBranchCounter()
+    retLabel
+  }
+
   def callerSavePush()(implicit stateST: StateTable, ir: IR) = {
     val usedParam = stateST.getUsedParamRegs()
     addInstr(Comment(s"Pushing param registers here! Number: ${usedParam.size}"))

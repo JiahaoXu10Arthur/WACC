@@ -555,23 +555,27 @@ object StatTranslator {
     
   }
 
-  /* New scope will have new state table */
-  private def translateIf(expr: Expr, stats1: List[Stat], stats2: List[Stat])(implicit
-      st: SymbolTable,
-      stateST: StateTable,
-      ir: IR
-  ) = {
-    // Translate condition
+  private def translateCondition(expr: Expr)(implicit st: SymbolTable, 
+                                                      stateST: StateTable, 
+                                                      ir: IR) = {
+    // Translate condition expr
     translateExpr(expr)
     // Translate extra compare instruction if boolean condition
     translateBoolCond(expr)
+  }
 
+  /* New scope will have new state table */
+  private def translateIf(expr: Expr, stats1: List[Stat], stats2: List[Stat])(implicit
+      st: SymbolTable, 
+      stateST: StateTable,
+      ir: IR
+  ) = {
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"${getBranchCounter()}")
-    incBranchCounter()
+    val branch_0 = getJumpLabel()
+    val branch_1 = getJumpLabel()
 
-    val branch_1 = JumpLabel(s"${getBranchCounter()}")
-    incBranchCounter()
+    // Translate condition
+    translateCondition(expr)
 
     // if true, branch to stat1 (if true branch)
     addInstr(CondBranchInstr(checkCondCode(expr), branch_0))
@@ -604,11 +608,9 @@ object StatTranslator {
       ir: IR
   ) = {
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"${getBranchCounter()}")
-    incBranchCounter()
+    val branch_0 = getJumpLabel()
 
-    val branch_1 = JumpLabel(s"${getBranchCounter()}")
-    incBranchCounter()
+    val branch_1 = getJumpLabel()
 
     // First, unconditionally jump to Branch 1
     addInstr(BranchInstr(branch_0))
@@ -623,8 +625,7 @@ object StatTranslator {
     addInstr(CreateLabel(branch_0))
 
     // Translate condition
-    translateExpr(expr)
-    translateBoolCond(expr)
+    translateCondition(expr)
 
     // If condition is true, jump back to branch 2
     addInstr(CondBranchInstr(checkCondCode(expr), branch_1))
