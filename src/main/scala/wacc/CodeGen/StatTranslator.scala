@@ -11,12 +11,6 @@ import Utils._
 
 object StatTranslator {
 
-  val trueCond = Immediate(1)
-  val ptrSize = 4
-  val pairSize = 8
-  val pairFstIdx = 0
-  val pairSndIdx = 4
-
   def translateStatement(
       stat: Stat
   )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit =
@@ -62,7 +56,7 @@ object StatTranslator {
       stateST: StateTable,
       ir: IRBuilder
   ) = {
-
+    // Calculate init value
     transRValue(initValue)
 
     // Pop init value to OpR1
@@ -70,16 +64,10 @@ object StatTranslator {
 
     // Move to the first available location
     val loc = stateST.nextStoreLocation()
-    loc match {
-      case loc: Register => addInstr(MovInstr(loc, OpR1))
-      case _             => {
-        val size = sizeOfElem(checkExprType(ident))
-        size match {
-          case 1 => addInstr(StoreByteInstr(OpR1, loc))
-          case 4 => addInstr(StoreInstr(OpR1, loc))
-        }
-      }
-    }
+    val size = sizeOfElem(checkExprType(ident))
+
+    // Store value to ident
+    locMovStore(size, OpR1, loc)
 
     // Add the location of variable to stateTable
     stateST.add(ident.name, loc)
@@ -90,7 +78,7 @@ object StatTranslator {
   )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
     val arr_len = arrayValue.values.size
     // Array store len + 1 elems -> +1 for store length
-    val arr_size = (arr_len + 1) * ptrSize
+    val arr_size = (arr_len + 1) * PtrSize
 
     // malloc array
     // @ (arr-len) element array
@@ -98,11 +86,11 @@ object StatTranslator {
 
     // @ array pointers are shifted forwards by 4 bytes (to account for size)
     // move array pointer to a[1]
-    addInstr(AddInstr(MPtr, MPtr, Immediate(ptrSize)))
+    addInstr(AddInstr(MPtr, MPtr, Immediate(PtrSize)))
 
     // store length of array in a[0]
     addInstr(MovInstr(OpR1, Immediate(arr_len)))
-    addInstr(StoreInstr(OpR1, RegIntOffset(MPtr, -ptrSize)))
+    addInstr(StoreInstr(OpR1, RegIntOffset(MPtr, -PtrSize)))
 
     // For loop to store each element
     for (i <- 0 until arr_len) {
@@ -114,10 +102,7 @@ object StatTranslator {
       val size_factor = sizeOfElem(checkExprType(arrayValue.values(i)))
 
       // Store elem to a[i]
-      size_factor match {
-        case 1 => addInstr(StoreByteInstr(OpR1, RegIntOffset(MPtr, i * size_factor)))
-        case 4 => addInstr(StoreInstr(OpR1, RegIntOffset(MPtr, i * size_factor)))
-      }
+      locMovStore(size_factor, OpR1, RegIntOffset(MPtr, i * size_factor))
     }
 
     // Push Array pointer
@@ -131,17 +116,17 @@ object StatTranslator {
     declareNewPairLit(pairValue.expr2)
 
     // Allocate for pair
-    translateMalloc(pairSize)
+    translateMalloc(PairSize)
 
     // Pop second elem from stack
     addInstr(PopInstr(Seq(OpR1)))
     // Store second elem
-    addInstr(StoreInstr(OpR1, RegIntOffset(MPtr, pairSndIdx)))
+    addInstr(StoreInstr(OpR1, RegIntOffset(MPtr, PairSndIdx)))
 
     // Pop first elem from stack
     addInstr(PopInstr(Seq(OpR1)))
     // Store first elem
-    addInstr(StoreInstr(OpR1, RegIntOffset(MPtr, pairFstIdx)))
+    addInstr(StoreInstr(OpR1, RegIntOffset(MPtr, PairFstIdx)))
 
     // Push pair pointer
     addInstr(PushInstr(Seq(MPtr)))
@@ -157,13 +142,10 @@ object StatTranslator {
     // Malloc for pair elem
     translateMalloc(size)
 
-      // translate Expr to Opr1
-      translateExprTo(elem, OpR1)
-
-    size match {
-      case 1 => addInstr(StoreByteInstr(OpR1, RegIntOffset(MPtr, 0)))
-      case 4 => addInstr(StoreInstr(OpR1, RegIntOffset(MPtr, 0)))
-    }
+    // translate Expr to Opr1
+    translateExprTo(elem, OpR1)
+    
+    locMovStore(size, OpR1, RegIntOffset(MPtr, 0))
 
     // Push Pair elem pointer
     addInstr(PushInstr(Seq(MPtr)))
@@ -176,16 +158,8 @@ object StatTranslator {
     // Move assign value to target_loc
     val target_loc = findVarLoc(ident.name, stateST)
 
-    target_loc match {
-      case target_loc: Register => addInstr(MovInstr(target_loc, OpR1))
-      case _             => {
-        val size = sizeOfElem(checkExprType(ident))
-        size match {
-          case 1 => addInstr(StoreByteInstr(OpR1, target_loc))
-          case 4 => addInstr(StoreInstr(OpR1, target_loc))
-        }
-      }
-    }
+    val size = sizeOfElem(checkExprType(ident))
+    locMovStore(size, OpR1, target_loc)
   }
 
   private def getPairElem(
@@ -196,10 +170,7 @@ object StatTranslator {
     addInstr(PopInstr(Seq(OpR1)))
 
     val _type = checkLvalueType(pairValue)
-    sizeOfElem(_type) match {
-      case 1 => addInstr(LoadSignedByteInstr(OpR1, RegIntOffset(OpR1, 0)))
-      case 4 => addInstr(LoadInstr(OpR1, RegIntOffset(OpR1, 0)))
-    }
+    locMovLoad(sizeOfElem(_type), OpR1, RegIntOffset(OpR1, 0))
 
     // Push result
     addInstr(PushInstr(Seq(OpR1)))
@@ -240,8 +211,8 @@ object StatTranslator {
 
     // Move fst/snd pointer of pair to R8
     pairValue.index match {
-      case "fst" => addInstr(LoadInstr(OpR1, RegIntOffset(locReg, pairFstIdx)))
-      case "snd" => addInstr(LoadInstr(OpR1, RegIntOffset(locReg, pairSndIdx)))
+      case "fst" => addInstr(LoadInstr(OpR1, RegIntOffset(locReg, PairFstIdx)))
+      case "snd" => addInstr(LoadInstr(OpR1, RegIntOffset(locReg, PairSndIdx)))
     }
 
     // Push result
@@ -293,8 +264,8 @@ object StatTranslator {
       val _type = checkLvalueType(arrayValue)
       val loadBranchName =
         sizeOfElem(_type) match {
-          case 1 => ArrayLoadB
-          case 4 => ArrayLoad
+          case ByteSize => ArrayLoadB
+          case DefaultSize => ArrayLoad
         }
 
       // branch to array load
@@ -342,8 +313,8 @@ object StatTranslator {
       val _type = checkLvalueType(arrayValue)
       val storeBranchName =
         sizeOfElem(_type) match {
-          case 1 => ArrayStoreB
-          case 4 => ArrayStore
+          case ByteSize => ArrayStoreB
+          case DefaultSize => ArrayStore
         }
 
       // branch to array load
@@ -391,7 +362,7 @@ object StatTranslator {
       } else {
         // More parameters
         // Push OpR1
-        addInstr(StoreInstr(OpR1, RegIntOffset(SP, -ptrSize), writeBack = true))
+        addInstr(StoreInstr(OpR1, RegIntOffset(SP, -PtrSize), writeBack = true))
       }
 
       index += 1
@@ -404,7 +375,7 @@ object StatTranslator {
     addInstr(MovInstr(OpR1, OpRet))
 
     // Add stackSpace back for parameter
-    val stackSpace = (para_num - paramReg.size) * ptrSize
+    val stackSpace = (para_num - paramReg.size) * PtrSize
     if (stackSpace > 0) {
       addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
     }
@@ -560,7 +531,7 @@ object StatTranslator {
       case ArrayType(_)   => {
         // array pointers are shifted forward by 4 bytes
         // correct it back to original pointer before free
-        addInstr(SubInstr(OpRet, OpRet, Immediate(ptrSize)))
+        addInstr(SubInstr(OpRet, OpRet, Immediate(PtrSize)))
         FreeLabel
       }
       case _              => null
@@ -577,30 +548,34 @@ object StatTranslator {
     addInstr(PopInstr(Seq(OpR1)))
 
     expr match {
-      case Ident(_)   => addInstr(CmpInstr(OpR1, trueCond))
-      case BoolLit(_) => addInstr(CmpInstr(OpR1, trueCond))
+      case Ident(_)   => addInstr(CmpInstr(OpR1, TrueImm))
+      case BoolLit(_) => addInstr(CmpInstr(OpR1, TrueImm))
       case _          =>
     }
     
   }
 
-  /* New scope will have new state table */
-  private def translateIf(expr: Expr, stats1: List[Stat], stats2: List[Stat])(implicit
-      st: SymbolTable,
-      stateST: StateTable,
-      ir: IRBuilder
-  ) = {
-    // Translate condition
+  private def translateCondition(expr: Expr)(implicit st: SymbolTable, 
+                                                      stateST: StateTable, 
+                                                      ir: IRBuilder) = {
+    // Translate condition expr
     translateExpr(expr)
     // Translate extra compare instruction if boolean condition
     translateBoolCond(expr)
+  }
 
+  /* New scope will have new state table */
+  private def translateIf(expr: Expr, stats1: List[Stat], stats2: List[Stat])(implicit
+      st: SymbolTable, 
+      stateST: StateTable,
+      ir: IRBuilder
+  ) = {
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"${getBranchCounter()}")
-    incBranchCounter()
+    val branch_0 = getJumpLabel()
+    val branch_1 = getJumpLabel()
 
-    val branch_1 = JumpLabel(s"${getBranchCounter()}")
-    incBranchCounter()
+    // Translate condition
+    translateCondition(expr)
 
     // if true, branch to stat1 (if true branch)
     addInstr(CondBranchInstr(checkCondCode(expr), branch_0))
@@ -633,11 +608,9 @@ object StatTranslator {
       ir: IRBuilder
   ) = {
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"${getBranchCounter()}")
-    incBranchCounter()
+    val branch_0 = getJumpLabel()
 
-    val branch_1 = JumpLabel(s"${getBranchCounter()}")
-    incBranchCounter()
+    val branch_1 = getJumpLabel()
 
     // First, unconditionally jump to Branch 1
     addInstr(BranchInstr(branch_0))
@@ -652,8 +625,7 @@ object StatTranslator {
     addInstr(CreateLabel(branch_0))
 
     // Translate condition
-    translateExpr(expr)
-    translateBoolCond(expr)
+    translateCondition(expr)
 
     // If condition is true, jump back to branch 2
     addInstr(CondBranchInstr(checkCondCode(expr), branch_1))

@@ -5,17 +5,6 @@ import wacc.Instructions._
 import wacc.CodeGen.IRBuilder.addBranchLink
 
 object BranchLinkTranslator {
-  /* Constants */
-  private final val ErrorExitCode     = 255
-  private final val ArrayLenOffset    = -4
-  private final val NullImm           = 0
-  private final val TrueImm           = 1
-  private final val FalseImm          = 0
-  private final val PairFstElemOffset = 0
-  private final val PairSndElemOffset = 4
-  private final val CharByteSize      = 1
-  private final val IntByteSize       = 4
-  private final val FFlushStream      = 0
 
   def translateBranchLink(blName: FuncLabel)(implicit ir: IRBuilder): Option[IRSegment] = {
     implicit val instrsBuffer = mutable.ListBuffer[Instruction]()
@@ -57,7 +46,7 @@ object BranchLinkTranslator {
       loadByte: Boolean = false
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction], ir: IRBuilder): Unit = {
     textLabelCreation(blName)
-    instrsBuffer += CmpInstr(R10, Immediate(NullImm))
+    instrsBuffer += CmpInstr(R10, NullImm)
     instrsBuffer += CondMovInstr(LtCond, R1, R10)
     instrsBuffer += CondBranchLinkInstr(LtCond, CheckBound)
     instrsBuffer += LoadInstr(LR, RegIntOffset(R3, ArrayLenOffset))
@@ -83,7 +72,7 @@ object BranchLinkTranslator {
       storeByte: Boolean = false
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction], ir: IRBuilder): Unit = {
     textLabelCreation(blName)
-    instrsBuffer += CmpInstr(R10, Immediate(NullImm))
+    instrsBuffer += CmpInstr(R10, NullImm)
     instrsBuffer += CondMovInstr(LtCond, R1, R10)
     instrsBuffer += CondBranchLinkInstr(LtCond, CheckBound)
     instrsBuffer += LoadInstr(LR, RegIntOffset(R3, ArrayLenOffset))
@@ -106,13 +95,13 @@ object BranchLinkTranslator {
     textLabelCreation(blName)
     instrsBuffer += MovInstr(R8, R0)
     /* Pair null check */
-    instrsBuffer += CmpInstr(R8, Immediate(NullImm))
+    instrsBuffer += CmpInstr(R8, NullImm)
     instrsBuffer += CondBranchLinkInstr(EqCond, CheckNull)
 
     /* Free pair elements */
-    instrsBuffer += LoadInstr(R0, RegIntOffset(R8, PairFstElemOffset))
+    instrsBuffer += LoadInstr(R0, RegIntOffset(R8, PairFstIdx))
     instrsBuffer += BranchLinkInstr(FreeLabel)
-    instrsBuffer += LoadInstr(R0, RegIntOffset(R8, PairSndElemOffset))
+    instrsBuffer += LoadInstr(R0, RegIntOffset(R8, PairSndIdx))
     instrsBuffer += BranchLinkInstr(FreeLabel)
 
     /* Free pair */
@@ -192,7 +181,7 @@ object BranchLinkTranslator {
     val trueLabel  = JumpLabel(s"${blName.getName}0")
     val printLabel = JumpLabel(s"${blName.getName}1")
     textLabelCreation(blName)
-    instrsBuffer += CmpInstr(R0, Immediate(FalseImm))
+    instrsBuffer += CmpInstr(R0, FalseImm)
     instrsBuffer += CondBranchInstr(NeqCond, trueLabel)
 
     /* Prints false */
@@ -299,7 +288,7 @@ object BranchLinkTranslator {
     literalsBuffer += CreateLabel(readCharFormatStr)
     /* Adds read_char function to text section */
     textLabelCreation(blName)
-    readFunction(readCharFormatStr, CharByteSize)
+    readFunction(readCharFormatStr, ByteSize)
   }
 
   private def translateReadInt(
@@ -313,7 +302,7 @@ object BranchLinkTranslator {
 
     /* Adds read_int function to text section */
     textLabelCreation(blName)
-    readFunction(readIntFormatStr, IntByteSize)
+    readFunction(readIntFormatStr, DefaultSize)
   }
 
   private def textLabelCreation(
@@ -337,7 +326,7 @@ object BranchLinkTranslator {
       pop: Boolean = true
   )(implicit instrsBuffer: mutable.ListBuffer[Instruction]): Unit = {
     loadAndBranch(loadFormat, branchFormat)
-    instrsBuffer += MovInstr(R0, Immediate(FFlushStream))
+    instrsBuffer += MovInstr(R0, FFlushStreamImm)
     instrsBuffer += BranchLinkInstr(FileFlush)
     if (pop)
       instrsBuffer += PopInstr(Seq(PC))
@@ -357,10 +346,10 @@ object BranchLinkTranslator {
     instrsBuffer += CreateLabel(blName)
     loadAndBranch(errorStr, print)
     if (flush) {
-      instrsBuffer += MovInstr(R0, Immediate(FFlushStream)) // Flush all open streams
+      instrsBuffer += MovInstr(R0, FFlushStreamImm) // Flush all open streams
       instrsBuffer += BranchLinkInstr(FileFlush)
     }
-    instrsBuffer += MovInstr(R0, Immediate(ErrorExitCode))
+    instrsBuffer += MovInstr(R0, ErrorExitCode)
     instrsBuffer += BranchLinkInstr(ExitLabel)
   }
 
@@ -371,9 +360,9 @@ object BranchLinkTranslator {
     instrsBuffer += StoreByteInstr(R0, RegIntOffset(SP, -offset), true) // Push R0 to stack
     instrsBuffer += MovInstr(R1, SP)                                    // Pass address of R0 to scanf
     loadAndBranch(format, ScanFormatted)
-    if (offset == CharByteSize) // Pop R0 from stack
+    if (offset == ByteSize) // Pop R0 from stack
       instrsBuffer += LoadSignedByteInstr(R0, RegIntOffset(SP, 0))
-    else if (offset == IntByteSize)
+    else if (offset == DefaultSize)
       instrsBuffer += LoadInstr(R0, RegIntOffset(SP, 0))
     instrsBuffer += AddInstr(SP, SP, Immediate(offset))
     instrsBuffer += PopInstr(Seq(PC))

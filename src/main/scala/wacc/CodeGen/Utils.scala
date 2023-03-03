@@ -10,6 +10,7 @@ import wacc.SemanticChecker.SemanticTypes._
 import ExprTranslator.{translateExpr}
 
 object Utils {
+
   def calculateSaveRegs(varNum: Int): Seq[Register] = {
     if (varNum <= variableReg.size) {
       (0 until varNum).map(i => variableReg(i))
@@ -33,12 +34,12 @@ object Utils {
     addInstr(MovInstr(FP, SP))
 
     // variable stack space
-    val stackSpace = (varNum - variableReg.size) * 4
+    val stackSpace = (varNum - variableReg.size) * PtrSize
     // Add stack space if too many variables
     if (stackSpace > 0) {
       addInstr(SubInstr(SP, SP, Immediate(stackSpace)))
       // Update stateTable fp pointer
-      stateT.updateFPPtr(stackSpace * -1)
+      stateT.updateFPPtr(-stackSpace)
     }
 
   }
@@ -47,7 +48,7 @@ object Utils {
     val popFuncRegs    = Seq(FP, PC)
     val savedRegs      = stateT.getSavedRegs()
     val regNum         = stateT.getVarNum()
-    val stackSpace     = (regNum - variableReg.size) * 4
+    val stackSpace     = (regNum - variableReg.size) * PtrSize
 
     if (restoreSP) {
       // Restore SP
@@ -105,10 +106,46 @@ object Utils {
 
   def sizeOfElem(elemType: Type): Int =
     elemType match {
-      case BoolType() => 1
-      case CharType() => 1
-      case _          => 4
+      case BoolType() => ByteSize
+      case CharType() => ByteSize
+      case _          => DefaultSize
     }
+  
+  /* Mov to location or register, will check size */
+  def locMovLoad(size: Int, 
+                 src: Register, 
+                 dest: Location)(implicit ir: IRBuilder) = {
+    dest match {
+      case dest: Register => addInstr(MovInstr(src, dest))
+      case _             => {
+        size match {
+          case ByteSize => addInstr(LoadSignedByteInstr(src, dest))
+          case _        => addInstr(LoadInstr(src, dest))
+        }
+      }
+    }
+  }
+
+  /* Mov to location or register, will check size */
+  def locMovStore(size: Int,  
+                  src: Register, 
+                  dest: Location)(implicit ir: IRBuilder) = {
+    dest match {
+      case dest: Register => addInstr(MovInstr(dest, src))
+      case _             => {
+        size match {
+          case ByteSize => addInstr(StoreByteInstr(src, dest))
+          case _        => addInstr(StoreInstr(src, dest))
+        }
+      }
+    }
+  }
+
+  def getJumpLabel()(implicit ir: IRBuilder): JumpLabel = {
+    val retLabel = JumpLabel(s"${getBranchCounter()}")
+    incBranchCounter()
+    retLabel
+  }
 
   def callerSavePush()(implicit stateST: StateTable, ir: IRBuilder) = {
     val usedParam = stateST.getUsedParamRegs()
