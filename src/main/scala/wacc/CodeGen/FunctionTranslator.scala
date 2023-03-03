@@ -25,7 +25,6 @@ object FunctionTranslator {
     stateST.modifyVarNum(varNum)
 
     /* Caculate how many stack space needed for more parameters */
-    //TODO: Refactor this into Utils
     stateST.updateParamPtr((pushedRegNum + paraNum - (paramReg.size + 1)) * ptrSize)
 
     /* Store function parameters */

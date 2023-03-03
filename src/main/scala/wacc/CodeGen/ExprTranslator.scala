@@ -138,7 +138,7 @@ object ExprTranslator {
     addInstr(MulInstr(OpR1, OpR2, OpR1, OpR2))
 
     // Check overflow
-    addInstr(CmpInstr(OpR2, OpR1, Some(MulShiftConst))) //TODO: What is 31?
+    addInstr(CmpInstr(OpR2, OpR1, Some(MulShiftConst)))
     translateCondBLink(NeqCond, CheckOverflow)
   }
 

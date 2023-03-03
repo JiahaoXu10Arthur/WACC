@@ -4,8 +4,6 @@ object Instructions {
 
   sealed trait Operand
   case class Immediate(value: Int) extends Operand
-
-  // Need to discuss which pattern here
   sealed class Label(name: String) extends Operand {
     def getName: String = name
   }
