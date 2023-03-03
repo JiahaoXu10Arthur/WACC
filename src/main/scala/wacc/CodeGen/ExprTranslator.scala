@@ -28,8 +28,8 @@ object ExprTranslator {
       case Eq(expr1, expr2)  => translateCmp(expr1, expr2, EqCond, NeqCond)
       case Neq(expr1, expr2) => translateCmp(expr1, expr2, NeqCond, EqCond)
 
-      case And(expr1, expr2) => translateAnd(expr1, expr2)
-      case Or(expr1, expr2)  => translateOr(expr1, expr2)
+      case And(expr1, expr2) => translateAndOr(expr1, expr2, NeqCond)
+      case Or(expr1, expr2)  => translateAndOr(expr1, expr2, EqCond)
       case Not(expr)         => translateNot(expr)
       case Neg(expr)         => translateNeg(expr)
       case Len(expr)         => translateLen(expr)
@@ -146,18 +146,9 @@ object ExprTranslator {
       expr1: Expr,
       expr2: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+    performDivision(expr1, expr2)
 
-    // Div calling convention - store in R0 and R1
-    translateTwoExprTo(expr1, expr2, R0, R1)
-
-    // Division by 0 check
-    addInstr(CmpInstr(R1, Immediate(0)))
-    translateCondBLink(EqCond, CheckDivZero)
-
-    // Perform division
-    translateBLink(DivisionLabel)
-
-    // Move result to OpR1 for push
+    // Div result store in R0 -> division convention
     addInstr(MovInstr(OpR1, R0))
   }
 
@@ -165,22 +156,16 @@ object ExprTranslator {
       expr1: Expr,
       expr2: Expr
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+    performDivision(expr1, expr2)
 
-    // Div calling convention - store in R0 and R1
-    translateTwoExprTo(expr1, expr2, R0, R1)
-
-    // Divison by 0 check
-    addInstr(CmpInstr(R1, Immediate(0)))
-    translateCondBLink(EqCond, CheckDivZero)
-
-    // Perform division
-    translateBLink(DivisionLabel)
-
-    // Move result to OpR1 for push
+    // Mod store in R1 -> division convention
     addInstr(MovInstr(OpR1, R1))
   }
 
-  private def translateCmp(expr1: Expr, expr2: Expr, trueCode: CondCode, falseCode: CondCode)(implicit
+  private def translateCmp(expr1: Expr, 
+                           expr2: Expr, 
+                           trueCode: CondCode, 
+                           falseCode: CondCode)(implicit
       st: SymbolTable,
       stateST: StateTable,
       ir: IR
@@ -192,16 +177,15 @@ object ExprTranslator {
     // Compare expr1, expr2
     addInstr(CmpInstr(OpR1, OpR2))
 
-    // Two checker
-    addInstr(CondMovInstr(trueCode, OpR1, TrueImm))
-    addInstr(CondMovInstr(falseCode, OpR1, FalseImm))
+    // Mov true/false to OpR1 depending on condition
+    condMovTwoChecker(trueCode, falseCode, OpR1)
   }
 
-  private def translateAnd(
+  private def translateAndOr(
       expr1: Expr,
-      expr2: Expr
+      expr2: Expr,
+      shortCutCode: CondCode
   )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
-
     // Expr1 store in OpR1
     translateExprTo(expr1, OpR1)
 
@@ -209,11 +193,10 @@ object ExprTranslator {
     addInstr(CmpInstr(OpR1, TrueImm))
 
     // Allocate new branch name
-    val branch_0 = JumpLabel(s"${getBranchCounter()}")
-    incBranchCounter()
+    val branch_0 = getJumpLabel()
 
-    // If expr1 false, shortcut to L0
-    addInstr(CondBranchInstr(NeqCond, branch_0))
+    // If expr1 false(And)/true(Or), shortcut to L0
+    addInstr(CondBranchInstr(shortCutCode, branch_0))
 
     // Expr2 store in OpR2
     translateExprTo(expr2, OpR2)
@@ -224,42 +207,9 @@ object ExprTranslator {
     // .L0:
     addInstr(CreateLabel(branch_0))
 
-    // If both true, true
-    addInstr(CondMovInstr(EqCond, OpR1, TrueImm)) // R8 here should be loc2, but ref compiler used r8
-    // If one of it false, false
-    addInstr(CondMovInstr(NeqCond, OpR1, FalseImm)) // R8 here should be loc2, but ref compiler used r8
-  }
-
-  private def translateOr(
-      expr1: Expr,
-      expr2: Expr
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
-    // Expr1 store in OpR1
-    translateExprTo(expr1, OpR1)
-
-    // Check if expr1 is true
-    addInstr(CmpInstr(OpR1, TrueImm))
-
-    // Allocate new branch name
-    val branch_0 = JumpLabel(s"${getBranchCounter()}")
-    incBranchCounter()
-
-    // If expr1 true, shortcut to L0
-    addInstr(CondBranchInstr(EqCond, branch_0))
-
-    // Expr2 store in OpR2
-    translateExprTo(expr2, OpR2)
-
-    // Check if expr2 is true
-    addInstr(CmpInstr(OpR2, TrueImm))
-
-    // .L0:
-    addInstr(CreateLabel(branch_0))
-
-    // If either true, true
-    addInstr(CondMovInstr(EqCond, OpR1, TrueImm)) // R8 here should be loc2, but ref compiler used r8
-    // If both false, false
-    addInstr(CondMovInstr(NeqCond, OpR1, FalseImm)) // R8 here should be loc2, but ref compiler used r8
+    // Mov true/false to OpR1 depending on condition
+    condMovTwoChecker(EqCond, NeqCond, OpR1)
+    
   }
 
   private def translateNot(
@@ -270,8 +220,9 @@ object ExprTranslator {
 
     // Check expr true or false
     addInstr(CmpInstr(OpR1, TrueImm))
-    addInstr(CondMovInstr(NeqCond, OpR1, TrueImm))
-    addInstr(CondMovInstr(EqCond, OpR1, FalseImm))
+
+    // Inverse expr use two checker
+    condMovTwoChecker(NeqCond, EqCond, OpR1)
   }
 
   private def translateNeg(
@@ -280,7 +231,10 @@ object ExprTranslator {
     // Expr store in OpR1
     translateExprTo(expr, OpR1)
 
+    // Signed sub
     addInstr(RsbsInstr(OpR1, OpR1, Immediate(0)))
+
+    // Check overflow
     translateCondBLink(VsCond, CheckOverflow)
   }
 
@@ -290,7 +244,7 @@ object ExprTranslator {
     // Expr store in OpR1
     translateExprTo(expr, OpR1)
 
-    addInstr(LoadInstr(OpR1, RegIntOffset(OpR1, -PtrSize))) // load from a[0] → len a
+    addInstr(LoadInstr(OpR1, RegIntOffset(OpR1, ArrayLenOffset))) // load from a[0] → len a
   }
 
   private def translateChr(
@@ -302,4 +256,29 @@ object ExprTranslator {
     // Translate to char ASCII
     addInstr(AndInstr(OpR1, OpR1, ChrImm))
   }
+
+  private def performDivision(
+      expr1: Expr,
+      expr2: Expr
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IR) = {
+    // Div calling convention - store in R0 and R1
+    translateTwoExprTo(expr1, expr2, R0, R1)
+
+    // Divison by 0 check
+    addInstr(CmpInstr(R1, Immediate(0)))
+    translateCondBLink(EqCond, CheckDivZero)
+
+    // Perform division
+    translateBLink(DivisionLabel)
+  }
+
+  private def condMovTwoChecker(trueCode: CondCode, 
+                                falseCode: CondCode, 
+                                dest: Register)(implicit ir: IR) = {
+    // Move #1 to dest to represent true                      
+    addInstr(CondMovInstr(trueCode, dest, TrueImm))
+    // Move #0 to dest to represent true
+    addInstr(CondMovInstr(falseCode, dest, FalseImm))
+  }
+
 }

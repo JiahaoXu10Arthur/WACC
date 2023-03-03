@@ -155,7 +155,6 @@ object Instructions {
   case object GlobalTag extends Tag("global main")
   case object LtorgTag extends Tag("ltorg")
 
-
   sealed trait CondCode
   case object EqCond  extends CondCode
   case object NeqCond extends CondCode
