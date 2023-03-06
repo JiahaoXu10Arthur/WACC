@@ -57,7 +57,15 @@ object ValueSemantic {
     var funcObj: FuncObj = null
     /* Search funcObj in all scope*/
     st.lookUpAllFunc(ident.name) match {
-      case Some(symObj) => funcObj = st.getOverloadFuncObj(ident.name, args)
+      case Some(symObj) => {
+        val argTypes = args.map(checkExprType(_))
+        // Get the suitable function object
+        val optFuncObj = st.getOverloadFuncObj(ident.name, argTypes)
+        optFuncObj match {
+          case Some(obj) => funcObj = obj
+          case None =>
+        }
+      }
       /* If no function found, error */
       case _ => {
         semErr += buildScopeError(

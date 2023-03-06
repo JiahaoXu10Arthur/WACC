@@ -161,13 +161,13 @@ object SemanticTypes {
     var sameType = true
 
     /* First check if number of arguments are the same */
-    if (args1.size == args2.size) {
+    if (args1.size != args2.size) {
       sameType = false
     }
 
     var index = 0
     // Once different type occurs, overloading
-    while (sameType) {
+    while (sameType && index < args1.size) {
       sameType = equalType(args1(index), args2(index))
       index += 1
     }
