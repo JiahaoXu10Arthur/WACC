@@ -2,6 +2,7 @@ package wacc.CodeGen
 
 import wacc.Ast._
 import wacc.Instructions._
+import wacc.SemanticChecker.SemanticTypes._
 
 import StatTranslator._
 import IRBuilder._
@@ -33,8 +34,19 @@ object FunctionTranslator {
       stateST.addParam(param.ident.name, loc)
     }
 
-    /* Translate function body */   
-    addInstr(CreateLabel(WACCFuncLabel(func.ident.name)))
+    /* Translate function body */
+    // Check function overloading to get correct function label
+    val funcName = func.ident.name
+    val funcs = func.symb.lookUpAllFunc(funcName).get
+    var funcLabelName = funcName
+    // if overloading
+    if (funcs.length > 1) {
+      val argTypes = func.params.map(x => convertType(x.paramType))
+      val funcOverloadIndex = func.symb.getOverloadFuncIndex(funcName, argTypes)
+      funcLabelName = funcName + funcOverloadIndex
+    } 
+    addInstr(CreateLabel(WACCFuncLabel(funcLabelName)))
+
     beginBlock()
     func.stats.foreach { s =>
       translateStatement(s)(s.symb, stateST, ir)
