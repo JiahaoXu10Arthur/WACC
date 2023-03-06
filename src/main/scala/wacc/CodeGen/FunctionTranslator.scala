@@ -34,7 +34,7 @@ object FunctionTranslator {
       stateST.addParam(param.ident.name, loc)
     }
 
-    /* Translate function body */
+   
     // Check function overloading to get correct function label
     val funcName = func.ident.name
     val funcs = func.symb.lookUpAllFunc(funcName).get
@@ -45,8 +45,10 @@ object FunctionTranslator {
       val funcOverloadIndex = func.symb.getOverloadFuncIndex(funcName, argTypes)
       funcLabelName = funcName + funcOverloadIndex
     } 
+    /* Create function label */
     addInstr(CreateLabel(WACCFuncLabel(funcLabelName)))
 
+    /* Translate function body */
     beginBlock()
     func.stats.foreach { s =>
       translateStatement(s)(s.symb, stateST, ir)
