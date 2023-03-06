@@ -368,8 +368,19 @@ object StatTranslator {
       index += 1
     }
 
+    // Check function overloading to get correct function label
+    val funcName = callValue.ident.name
+    val funcs = st.lookUpFunc(funcName).get
+    var funcLabelName = funcName
+    // if overloading
+    if (funcs.length > 1) {
+      val argTypes = callValue.args.map(checkExprType(_))
+      val funcOverloadIndex = st.getOverloadFuncIndex(funcName, argTypes)
+      funcLabelName = funcName + funcOverloadIndex
+    } 
+      
     // Create branch jump
-    addInstr(BranchLinkInstr(WACCFuncLabel(callValue.ident.name)))
+    addInstr(BranchLinkInstr(WACCFuncLabel(funcLabelName)))
 
     // Store the result in OpR1
     addInstr(MovInstr(OpR1, OpRet))
