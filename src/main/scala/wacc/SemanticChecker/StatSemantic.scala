@@ -48,7 +48,7 @@ object StatSemantic {
     val targetType: Type = convertType(type1)
     val valueType: Type = checkRvalue(initValue)
     /* Check existence, Create new VariableObj */
-    st.lookUp(ident.name, VariableType()) match {
+    st.lookUpVar(ident.name) match {
       /* If varaible already declared, error */
       case Some(VariableObj(_, pos)) =>
         semErr += buildVarRedefError(

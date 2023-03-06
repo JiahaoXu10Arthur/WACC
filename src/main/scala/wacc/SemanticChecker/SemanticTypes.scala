@@ -111,7 +111,7 @@ object SemanticTypes {
       case PairLit()           => AnyType()
       case Ident(name)         => {
         /* Search for identifier in all scope */
-        st.lookUpAll(name, VariableType()) match {
+        st.lookUpAllVar(name) match {
           case Some(symObj) => symObj.getType()
           case None => AnyType()
         }

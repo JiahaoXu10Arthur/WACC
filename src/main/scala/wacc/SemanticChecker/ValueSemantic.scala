@@ -56,7 +56,7 @@ object ValueSemantic {
   ): Type = {
     var funcObj: FuncObj = null
     /* Search funcObj in all scope*/
-    st.lookUpAll(ident.name, FunctionType()) match {
+    st.lookUpAllFunc(ident.name) match {
       case Some(symObj: FuncObj) => funcObj = symObj
       /* If no function found, error */
       case _ => {

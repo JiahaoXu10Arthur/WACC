@@ -9,7 +9,7 @@ import wacc.Ast._
 import SymbolObject._
 import SymbolObjectType._
 import StatSemantic._
-import SemanticTypes.{convertType}
+import SemanticTypes._
 
 object FunctionSemantic {
   /* Load only header into main scope */
@@ -23,32 +23,38 @@ object FunctionSemantic {
       args += new ParamObj(convertType(p.paramType), p.pos)
     }
 
-    /* Check for function redefinition */
-    st.lookUp(func.ident.name, FunctionType()) match {
-      /* Function redefinition */
-      case Some(obj) => {
-        semErr += buildFuncRedefError(
-          func.ident.pos,
-          func.ident.name,
-          obj.getPos(),
-          Seq(s"Illegal redeclaration of parameter ${func.ident.name} ")
-        )
-      }
-      case None => {
-        /* add function to main scope */
-        st.add(
-          func.ident.name,
-          FunctionType(),
-          new FuncObj(
-            convertType(func.type1),
-            args.toList,
-            func.params.length,
-            st,
-            func.pos
-          )
-        )
-      }
-    }
+    // /* Check for function redefinition */
+    // st.lookUpFunc(func.ident.name) match {
+    //   /* Function redefinition */
+    //   case Some(obj: FunctionObj) => {
+    //     /* Check function overload */
+    //     if (allArgsSameType(obj.args, func.params)) {
+    //       /* All arguments are the same type, function redefinition */
+    //       semErr += buildFuncRedefError(
+    //         func.ident.pos,
+    //         func.ident.name,
+    //         obj.getPos(),
+    //         Seq(s"Illegal redeclaration of parameter ${func.ident.name} ")
+    //       )
+    //     } else {
+    //       /* Function overloading */
+    //     }
+    //   }
+    //   case None => {
+    //     /* add function to main scope */
+    //     st.add(
+    //       func.ident.name,
+    //       FunctionType(),
+    //       new FuncObj(
+    //         convertType(func.type1),
+    //         args.toList,
+    //         func.params.length,
+    //         st,
+    //         func.pos
+    //       )
+    //     )
+    //   }
+    // }
 
   }
 
@@ -64,7 +70,8 @@ object FunctionSemantic {
 
     /* Check for parameter redefinition */
     func.params.foreach { p =>
-      new_st.lookUp(p.ident.name, VariableType()) match {
+      new_st.lookUpVar(p.ident.name) match {
+        /* Parameter redefinition */
         case Some(obj) => {
           semErr += buildParamRedefError(
             p.ident.pos,
@@ -106,5 +113,26 @@ object FunctionSemantic {
 
     /* Add symbol table to func */
     func.symb = new_st
+  }
+
+  private def allArgsSameType(
+      args1: List[Expr],
+      args2: List[Expr],
+  )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Boolean = {
+    var sameType = true
+
+    /* First check if number of arguments are the same */
+    if (args1.size == args2.size) {
+      sameType = false
+    }
+
+    var index = 0
+    // Once different type occurs, overloading
+    while (sameType) {
+      sameType = equalType(checkExprType(args1(index)), checkExprType(args2(index)))
+      index += 1
+    }
+
+    sameType
   }
 }
