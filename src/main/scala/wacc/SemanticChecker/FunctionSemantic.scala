@@ -23,38 +23,46 @@ object FunctionSemantic {
       args += new ParamObj(convertType(p.paramType), p.pos)
     }
 
-    // /* Check for function redefinition */
-    // st.lookUpFunc(func.ident.name) match {
-    //   /* Function redefinition */
-    //   case Some(obj: FunctionObj) => {
-    //     /* Check function overload */
-    //     if (allArgsSameType(obj.args, func.params)) {
-    //       /* All arguments are the same type, function redefinition */
-    //       semErr += buildFuncRedefError(
-    //         func.ident.pos,
-    //         func.ident.name,
-    //         obj.getPos(),
-    //         Seq(s"Illegal redeclaration of parameter ${func.ident.name} ")
-    //       )
-    //     } else {
-    //       /* Function overloading */
-    //     }
-    //   }
-    //   case None => {
-    //     /* add function to main scope */
-    //     st.add(
-    //       func.ident.name,
-    //       FunctionType(),
-    //       new FuncObj(
-    //         convertType(func.type1),
-    //         args.toList,
-    //         func.params.length,
-    //         st,
-    //         func.pos
-    //       )
-    //     )
-    //   }
-    // }
+    var redefFunc = false
+    /* Check for function redefinition */
+    st.lookUpFunc(func.ident.name) match {
+      /* Function redefinition */
+      case Some(objs) => {
+        objs.foreach {
+          case obj: FuncObj => {
+              val argTypes1 = args.map(_.t).toList
+              val argTypes2 = obj.args.map(_.t)
+              /* All arguments are the same type, function redefinition */
+              if (allArgsSameType(argTypes1, argTypes2)) {
+                semErr += buildFuncRedefError(
+                  func.ident.pos,
+                  func.ident.name,
+                  obj.getPos(),
+                  Seq(s"Illegal redeclaration of parameter ${func.ident.name} ")
+                )
+                redefFunc = true
+              }
+            }
+          case _ =>
+        }
+      }
+      case None =>
+    }
+
+    /* Add function definition to main scope */
+    if (!redefFunc) {
+      st.add(
+        func.ident.name,
+        FunctionType(),
+        new FuncObj(
+          convertType(func.type1),
+          args.toList,
+          args.length,
+          st,
+          func.pos
+        )
+      )
+    }
 
   }
 
@@ -113,26 +121,5 @@ object FunctionSemantic {
 
     /* Add symbol table to func */
     func.symb = new_st
-  }
-
-  private def allArgsSameType(
-      args1: List[Expr],
-      args2: List[Expr],
-  )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Boolean = {
-    var sameType = true
-
-    /* First check if number of arguments are the same */
-    if (args1.size == args2.size) {
-      sameType = false
-    }
-
-    var index = 0
-    // Once different type occurs, overloading
-    while (sameType) {
-      sameType = equalType(checkExprType(args1(index)), checkExprType(args2(index)))
-      index += 1
-    }
-
-    sameType
   }
 }

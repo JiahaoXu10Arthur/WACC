@@ -243,9 +243,9 @@ object StatSemantic {
     var retType: Type = null
 
     /* Find functionObj declared in scope */
-    for ((name, obj) <- st.dictionary) {
+    for ((name, objs) <- st.dictionary) {
       /* find function in this scope */
-      obj match {
+      objs.head match {
         case obj: FuncObj => retType = obj.returnType
         case _            =>
       }

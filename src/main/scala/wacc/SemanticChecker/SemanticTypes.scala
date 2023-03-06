@@ -1,7 +1,6 @@
 package wacc.SemanticChecker
 
 import wacc.SyntaxChecker.Types
-import wacc.SemanticChecker.SymbolObjectType._
 import wacc.Ast._
 
 object SemanticTypes {
@@ -155,5 +154,24 @@ object SemanticTypes {
         returnType
       }
     }
+  }
+
+  def allArgsSameType(args1: List[Type],
+                      args2: List[Type]): Boolean = {
+    var sameType = true
+
+    /* First check if number of arguments are the same */
+    if (args1.size == args2.size) {
+      sameType = false
+    }
+
+    var index = 0
+    // Once different type occurs, overloading
+    while (sameType) {
+      sameType = equalType(args1(index), args2(index))
+      index += 1
+    }
+
+    sameType
   }
 }

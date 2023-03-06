@@ -2,8 +2,10 @@ package wacc.SemanticChecker
 
 import scala.collection.mutable
 
+import wacc.Ast._
 import SymbolObject._
 import SymbolObjectType._
+import SemanticTypes._
 
 class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
@@ -86,6 +88,67 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     }
 
     None
+  }
+
+  private def correctArgForFuncObj(func: FuncObj, 
+                                   exprs: List[Expr])(implicit st: SymbolTable): Boolean = {
+    val funcArgTypes = func.args.map(_.t)
+    val argTypes = exprs.map(checkExprType(_))
+    if (allArgsSameType(funcArgTypes, argTypes)) {
+      true
+    } else {
+      false
+    }
+  }
+
+  /* Find the overload function object with the same argument types */
+  def getOverloadFuncObj(name: String, args: List[Expr])(implicit st: SymbolTable): FuncObj = {
+    val funcObjs = lookUpFunc(name)
+    var retObj: FuncObj = null
+
+    funcObjs match {
+      case Some(funcs) => {
+        /* For each overloading function, check if the argument types are the same */
+        for (func <- funcs) { 
+          func match {
+            case func: FuncObj => {
+              if (correctArgForFuncObj(func, args))
+                retObj = func
+            }
+            case _ =>
+          }
+        }
+      }
+      case None =>
+    }
+
+    retObj
+  }
+
+  /* Get the overload index of a function */
+  def getOverloadFuncIndex(name: String, args: List[Expr])(implicit st: SymbolTable): Int = {
+    val funcObjs = lookUpFunc(name)
+    var retIndex = -1
+
+    funcObjs match {
+      case Some(funcs) => {
+        var index = 0
+        /* For each overloading function, check if the argument types are the same */
+        for (func <- funcs) { 
+          func match {
+            case func: FuncObj => {
+              if (correctArgForFuncObj(func, args))
+                retIndex = index
+            }
+            case _ =>
+          }
+          index += 1
+        }
+      }
+      case None =>
+    }
+
+    retIndex
   }
 
   // find variable number in this scope
