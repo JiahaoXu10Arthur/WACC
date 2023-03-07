@@ -38,7 +38,7 @@ object FunctionTranslator {
     val funcName = func.ident.name
     val argTypes = func.params.map(x => convertType(x.paramType))
     // for function header, search in main st
-    val funcOverloadIndex = func.symb.encSymTable.getOverloadFuncIndex(funcName, argTypes)
+    val funcOverloadIndex = func.symb.getOverloadFuncIndex(funcName, argTypes)
     val funcLabelName = funcName + funcOverloadIndex
 
     /* Create function label */
