@@ -1,12 +1,15 @@
+package wacc.CodeGen
+
 import scala.collection.mutable.ListBuffer
 
 import wacc.Instructions._
+import wacc.CodeGen.IR
+import wacc.CodeGen.IRSegment
 
 object OptimiseIR {
-
   val optimisedList = ListBuffer[Instruction]()
 
-  def optimise1(ir: IR): IR = {
+  def optimise1(ir: IR) = {
 
     val mainSeq: Seq[Instruction] = ir.segments(0).instrs
     var i = 0
@@ -43,10 +46,10 @@ object OptimiseIR {
     
     optimise1(originalIR)
     val optimisedMain = new IRSegment(originalIR.segments(0).literals, optimisedList.toSeq)
-    val irBuilder = ListBuffer[Instruction]()
+    val irBuilder = ListBuffer[IRSegment]()
 
     irBuilder += optimisedMain
-    originalIR.drop(1).foreach(seg => irBuilder += seg)
+    originalIR.segments.drop(1).foreach(seg => irBuilder += seg)
 
     new IR(irBuilder.toSeq)
   }
