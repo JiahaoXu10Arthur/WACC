@@ -77,16 +77,14 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
   /* Look up a value according to key in this symbol table and all parent table*/
   def lookUpAllFunc(name: String): Option[List[SymbolObj]] = {
-    var s = this
-    while (s != null) {
-      val obj = s.lookUpFunc(name)
-      if (obj != None) {
-        return obj
-      }
-      s = s.encSymTable
+    // Can only define function in main scope
+
+    var mainSt = this
+    while (mainSt.encSymTable != null) {
+      mainSt = mainSt.encSymTable
     }
 
-    None
+    mainSt.lookUpFunc(name)
   }
 
   private def correctArgForFuncObj(func: FuncObj, 

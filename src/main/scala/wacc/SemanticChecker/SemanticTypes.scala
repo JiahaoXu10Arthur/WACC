@@ -97,11 +97,11 @@ object SemanticTypes {
 
       case And(_, _)   => BoolType()
       case Or(_, _)    => BoolType()
-      case Not(_)           => BoolType()
-      case Neg(_)           => IntType()
-      case Len(_)           => IntType()
-      case Ord(_)           => IntType()
-      case Chr(_)           => CharType()
+      case Not(_)      => BoolType()
+      case Neg(_)      => IntType()
+      case Len(_)      => IntType()
+      case Ord(_)      => IntType()
+      case Chr(_)      => CharType()
 
       case IntLit(_)       => IntType()
       case BoolLit(_)      => BoolType()

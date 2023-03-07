@@ -1,0 +1,36 @@
+# attempted function overload with function recursive call
+
+# Output:
+# 5
+# 2
+#
+
+# Program:
+
+begin
+	int f(int a) is
+    if a > 0
+    then
+      int y = call f(a - 1);
+      return y + 1
+    else
+      return 0
+    fi
+	end
+
+  int f(char a) is
+    if a > 'a'
+    then
+      char nextChar = chr(ord(a) - 1);
+      int y = call f(nextChar);
+      return y + 1
+    else
+      return 0
+    fi
+  end
+
+  int x = call f(5);
+  println x;
+  int y = call f('c');
+  println y
+end
