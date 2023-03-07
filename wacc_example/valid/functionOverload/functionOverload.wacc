@@ -2,6 +2,7 @@
 
 # Output:
 # 0
+# 1
 #
 
 # Program:
@@ -16,8 +17,7 @@ begin
   end
 
   int x = call f(1);
-  println x
-
-#  int y = call f('a')
-#  println y
+  println x;
+  int y = call f('a');
+  println y
 end
