@@ -8,18 +8,17 @@ import wacc.CodeGen.IRSegment
 
 object OptimiseIR {
   
-  def optimise1(ir: IR): Seq[Instruction] = {
+  def optimise1(seqs: Seq[Instruction]): Seq[Instruction] = {
     // Optimise push/pop pairs
-    val mainSeq: Seq[Instruction] = ir.segments(0).instrs
     val optimisedList = ListBuffer[Instruction]()
     var i = 0
 
-    while (i < mainSeq.length) {
-      mainSeq(i) match {
+    while (i < seqs.length) {
+      seqs(i) match {
         case PushInstr(registers) => {
-          if (registers.length == 1 && nextInstrIsPop(mainSeq(i+1))) {
+          if (registers.length == 1 && nextInstrIsPop(seqs(i+1))) {
             val srcReg = registers(0)
-            val destReg = getDestReg(mainSeq(i+1))
+            val destReg = getDestReg(seqs(i+1))
             // If move to different register, add mov instruction
             if (srcReg != destReg) {
               optimisedList += MovInstr(destReg, srcReg)
@@ -28,10 +27,10 @@ object OptimiseIR {
             i += 1
           } else {
             // If next not pop, add push instruction
-            optimisedList += mainSeq(i)
+            optimisedList += seqs(i)
           }
         }
-        case _ => optimisedList += mainSeq(i)
+        case _ => optimisedList += seqs(i)
       }
       // next instruction
       i += 1
@@ -40,10 +39,51 @@ object OptimiseIR {
     optimisedList.toSeq
   }
 
-  // def optimise2(ir: IR) = {
-  //   // Optimise MovInstr
+  def optimise2(seqs: Seq[Instruction]): Seq[Instruction] = {
+    // Optimise MovInstr
+    val optimisedList = ListBuffer[Instruction]()
 
-  // }
+    var previousMove: Option[Instruction] = None
+    var i = 0
+
+    while (i < seqs.length) {
+      var combineMove: Option[Instruction] = None
+      val curInstr = seqs(i)
+      
+      previousMove match {
+        case Some(preInstr) => combineMove = connectMove(preInstr, curInstr)
+        case None => 
+      }
+      
+      combineMove match {
+        case Some(moveInstr) => {
+          previousMove = combineMove
+        }
+        case None => (curInstr, previousMove) match {
+          case (MovInstr(_, _), Some(instr)) => {
+            optimisedList += instr
+            previousMove = Some(curInstr)
+          }
+          case (MovInstr(_, _), None) => {
+            previousMove = Some(curInstr)
+          }
+          case (_, Some(instr)) => {
+            optimisedList += instr
+            optimisedList += curInstr
+            previousMove = None
+          }
+          case (_, None) => {
+            optimisedList += curInstr
+            previousMove = None
+          }
+        }
+      }
+
+      i += 1
+    }
+
+    optimisedList.toSeq
+  }
 
   def nextInstrIsPop(instr: Instruction): Boolean = {
     instr match {
@@ -59,9 +99,35 @@ object OptimiseIR {
     }
   }
 
+  def connectMove(mov1: Instruction,
+                  mov2: Instruction): Option[Instruction] = {
+    
+    mov1 match {
+      case MovInstr(dest1, src1) => {
+        // If move to varaible register -> declaration, cannot combine
+        if (variableReg.contains(dest1)) {
+          return None
+        }
+      
+        mov2 match {
+          case MovInstr(dest2, src2) =>
+            if (dest1 == src2) {
+              Some(MovInstr(dest2, src1))
+            } else {
+              None
+            }
+          case _ => None
+        }
+      }
+      case _ => None
+    }
+  }
+
   def makeOptimisedIR(originalIR: IR): IR = {
-    val mainInstrSeq = optimise1(originalIR)
-    val optimisedMain = new IRSegment(originalIR.segments(0).literals, mainInstrSeq)
+    val mainSeq = originalIR.segments(0).instrs
+    val opt1Seq = optimise1(mainSeq)
+    val opt2Seq = optimise2(opt1Seq)
+    val optimisedMain = new IRSegment(originalIR.segments(0).literals, opt2Seq)
     val irBuilder = ListBuffer[IRSegment]()
 
     irBuilder += optimisedMain
