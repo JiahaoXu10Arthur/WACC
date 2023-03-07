@@ -34,17 +34,13 @@ object FunctionTranslator {
       stateST.addParam(param.ident.name, loc)
     }
 
-   
     // Check function overloading to get correct function label
     val funcName = func.ident.name
-    val funcs = func.symb.lookUpAllFunc(funcName).get
-    var funcLabelName = funcName
-    // if overloading
-    if (funcs.length > 1) {
-      val argTypes = func.params.map(x => convertType(x.paramType))
-      val funcOverloadIndex = func.symb.getOverloadFuncIndex(funcName, argTypes)
-      funcLabelName = funcName + funcOverloadIndex
-    } 
+    val argTypes = func.params.map(x => convertType(x.paramType))
+    // for function header, search in main st
+    val funcOverloadIndex = func.symb.encSymTable.getOverloadFuncIndex(funcName, argTypes)
+    val funcLabelName = funcName + funcOverloadIndex
+
     /* Create function label */
     addInstr(CreateLabel(WACCFuncLabel(funcLabelName)))
 

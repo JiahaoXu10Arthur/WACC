@@ -1,0 +1,23 @@
+# attempted overload of function with different parameters
+
+# Output:
+# 0
+#
+
+# Program:
+
+begin
+	int f(int a) is
+		return 0
+	end
+
+  int f(char a) is
+    return 1
+  end
+
+  int x = call f(1);
+  println x
+
+#  int y = call f('a')
+#  println y
+end

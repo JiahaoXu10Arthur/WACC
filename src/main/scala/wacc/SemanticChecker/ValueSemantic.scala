@@ -55,20 +55,26 @@ object ValueSemantic {
       semErr: ListBuffer[WACCError]
   ): Type = {
     var funcObj: FuncObj = null
+    var findFunc = false
     /* Search funcObj in all scope*/
     st.lookUpAllFunc(ident.name) match {
       case Some(symObj) => {
         val argTypes = args.map(checkExprType(_))
         // Get the suitable function object
-        val optFuncObj = st.getOverloadFuncObj(ident.name, argTypes)
-        optFuncObj match {
-          case Some(obj) => funcObj = obj
+        st.getOverloadFuncObj(ident.name, argTypes) match {
+          case Some(obj) => {
+            findFunc = true
+            funcObj = obj
+          }
           case None =>
         }
       }
-      /* If no function found, error */
-      case _ => {
-        semErr += buildScopeError(
+      case _ => 
+    }
+
+    /* If no function found, error */
+    if (!findFunc) {
+      semErr += buildScopeError(
           ident.pos,
           ident.name,
           st.lookUpAllSimilar(ident.name, FunctionType()),
@@ -80,8 +86,7 @@ object ValueSemantic {
           FunctionType(),
           new FuncObj(AnyType(), List(), 0, st, ident.pos)
         )
-        return AnyType()
-      }
+      return AnyType()
     }
 
     val lengthArgs = args.length

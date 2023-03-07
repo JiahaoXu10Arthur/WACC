@@ -126,7 +126,7 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
   /* Get the overload index of a function */
   def getOverloadFuncIndex(name: String, args: List[Type]): Int = {
     val funcObjs = lookUpAllFunc(name)
-    var retIndex = -1
+    var retIndex = 0
 
     funcObjs match {
       case Some(funcs) => {
