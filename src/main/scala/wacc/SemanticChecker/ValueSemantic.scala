@@ -23,11 +23,12 @@ object ValueSemantic {
   }
 
   def checkRvalue(
-      rvalue: Rvalue
+      rvalue: Rvalue,
+      targetType: Type
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
     rvalue match {
       case NewPair(e1, e2)         => newPairCheck(e1, e2)
-      case Call(ident, args)       => callCheck(ident, args)
+      case Call(ident, args)       => callCheck(ident, args, targetType)
       case PairElem(index, lvalue) => pairElemCheck(index, lvalue)
       case ArrayLit(values)        => arrayLitCheck(values)
       case rvalue: Expr            => checkExpr(rvalue)
@@ -50,7 +51,7 @@ object ValueSemantic {
      FuncObj(returnType, args, argc, st)
      Arg2: args -> type match to FuncObj(args)
      Return: FuncObj(returnType) */
-  def callCheck(ident: Ident, args: List[Expr])(implicit
+  def callCheck(ident: Ident, args: List[Expr], targetType: Type)(implicit
       st: SymbolTable,
       semErr: ListBuffer[WACCError]
   ): Type = {
@@ -60,12 +61,12 @@ object ValueSemantic {
     st.lookUpAllFunc(ident.name) match {
       case Some(symObj) => {
         val expectedArgs = args.map(checkExprType(_))
-        val sameArgFuncObjs = st.getAllSuitableFuncObj(ident.name, expectedArgs)
-
-        /* No function of these argument types found */
-        if (sameArgFuncObjs.isEmpty) {
-          findFunc = false
+        val funcObjOpt = st.getOverloadFuncObj(ident.name, targetType, expectedArgs)
+        funcObjOpt match {
+          case Some(obj) => funcObj = obj
+          case None => findFunc = false
         }
+
       }
       case _ => 
     }

@@ -46,7 +46,7 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     val targetType: Type = convertType(type1)
-    val valueType: Type = checkRvalue(initValue)
+    val valueType: Type = checkRvalue(initValue, targetType)
     /* Check existence, Create new VariableObj */
     st.lookUpVar(ident.name) match {
       /* If varaible already declared, error */
@@ -101,7 +101,7 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     val targetType = checkLvalue(target)
-    val assignType = checkRvalue(newValue)
+    val assignType = checkRvalue(newValue, targetType)
 
     /* Check target type matches assign type */
     if (!equalType(targetType, assignType)) {
@@ -124,7 +124,7 @@ object StatSemantic {
     // Check left side nested pair
     target match {
       case PairElem(_, PairElem(_, _)) => {
-        checkRvalue(newValue)
+        checkRvalue(newValue, AnyType())
         firstNested = true
       }
       case _ =>

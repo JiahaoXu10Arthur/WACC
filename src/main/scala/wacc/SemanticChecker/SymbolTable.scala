@@ -101,10 +101,11 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
   }
 
   /* Find the overload function object with the same argument types */
-  def getAllSuitableFuncObj(name: String, 
-                            expectedArgs: List[Type]): List[FuncObj] = {
+  def getOverloadFuncObj(name: String,
+                         expectRet:  Type,
+                         expectArgs: List[Type]): Option[FuncObj] = {
     val funcObjs = lookUpAllFunc(name)
-    val retObj = ListBuffer[FuncObj]()
+    var retObj: Option[FuncObj] = None
 
     funcObjs match {
       case Some(funcs) => {
@@ -112,8 +113,8 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
         for (func <- funcs) { 
           func match {
             case func: FuncObj => {
-              if (correctFuncObj(func, AnyType(), expectedArgs))
-                retObj += func
+              if (correctFuncObj(func, expectRet, expectArgs))
+                retObj = Some(func)
             }
             case _ =>
           }
@@ -122,7 +123,7 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
       case None =>
     }
 
-    retObj.toList
+    retObj
   }
 
   /* Get the overload index of a function */
