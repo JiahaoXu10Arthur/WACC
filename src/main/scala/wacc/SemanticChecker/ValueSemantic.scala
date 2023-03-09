@@ -27,11 +27,15 @@ object ValueSemantic {
       targetType: Type
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
     rvalue match {
-      case NewPair(e1, e2)         => newPairCheck(e1, e2)
-      case Call(ident, args)       => callCheck(ident, args, targetType)
-      case PairElem(index, lvalue) => pairElemCheck(index, lvalue)
-      case ArrayLit(values)        => arrayLitCheck(values)
-      case rvalue: Expr            => checkExpr(rvalue)
+      case NewPair(e1, e2)               => newPairCheck(e1, e2)
+      case callValue @ Call(ident, args) => {
+        // Assign return type for callValue AST node
+        callValue.returnType = targetType
+        callCheck(ident, args, targetType)
+      }
+      case PairElem(index, lvalue)       => pairElemCheck(index, lvalue)
+      case ArrayLit(values)              => arrayLitCheck(values)
+      case rvalue: Expr                  => checkExpr(rvalue)
     }
   }
 
