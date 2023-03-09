@@ -370,8 +370,9 @@ object StatTranslator {
 
     // Check function overloading to get correct function label
     val funcName = callValue.ident.name
-    val argTypes = callValue.args.map(checkExprType(_))
-    val funcOverloadIndex = st.getOverloadFuncIndex(funcName, argTypes)
+    val expectedRet  = callValue.returnType
+    val expectedArgs = callValue.args.map(checkExprType(_))
+    val funcOverloadIndex = st.getOverloadFuncIndex(funcName, expectedRet, expectedArgs)
     val funcLabelName = funcName + funcOverloadIndex
       
     // Create branch jump

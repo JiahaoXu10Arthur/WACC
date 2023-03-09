@@ -33,7 +33,7 @@ object ValueParser {
       NewPair(("newpair" ~> "(" ~> expr), ("," ~> expr <~ ")")) |
       Call(
         ("call" ~> Ident(Lexer.ident)),
-        "(" ~> sepBy(expr, ",") <~ ")"
+        "(" ~> sepBy(expr, ",") <~ ")",
       ) |
       arrayLit | expr
 
