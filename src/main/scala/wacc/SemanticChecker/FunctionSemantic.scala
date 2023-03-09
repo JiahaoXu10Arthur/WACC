@@ -23,17 +23,20 @@ object FunctionSemantic {
       args += new ParamObj(convertType(p.paramType), p.pos)
     }
 
-    var redefFunc = false
     /* Check for function redefinition */
+    val expectedRet  = convertType(func.type1)
+    val expectedArgs = args.map(_.t).toList
+
+    var redefFunc = false
     st.lookUpFunc(func.ident.name) match {
       /* Function redefinition */
       case Some(objs) => {
         objs.foreach {
           case obj: FuncObj => {
-              val argTypes1 = args.map(_.t).toList
-              val argTypes2 = obj.args.map(_.t)
+              val objRet  = obj.returnType
+              val objArgs = obj.args.map(_.t)
               /* All arguments are the same type, function redefinition */
-              if (allArgsSameType(argTypes1, argTypes2)) {
+              if (sameFunction(expectedRet, objRet, expectedArgs, objArgs)) {
                 semErr += buildFuncRedefError(
                   func.ident.pos,
                   func.ident.name,
@@ -55,7 +58,7 @@ object FunctionSemantic {
         func.ident.name,
         FunctionType(),
         new FuncObj(
-          convertType(func.type1),
+          expectedRet,
           args.toList,
           args.length,
           st,

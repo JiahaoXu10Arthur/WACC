@@ -55,18 +55,16 @@ object ValueSemantic {
       semErr: ListBuffer[WACCError]
   ): Type = {
     var funcObj: FuncObj = null
-    var findFunc = false
+    var findFunc = true
     /* Search funcObj in all scope*/
     st.lookUpAllFunc(ident.name) match {
       case Some(symObj) => {
-        val argTypes = args.map(checkExprType(_))
-        // Get the suitable function object
-        st.getOverloadFuncObj(ident.name, argTypes) match {
-          case Some(obj) => {
-            findFunc = true
-            funcObj = obj
-          }
-          case None =>
+        val expectedArgs = args.map(checkExprType(_))
+        val sameArgFuncObjs = st.getAllSuitableFuncObj(ident.name, expectedArgs)
+
+        /* No function of these argument types found */
+        if (sameArgFuncObjs.isEmpty) {
+          findFunc = false
         }
       }
       case _ => 
@@ -87,31 +85,6 @@ object ValueSemantic {
           new FuncObj(AnyType(), List(), 0, st, ident.pos)
         )
       return AnyType()
-    }
-
-    val lengthArgs = args.length
-    /* check number of parameters macthes function declaration  */
-    if (lengthArgs != funcObj.argc) {
-      semErr += buildArgNumError(
-        args(lengthArgs - 1).pos,
-        lengthArgs,
-        funcObj.argc,
-        Seq(s"Wrong number of arguments provided to function ${ident.name}")
-      )
-    }
-
-    /* check every parameter's type matches function declaration */
-    for (i <- 0 until lengthArgs.min(funcObj.argc)) {
-      val type1 = funcObj.args(i).getType()
-      val type2 = checkExpr(args(i))
-      if (!equalType(type1, type2)) {
-        semErr += buildTypeError(
-          args(i).pos,
-          type2,
-          Set(type1),
-          Seq("Arguments passed in need to match the type in funciton declaration")
-        )
-      }
     }
 
     /* Return type */

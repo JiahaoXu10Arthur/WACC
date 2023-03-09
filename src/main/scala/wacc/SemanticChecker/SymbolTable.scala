@@ -5,6 +5,7 @@ import scala.collection.mutable
 import SymbolObject._
 import SymbolObjectType._
 import SemanticTypes._
+import scala.collection.mutable.ListBuffer
 
 class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
@@ -87,10 +88,12 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     mainSt.lookUpFunc(name)
   }
 
-  private def correctArgForFuncObj(func: FuncObj, 
-                                   argTypes: List[Type]): Boolean = {
-    val funcArgTypes = func.args.map(_.t)
-    if (allArgsSameType(funcArgTypes, argTypes)) {
+  private def correctFuncObj(func: FuncObj,
+                                   expectedRet: Type, 
+                                   expectedArgs: List[Type]): Boolean = {
+    val funcRet  = func.returnType
+    val funcArgs = func.args.map(_.t)
+    if (sameFunction(expectedRet, funcRet, expectedArgs, funcArgs)) {
       true
     } else {
       false
@@ -98,9 +101,10 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
   }
 
   /* Find the overload function object with the same argument types */
-  def getOverloadFuncObj(name: String, args: List[Type]): Option[FuncObj] = {
+  def getAllSuitableFuncObj(name: String, 
+                            expectedArgs: List[Type]): List[FuncObj] = {
     val funcObjs = lookUpAllFunc(name)
-    var retObj: Option[FuncObj] = None
+    val retObj = ListBuffer[FuncObj]()
 
     funcObjs match {
       case Some(funcs) => {
@@ -108,8 +112,8 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
         for (func <- funcs) { 
           func match {
             case func: FuncObj => {
-              if (correctArgForFuncObj(func, args))
-                retObj = Some(func)
+              if (correctFuncObj(func, AnyType(), expectedArgs))
+                retObj += func
             }
             case _ =>
           }
@@ -118,11 +122,13 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
       case None =>
     }
 
-    retObj
+    retObj.toList
   }
 
   /* Get the overload index of a function */
-  def getOverloadFuncIndex(name: String, args: List[Type]): Int = {
+  def getOverloadFuncIndex(name: String, 
+                           expectedRet: Type, 
+                           expectedArgs: List[Type]): Int = {
     val funcObjs = lookUpAllFunc(name)
     var retIndex = 0
 
@@ -133,7 +139,7 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
         for (func <- funcs) { 
           func match {
             case func: FuncObj => {
-              if (correctArgForFuncObj(func, args))
+              if (correctFuncObj(func, expectedRet, expectedArgs))
                 retIndex = index
             }
             case _ =>

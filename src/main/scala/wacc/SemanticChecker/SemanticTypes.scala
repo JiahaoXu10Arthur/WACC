@@ -156,19 +156,26 @@ object SemanticTypes {
     }
   }
 
-  def allArgsSameType(args1: List[Type],
-                      args2: List[Type]): Boolean = {
-    var sameType = true
+  def sameFunction(expectRet: Type,
+                   funcRet:   Type,
+                   expectArgs: List[Type],
+                   funcArgs:   List[Type]): Boolean = {
 
-    /* First check if number of arguments are the same */
-    if (args1.size != args2.size) {
-      sameType = false
+    // If return type is not the same, not same function
+    if (!equalType(expectRet, funcRet)) {
+      false
     }
 
+    // If number of arguments are not the same, not same function
+    if (expectArgs.size != funcArgs.size) {
+      false
+    }
+
+    var sameType = true
     var index = 0
-    // Once different type occurs, overloading
-    while (sameType && index < args1.size) {
-      sameType = equalType(args1(index), args2(index))
+    // Once different type occurs, not same function
+    while (sameType && index < expectArgs.size) {
+      sameType = equalType(expectArgs(index), funcArgs(index))
       index += 1
     }
 
