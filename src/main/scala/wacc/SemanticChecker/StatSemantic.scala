@@ -32,6 +32,7 @@ object StatSemantic {
       case If(expr, stat1, stat2)   => ifCheck(expr, stat1, stat2)
       case While(expr, stat)        => whileCheck(expr, stat)
       case Begin(stat)              => beginCheck(stat)
+      case _                        => // Auxillary AST Nodes shouldn't be checked
     }
 
     /* Record the symbol table to AST node */

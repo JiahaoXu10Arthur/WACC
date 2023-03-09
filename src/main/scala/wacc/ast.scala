@@ -196,4 +196,7 @@ object Ast {
   object Func
       extends ParserBridgePos4[Type, Ident, List[Param], List[Stat], Func] 
 
+  /* Auxillary AST nodes for optimisation -- not parsed */
+  case class TailRecurse(fname: Ident) extends Stat
+
 }
