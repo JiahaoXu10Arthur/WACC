@@ -8,8 +8,8 @@ import wacc.CodeGen.IRSegment
 
 object OptimiseIR {
   
+  // Optimise push/pop pairs
   def optimise1(seqs: Seq[Instruction]): Seq[Instruction] = {
-    // Optimise push/pop pairs
     val optimisedList = ListBuffer[Instruction]()
     var i = 0
 
@@ -39,8 +39,8 @@ object OptimiseIR {
     optimisedList.toSeq
   }
 
+  // Optimise MovInstr
   def optimise2(seqs: Seq[Instruction]): Seq[Instruction] = {
-    // Optimise MovInstr
     val optimisedList = ListBuffer[Instruction]()
 
     var previousMove: Option[Instruction] = None
@@ -85,6 +85,60 @@ object OptimiseIR {
     optimisedList.toSeq
   }
 
+  // Optimise store/load pairs
+  def optimise3(seqs: Seq[Instruction]): Seq[Instruction] = {
+    val optimisedList = ListBuffer[Instruction]()
+    var i = 0
+
+    while (i < seqs.length) {
+      seqs(i) match {
+        case StoreInstr(srcReg, destLocStore, _) => {
+          if (nextInstrIsLoad(seqs(i+1))) {
+            val destReg = getDestRegLoad(seqs(i+1))
+            val srcLocLoad = getSrcLocLoad(seqs(i+1))
+            // the load instruction is loading from the same location
+            if (destLocStore == srcLocLoad) {
+              // If after optimise, move to/from same reg, do not add mov
+              optimisedList += MovInstr(destReg, srcReg)
+
+              // Skip the next load instruction
+              i += 1
+            } else {
+              optimisedList += seqs(i)
+            }
+          } else {
+            // If next not load, add store instruction
+            optimisedList += seqs(i)
+          }
+        }
+        case StoreByteInstr(srcReg, destLocStore, _) => {
+          if (nextInstrIsLoadByte(seqs(i+1))) {
+            val destReg = getDestRegLoad(seqs(i+1))
+            val srcLocLoad = getSrcLocLoad(seqs(i+1))
+            // the load signed byte instruction is loading from the same location
+            if (destLocStore == srcLocLoad) {
+              // If after optimise, move to/from same reg, do not add mov
+              optimisedList += MovInstr(destReg, srcReg)
+
+              // Skip the next load instruction
+              i += 1
+            } else {
+              optimisedList += seqs(i)
+            }
+          } else {
+            // If next not load signed byte, add store byte instruction
+            optimisedList += seqs(i)
+          }
+        }
+        case _ => optimisedList += seqs(i)
+      }
+      // next instruction
+      i += 1
+    }
+
+    optimisedList.toSeq
+  }
+
   def nextInstrIsPop(instr: Instruction): Boolean = {
     instr match {
       case PopInstr(registers) => (registers.length == 1)
@@ -92,9 +146,39 @@ object OptimiseIR {
     }
   }
 
+  def nextInstrIsLoad(instr: Instruction): Boolean = {
+    instr match {
+      case LoadInstr(destReg, srcLoc, _) => true
+      case _ => false
+    }
+  }
+
+  def nextInstrIsLoadByte(instr: Instruction): Boolean = {
+    instr match {
+      case LoadSignedByteInstr(destReg, srcLoc, _) => true
+      case _ => false
+    }
+  }
+
   def getDestReg(instr: Instruction): Register = {
     instr match {
       case PopInstr(registers) => registers(0)
+      case _ => null
+    }
+  }
+
+  def getDestRegLoad(instr: Instruction): Register = {
+    instr match {
+      case LoadInstr(dest, srcLoc, _) => dest
+      case LoadSignedByteInstr(dest, srcLoc, _) => dest
+      case _ => null
+    }
+  }
+
+  def getSrcLocLoad(instr: Instruction): Operand = {
+    instr match {
+      case LoadInstr(dest, srcLoc, _) => srcLoc
+      case LoadSignedByteInstr(dest, srcLoc, _) => srcLoc
       case _ => null
     }
   }
