@@ -197,7 +197,7 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
   /* Find similar value in this st with the given key provided as suggestion
      Similar means: without case sensitivity */
-  private def lookUpSimilar(
+  def lookUpSimilar(
       typeIn: String,
       objType: ObjectType
   ): Set[(String, (Int, Int))] = {
