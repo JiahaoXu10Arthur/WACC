@@ -5,7 +5,6 @@ import scala.collection.mutable
 import SymbolObject._
 import SymbolObjectType._
 import SemanticTypes._
-import scala.collection.mutable.ListBuffer
 
 class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
@@ -104,6 +103,7 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
   def getOverloadFuncObj(name: String,
                          expectRet:  Type,
                          expectArgs: List[Type]): Option[FuncObj] = {
+    // Get all overloading functions of this name
     val funcObjs = lookUpAllFunc(name)
     var retObj: Option[FuncObj] = None
 
@@ -127,20 +127,21 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
   }
 
   /* Get the overload index of a function */
-  def getOverloadFuncIndex(name: String, 
-                           expectedRet: Type, 
-                           expectedArgs: List[Type]): Int = {
+  private def getOverloadFuncIndex(name: String, 
+                           expectRet: Type, 
+                           expectArgs: List[Type]): Int = {
+    // Get all overloading functions of this name
     val funcObjs = lookUpAllFunc(name)
-    var retIndex = 0
+    var retIndex = -1
 
     funcObjs match {
       case Some(funcs) => {
         var index = 0
         /* For each overloading function, check if the argument types are the same */
-        for (func <- funcs) { 
+        for (func <- funcs) {
           func match {
             case func: FuncObj => {
-              if (correctFuncObj(func, expectedRet, expectedArgs))
+              if (correctFuncObj(func, expectRet, expectArgs))
                 retIndex = index
             }
             case _ =>
@@ -153,6 +154,13 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
     retIndex
   }
+
+// Get overload function name with index
+def getOverloadFuncName(baseFuncName: String, 
+                        expectRet: Type, 
+                        expectArgs: List[Type]): String = {
+  baseFuncName + getOverloadFuncIndex(baseFuncName, expectRet, expectArgs)                         
+}
 
   // find variable number in this scope
   private def findVarNum(): Int = {

@@ -36,11 +36,10 @@ object FunctionTranslator {
 
     // Check function overloading to get correct function label
     val funcName = func.ident.name
-    val expectedRet  = convertType(func.type1)
-    val expectedArgs = func.params.map(x => convertType(x.paramType))
+    val expectRet  = convertType(func.type1)
+    val expectArgs = func.params.map(x => convertType(x.paramType))
     // for function header, search in main st
-    val funcOverloadIndex = func.symb.getOverloadFuncIndex(funcName, expectedRet, expectedArgs)
-    val funcLabelName = funcName + funcOverloadIndex
+    val funcLabelName = func.symb.getOverloadFuncName(funcName, expectRet, expectArgs)
 
     /* Create function label */
     addInstr(CreateLabel(WACCFuncLabel(funcLabelName)))

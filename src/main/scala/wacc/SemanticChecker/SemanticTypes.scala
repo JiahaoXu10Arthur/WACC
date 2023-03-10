@@ -163,12 +163,12 @@ object SemanticTypes {
 
     // If return type is not the same, not same function
     if (!equalType(expectRet, funcRet)) {
-      false
+      return false
     }
 
     // If number of arguments are not the same, not same function
     if (expectArgs.size != funcArgs.size) {
-      false
+      return false
     }
 
     var sameType = true
