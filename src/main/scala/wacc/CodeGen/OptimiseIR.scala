@@ -9,7 +9,7 @@ import wacc.CodeGen.IRSegment
 object OptimiseIR {
   
   // Optimise push/pop pairs
-  def optimise1(seqs: Seq[Instruction]): Seq[Instruction] = {
+  def optimisePushPop(seqs: Seq[Instruction]): Seq[Instruction] = {
     val optimisedList = ListBuffer[Instruction]()
     var i = 0
 
@@ -40,7 +40,7 @@ object OptimiseIR {
   }
 
   // Optimise MovInstr
-  def optimise2(seqs: Seq[Instruction]): Seq[Instruction] = {
+  def optimiseMov(seqs: Seq[Instruction]): Seq[Instruction] = {
     val optimisedList = ListBuffer[Instruction]()
 
     var previousMove: Option[Instruction] = None
@@ -86,7 +86,7 @@ object OptimiseIR {
   }
 
   // Optimise store/load pairs
-  def optimise3(seqs: Seq[Instruction]): Seq[Instruction] = {
+  def optimiseStoreLoad(seqs: Seq[Instruction]): Seq[Instruction] = {
     val optimisedList = ListBuffer[Instruction]()
     var i = 0
 
@@ -96,15 +96,17 @@ object OptimiseIR {
           if (nextInstrIsLoad(seqs(i+1))) {
             val destReg = getDestRegLoad(seqs(i+1))
             val srcLocLoad = getSrcLocLoad(seqs(i+1))
+
+            // Adding store instruction
+            optimisedList += seqs(i)
             // the load instruction is loading from the same location
             if (destLocStore == srcLocLoad) {
               // If after optimise, move to/from same reg, do not add mov
+              // Replacing load with move since move is faster
               optimisedList += MovInstr(destReg, srcReg)
 
               // Skip the next load instruction
               i += 1
-            } else {
-              optimisedList += seqs(i)
             }
           } else {
             // If next not load, add store instruction
@@ -115,15 +117,17 @@ object OptimiseIR {
           if (nextInstrIsLoadByte(seqs(i+1))) {
             val destReg = getDestRegLoad(seqs(i+1))
             val srcLocLoad = getSrcLocLoad(seqs(i+1))
+
+            // Adding store byte instruction
+            optimisedList += seqs(i)
             // the load signed byte instruction is loading from the same location
             if (destLocStore == srcLocLoad) {
               // If after optimise, move to/from same reg, do not add mov
+              // Replacing load with move since move is faster
               optimisedList += MovInstr(destReg, srcReg)
 
               // Skip the next load instruction
               i += 1
-            } else {
-              optimisedList += seqs(i)
             }
           } else {
             // If next not load signed byte, add store byte instruction
@@ -209,9 +213,10 @@ object OptimiseIR {
 
   def makeOptimisedIR(originalIR: IR): IR = {
     val mainSeq = originalIR.segments(0).instrs
-    val opt1Seq = optimise1(mainSeq)
-    val opt2Seq = optimise2(opt1Seq)
-    val optimisedMain = new IRSegment(originalIR.segments(0).literals, opt2Seq)
+    val optPushPopSeq = optimisePushPop(mainSeq)
+    val optStoreLoadSeq = optimiseStoreLoad(optPushPopSeq)
+    val optMovSeq = optimiseMov(optStoreLoadSeq)
+    val optimisedMain = new IRSegment(originalIR.segments(0).literals, optMovSeq)
     val irBuilder = ListBuffer[IRSegment]()
 
     irBuilder += optimisedMain
