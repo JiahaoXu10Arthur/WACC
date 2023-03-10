@@ -7,6 +7,7 @@ import wacc.SemanticChecker.SymbolTable
 import StatTranslator._
 import FunctionTranslator._
 import IRBuilder._
+import TailRecOptimiser._
 import Utils.{beginBlock, endBlock, calculateSaveRegs}
 
 object Translator {
@@ -34,7 +35,7 @@ object Translator {
     endBlock(restoreSP = false)
 
     /* Translate functions */
-    p.funcs.foreach(f => translateFunction(f))
+    p.funcs.foreach(f => translateFunction(optimiseFunc(f)))
 
     /* Return the intermediate representation for code generation */
     returnIR()

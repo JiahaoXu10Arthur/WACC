@@ -163,20 +163,4 @@ object Utils {
     }
   }
 
-  // /* TODO: Consider function overloading in recursive check */
-  // def funcBodyIsTailRecursive(body: Seq[Stat], fname: Ident): Boolean = {
-  //   body.takeRight(2) match {
-  //     case Seq(stmt, Return(expr : Lvalue)) => {
-  //       stmt match {
-  //         case Assign(expr, Call(fname, _)) => true
-  //         case Declare(_, expr, Call(fname, _)) => true
-  //         case _ => false
-  //       }
-  //     }
-  //     case Seq(_, If(_, stats1, stats2)) => {
-  //       funcBodyIsTailRecursive(stats1, fname) && funcBodyIsTailRecursive(stats2, fname)
-  //     }
-  //     case _ => false
-  //   }
-  // }
 }

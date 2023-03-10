@@ -34,19 +34,19 @@ object Main {
             println(s"Compile ${args.head} successful!")
             val path = generateAssembly(ast, st, waccName)
             println(s"Assembly file generated at $path")
-            System.exit(SUCCESS)
+            //System.exit(SUCCESS)
 
           /* Error detected, semantic error */
           case errors =>
             println(errorsMkString(errors, filename))
             println(s"Exiting with code $SEMANTIC_ERR...")
-            System.exit(SEMANTIC_ERR)
+            //System.exit(SEMANTIC_ERR)
         }
       /* Syntax check failed, syntax error */
       case Failure(err) =>
         println(errorsMkString(Seq(err), filename))
         println(s"Exiting with code $SYNTAX_ERR...")
-        System.exit(SYNTAX_ERR)
+        //System.exit(SYNTAX_ERR)
     }
 
   }

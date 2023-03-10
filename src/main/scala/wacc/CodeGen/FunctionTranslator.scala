@@ -36,6 +36,7 @@ object FunctionTranslator {
     /* Translate function body */   
     addInstr(CreateLabel(WACCFuncLabel(func.ident.name)))
     beginBlock()
+    addInstr(CreateLabel(WACCFuncBodyLabel(func.ident.name)))
     func.stats.foreach { s =>
       translateStatement(s)(s.symb, stateST, ir)
     }

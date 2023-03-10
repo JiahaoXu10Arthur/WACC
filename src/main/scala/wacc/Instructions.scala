@@ -12,6 +12,7 @@ object Instructions {
   case class StrLabel(name: String, value: String) extends Label(name)
   case class JumpLabel(name: String)               extends Label(name)
   case class WACCFuncLabel(name: String)           extends Label(name)
+  case class WACCFuncBodyLabel(fname: String)      extends Label(fname)
 
   sealed trait Location                                                      extends Operand
   case class RegIntOffset(reg: Register, offset: Int)                        extends Location
@@ -65,26 +66,25 @@ object Instructions {
   val reservedReg = List(R8, R10, R12)
 
   /* Constant */
-  final val TrueImm = Immediate(1)
-  final val FalseImm = Immediate(0)
-  final val NullImm = Immediate(0)
-  final val ChrImm = Immediate(127)
-  final val MulShiftConst = ASR(31)
-  final val FFlushStreamImm = Immediate(0)
+  final val TrueImm            = Immediate(1)
+  final val FalseImm           = Immediate(0)
+  final val NullImm            = Immediate(0)
+  final val ChrImm             = Immediate(127)
+  final val MulShiftConst      = ASR(31)
+  final val FFlushStreamImm    = Immediate(0)
   final val DefaultExitCodeImm = Immediate(0)
-  final val ErrorExitCode = Immediate(255)
-  
+  final val ErrorExitCode      = Immediate(255)
 
-  final val ByteSize = 1
-  final val PtrSize = 4
+  final val ByteSize    = 1
+  final val PtrSize     = 4
   final val DefaultSize = 4
-  final val PairSize = 8
-  final val PairFstIdx = 0
-  final val PairSndIdx = 4
-  
+  final val PairSize    = 8
+  final val PairFstIdx  = 0
+  final val PairSndIdx  = 4
+
   final val ArrayLenOffset = -4
-  final val MovImmMax = 255
-  
+  final val MovImmMax      = 255
+
   sealed trait Instruction
 
   sealed trait ExprInstr extends Instruction
@@ -142,16 +142,16 @@ object Instructions {
   case class CondBranchInstr(cond: CondCode, label: Label)     extends JumpInstr
 
   case class CreateLabel(label: Label) extends Instruction
-  case class Comment(value: String) extends Instruction
+  case class Comment(value: String)    extends Instruction
 
   sealed class Tag(name: String) extends Instruction {
     def getName: String = name
   }
 
-  case object DataTag extends Tag("data")
-  case object TextTag extends Tag("text")
+  case object DataTag   extends Tag("data")
+  case object TextTag   extends Tag("text")
   case object GlobalTag extends Tag("global main")
-  case object LtorgTag extends Tag("ltorg")
+  case object LtorgTag  extends Tag("ltorg")
 
   sealed trait CondCode
   case object EqCond  extends CondCode
@@ -182,7 +182,7 @@ object Instructions {
   case object ArrayStore  extends Label("_arrStore") with FuncLabel
   case object ArrayStoreB extends Label("_arrStoreB") with FuncLabel
   case object ArrayLoad   extends Label("_arrLoad") with FuncLabel
-  case object ArrayLoadB   extends Label("_arrLoadB") with FuncLabel
+  case object ArrayLoadB  extends Label("_arrLoadB") with FuncLabel
   case object FreePair    extends Label("_freepair") with FuncLabel
 
   /* standard library functions */

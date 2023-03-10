@@ -4,7 +4,7 @@ import java.io._
 import wacc.Instructions._
 
 object ArmAsmGenerator {
-  private final val MovImmMax = 255
+  final private val MovImmMax = 255
 
   def assemble(ir: IR, fileName: String): String = {
     val asmFile = new File(s"$fileName.s")
@@ -39,14 +39,14 @@ object ArmAsmGenerator {
       case Comment(value)     => s"@$value"
     }
 
-
   private def asmLabel(label: Label): String = label match {
-    case SegmentLabel(name)    => s".$name"
-    case StrLabel(name, value) => s".L.$name"
-    case JumpLabel(name)       => s".L$name"
-    case label: FuncLabel      => s"${label.getName}"
-    case WACCFuncLabel(name)   => s"wacc_$name"
-    case _                     => s"@unsupported label creation!"
+    case SegmentLabel(name)       => s".$name"
+    case StrLabel(name, value)    => s".L.$name"
+    case JumpLabel(name)          => s".L$name"
+    case label: FuncLabel         => s"${label.getName}"
+    case WACCFuncLabel(name)      => s"wacc_$name"
+    case WACCFuncBodyLabel(fname) => s"body_wacc_$fname"
+    case _                        => s"@unsupported label creation!"
   }
 
   private def asmReg(reg: Register): String = reg match {
@@ -152,11 +152,12 @@ object ArmAsmGenerator {
 
   /* Generates the assembly for an expression instruction with 4 parameters */
   private def exprAsmGen(
-    name: String,
-    destReg: Register,
-    srcReg: Register,
-    opr: Operand,
-    shifter: Option[Shifter]): String = {
+      name: String,
+      destReg: Register,
+      srcReg: Register,
+      opr: Operand,
+      shifter: Option[Shifter]
+  ): String = {
 
     val destStr = asmReg(destReg)
     val srcStr  = asmReg(srcReg)
@@ -187,13 +188,9 @@ object ArmAsmGenerator {
   }
 
   // Generates the assembly for a memory instruction
-  private def memoryAsmGen(
-    name: String,
-    reg: Register, 
-    opr: Operand, 
-    writeBack: Boolean): String = {
-      val wbStr = if (writeBack) "!" else ""
-      s"$name ${asmReg(reg)}, ${asmMemOp(opr)}$wbStr"
+  private def memoryAsmGen(name: String, reg: Register, opr: Operand, writeBack: Boolean): String = {
+    val wbStr = if (writeBack) "!" else ""
+    s"$name ${asmReg(reg)}, ${asmMemOp(opr)}$wbStr"
   }
 
   private def asmMemOp(op: Operand): String = op match {
@@ -210,9 +207,9 @@ object ArmAsmGenerator {
   }
 
   private def assembleStat(instr: StatInstr): String = instr match {
-    case MovInstr(destReg, opr@Immediate(n)) if n > MovImmMax =>
+    case MovInstr(destReg, opr @ Immediate(n)) if n > MovImmMax =>
       s"ldr ${asmReg(destReg)}, ${asmMemOp(opr)}"
-    case MovInstr(destReg, opr) => 
+    case MovInstr(destReg, opr) =>
       s"mov ${asmReg(destReg)}, ${asmOp(opr)}"
     case CondMovInstr(cond, destReg, opr) =>
       s"mov${asmCond(cond)} ${asmReg(destReg)}, ${asmOp(opr)}"

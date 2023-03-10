@@ -20,6 +20,7 @@ object StatTranslator {
       case Read(lvalue)                     => translateRead(lvalue)
       case Free(expr)                       => translateFree(expr)
       case Return(expr)                     => translateReturn(expr)
+      case TailRecurse(call)                => translateTailRec(call)
       case Exit(expr)                       => translateExit(expr)
       case Print(expr)                      => translatePrint(expr)
       case Println(expr)                    => translatePrintln(expr)
@@ -326,7 +327,8 @@ object StatTranslator {
   }
 
   private def translateCall(
-      callValue: Call
+      callValue: Call,
+      tailRec: Boolean = false
   )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
 
     // If this is inside a function with parameter, push caller saved regs first
@@ -369,23 +371,32 @@ object StatTranslator {
     }
 
     // Create branch jump
-    addInstr(BranchLinkInstr(WACCFuncLabel(callValue.ident.name)))
+    if (tailRec) {
+      val stackSpace = para_num * PtrSize
+      if (stackSpace > 0) {
+        addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
+      }
+      addInstr(BranchInstr(WACCFuncBodyLabel(callValue.ident.name)))
+      
+    } else {
+      addInstr(BranchLinkInstr(WACCFuncLabel(callValue.ident.name)))
 
-    // Store the result in OpR1
-    addInstr(MovInstr(OpR1, OpRet))
+      // Store the result in OpR1
+      addInstr(MovInstr(OpR1, OpRet))
 
-    // Add stackSpace back for parameter
-    val stackSpace = (para_num - paramReg.size) * PtrSize
-    if (stackSpace > 0) {
-      addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
+      // Add stackSpace back for parameter
+      val stackSpace = (para_num - paramReg.size) * PtrSize
+      if (stackSpace > 0) {
+        addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
+      }
+
+      if (!usedParam.isEmpty) {
+        addInstr(PopInstr(usedParam))
+        stateST.updateParamBackToReg()
+      }
+
+      addInstr(PushInstr(Seq(OpR1)))
     }
-
-    if (!usedParam.isEmpty) {
-      addInstr(PopInstr(usedParam))
-      stateST.updateParamBackToReg()
-    }
-
-    addInstr(PushInstr(Seq(OpR1)))
   }
 
   private def translateAssign(target: Lvalue, newValue: Rvalue)(implicit
@@ -418,6 +429,12 @@ object StatTranslator {
     translateExprTo(expr, OpRet)
 
     endBlock(restoreSP = true)
+  }
+
+  /* Tail recurse will branch to beginning of function */
+  private def translateTailRec(call: Call)(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
+    // Branch to beginning of function
+    translateCall(call, true)
   }
 
 

@@ -157,9 +157,9 @@ class StateTable(stateT: Option[StateTable]) {
   def updateParamToStack() = {
     for (key_value <- paramDictionary) {
       (key_value) match {
-        case (name, R0) => updateParam(name, RegIntOffset(R12, 0)) 
-        case (name, R1) => updateParam(name, RegIntOffset(R12, 4))
-        case (name, R2) => updateParam(name, RegIntOffset(R12, 8))
+        case (name, R0) => updateParam(name, RegIntOffset(SFP, 0)) 
+        case (name, R1) => updateParam(name, RegIntOffset(SFP, 4))
+        case (name, R2) => updateParam(name, RegIntOffset(SFP, 8))
         case _ =>
       }
     }
