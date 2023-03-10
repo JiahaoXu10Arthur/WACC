@@ -99,7 +99,7 @@ object OptimiseIR {
 
             // Adding store instruction
             optimisedList += seqs(i)
-            // the load instruction is loading from the same location
+            // The load instruction is loading from the same location
             if (destLocStore == srcLocLoad) {
               // If after optimise, move to/from same reg, do not add mov
               // Replacing load with move since move is faster
@@ -120,7 +120,7 @@ object OptimiseIR {
 
             // Adding store byte instruction
             optimisedList += seqs(i)
-            // the load signed byte instruction is loading from the same location
+            // The load signed byte instruction is loading from the same location
             if (destLocStore == srcLocLoad) {
               // If after optimise, move to/from same reg, do not add mov
               // Replacing load with move since move is faster
@@ -189,7 +189,6 @@ object OptimiseIR {
 
   def connectMove(mov1: Instruction,
                   mov2: Instruction): Option[Instruction] = {
-    
     mov1 match {
       case MovInstr(dest1, src1) => {
         // If move to varaible register -> declaration, cannot combine
