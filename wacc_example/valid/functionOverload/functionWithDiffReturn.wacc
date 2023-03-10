@@ -1,0 +1,23 @@
+# attempted overload of function with same arguments but different return type
+
+# Output:
+# 0
+# a
+#
+
+# Program:
+
+begin
+	int f(int a) is
+		return 0
+	end
+
+  char f(int a) is
+    return 'a'
+  end
+
+  int x = call f(1);
+  println x;
+  char y = call f(1);
+  println y
+end
