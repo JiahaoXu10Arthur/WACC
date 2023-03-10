@@ -97,7 +97,6 @@ object Ast {
   object PairLit extends ParserSingletonBridgePos[PairLit] {
     override def con(pos: (Int, Int)) = this()(pos)
   }
-
   case class Ident(name: String)(val pos: (Int, Int)) extends Expr with Lvalue
   object Ident extends ParserBridgePos1[String, Ident]
 
@@ -105,6 +104,13 @@ object Ast {
       extends Expr
       with Lvalue
   object ArrayElem extends ParserBridgePos2[Ident, List[Expr], ArrayElem]
+
+
+  /* call a struct by "." */
+  case class StructElem(ident: Ident, field: List[Ident])(val pos: (Int, Int))
+      extends Expr
+      with Lvalue
+  object StructElem extends ParserBridgePos2[Ident, List[Ident], StructElem]
 
   /* Values */
   sealed trait Lvalue {
@@ -129,6 +135,9 @@ object Ast {
 
   case class ArrayLit(values: List[Expr])(val pos: (Int, Int)) extends Rvalue
   object ArrayLit extends ParserBridgePos1[List[Expr], ArrayLit]
+
+  case class StructLit(values: List[Expr])(val pos: (Int, Int)) extends Rvalue
+  object StructLit extends ParserBridgePos1[List[Expr], StructLit]
 
   case class ArgList(values: List[Expr])(val pos: (Int, Int))
   object ArgList extends ParserBridgePos1[List[Expr], ArgList]
@@ -195,5 +204,10 @@ object Ast {
   }
   object Func
       extends ParserBridgePos4[Type, Ident, List[Param], List[Stat], Func] 
+
+  case class Struct(name: Ident, fields: List[(Type, Ident)])(val pos: (Int, Int)) {
+    var symb: SymbolTable = null
+  }
+  object Struct extends ParserBridgePos2[Ident, List[(Type, Ident)], Struct]
 
 }
