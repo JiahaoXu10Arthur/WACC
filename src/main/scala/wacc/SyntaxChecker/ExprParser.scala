@@ -29,6 +29,7 @@ object ExprParser {
     StrLit(Lexer.str.label("string literal")),
     (PairLit <# Lexer.pair),
     attempt(ArrayElem(Ident(Lexer.ident), some("[" ~> expr <~ "]"))),
+    attempt(StructElem(Ident(Lexer.ident), some( "." ~> Ident(Lexer.ident)))),  
     Ident(Lexer.ident),
     ("(" ~> expr <~ ")").hide
   )(
