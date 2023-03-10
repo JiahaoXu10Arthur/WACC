@@ -24,8 +24,8 @@ object FunctionSemantic {
     }
 
     /* Check for function redefinition */
-    val expectedRet  = convertType(func.type1)
-    val expectedArgs = args.map(_.t).toList
+    val newDefinedRet  = convertType(func.type1)
+    val newDefinedArgs = args.map(_.t).toList
 
     var redefFunc = false
     st.lookUpFunc(func.ident.name) match {
@@ -36,12 +36,14 @@ object FunctionSemantic {
               val objRet  = obj.returnType
               val objArgs = obj.args.map(_.t)
               /* All arguments are the same type, function redefinition */
-              if (sameFunction(expectedRet, objRet, expectedArgs, objArgs)) {
+              if (sameFunction(newDefinedRet, objRet, newDefinedArgs, objArgs)) {
                 semErr += buildFuncRedefError(
                   func.ident.pos,
                   func.ident.name,
                   obj.getPos(),
-                  Seq(s"Illegal redeclaration of parameter ${func.ident.name} ")
+                  Seq(s"Illegal redeclaration of parameter ${func.ident.name} with " +
+                      s"argument type ${newDefinedArgs} and " +
+                      s"return type ${newDefinedRet}")
                 )
                 redefFunc = true
               }
