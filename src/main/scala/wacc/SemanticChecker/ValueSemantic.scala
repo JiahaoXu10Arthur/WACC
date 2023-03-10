@@ -61,10 +61,11 @@ object ValueSemantic {
   ): Type = {
     var funcObj: FuncObj = null
     var findFunc = false
+    val expectedArgs = args.map(checkExprType(_))
+
     /* Search funcObj in all scope*/
     st.lookUpAllFunc(ident.name) match {
       case Some(symObj) => {
-        val expectedArgs = args.map(checkExprType(_))
         val funcObjOpt = st.getOverloadFuncObj(ident.name, targetType, expectedArgs)
         // If can find function with same return type and arguments
         funcObjOpt match {
@@ -81,11 +82,14 @@ object ValueSemantic {
 
     /* If no function found, error */
     if (!findFunc) {
-      semErr += buildScopeError(
+      val similarFuncs = st.lookUpAllSimilarFunc(ident.name)
+      semErr += buildFunctionScopeError(
           ident.pos,
           ident.name,
-          st.lookUpAllSimilar(ident.name, FunctionType()),
-          Seq(s"Function ${ident.name} has not been defined")
+          similarFuncs,
+          Seq(s"Function ${ident.name} with " +
+              s"argument type ${expectedArgs} and " +
+              s"return type ${targetType} has not been defined")
         )
         /* Add fake function to the scope to avoid further error */
         st.add(

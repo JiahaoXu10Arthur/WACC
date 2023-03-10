@@ -197,7 +197,7 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
   /* Find similar value in this st with the given key provided as suggestion
      Similar means: without case sensitivity */
-  def lookUpSimilar(
+  private def lookUpSimilar(
       typeIn: String,
       objType: ObjectType
   ): Set[(String, (Int, Int))] = {
@@ -232,6 +232,56 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
       similar ++= new_similar
       s = s.encSymTable
     }
+
+    return similar.toSet
+  }
+
+  /* Look up a function with all overloading according to the name 
+     Return the name, position, type of arguments required and return type */
+  private def lookUpSimilarFunc(name: String): 
+    Set[(String, (Int, Int), List[Type], Type)] = {
+    val allOverload = mutable.ListBuffer[(String, (Int, Int), List[Type], Type)]()
+
+    // Get all overloading functions of this name
+    val funcObjs = lookUpAllFunc(name)
+    funcObjs match {
+      case Some(funcs) => {
+        var index = 0
+        /* For each overloading function, check if the argument types are the same */
+        for (func <- funcs) {
+          func match {
+            case func: FuncObj => {
+              val position = func.getPos()
+              val funcRet  = func.returnType
+              val funcArgs = func.args.map(_.t)
+              allOverload += ((name, position, funcArgs, funcRet))
+            }
+            case _ =>
+          }
+          index += 1
+        }
+      }
+      case None =>
+    }
+
+    allOverload.toSet
+  }
+
+  /* Find similar Function in this st and all parent st,
+     with the given key provided as suggestion
+     Return the name, position, type of arguments required and return type
+     Similar means: without case sensitivity */
+  def lookUpAllSimilarFunc(
+      typeIn: String
+  ): Set[(String, (Int, Int), List[Type], Type)] = {
+    // Get all similar name function
+    val similarName = lookUpAllSimilar(typeIn, FunctionType()).map(_._1)
+
+    // 1.Name; 2.Position; 3.List[Argument type]; 4.Return type
+    val similar = mutable.ListBuffer[(String, (Int, Int), List[Type], Type)]()
+
+    // For each similar name, get all overload function
+    similarName.foreach{similar ++= lookUpSimilarFunc(_)}
 
     return similar.toSet
   }
