@@ -52,7 +52,8 @@ object Lexer {
     "bool",
     "char",
     "string",
-    "null"
+    "null",
+    "struct"
   )
 
   private val keywords =
@@ -144,6 +145,7 @@ object Lexer {
           case "bool"   => Label("boolean type")
           case "char"   => Label("character type")
           case "string" => Label("string type")
+          case "struct" => Label("struct type")
           case x        => Label(s"$x")
         }
       }
@@ -173,8 +175,6 @@ object Lexer {
 
     // label for graphic characters
     override def labelGraphicCharacter: LabelWithExplainConfig = Label("character")
-
-    // label
   }
   val lexer = new Lexer(desc, errorConfig)
 
