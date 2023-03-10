@@ -7,6 +7,16 @@ import wacc.Ast._
 
 class ParserValueTest extends AnyFlatSpec {
 
+  "Lvalue: Struct Elem" should "be parsed as lvalue" in {
+		ValueParser.lvalueParse("a.field1").get should matchPattern {
+			case StructElem(Ident("a"), List(Ident("field1"))) =>
+		}
+
+		ValueParser.lvalueParse("a.field2.field3").get should matchPattern {
+			case StructElem(Ident("a"), List(Ident("field2"), Ident("field3"))) =>
+		}	
+	}
+
   "Lvalue: Identifier" should "be parsed as lvalue" in {
 		ValueParser.lvalueParse("p").get should matchPattern {
       case Ident("p") =>
@@ -80,6 +90,24 @@ class ParserValueTest extends AnyFlatSpec {
 		ValueParser.rvalueParse("call func (1,3)").get should matchPattern {
 			case Call(Ident("func"), List(IntLit(1), IntLit(3))) =>
 		} 
+	}
+
+	"Rvalue: structLit" should "be parsed as rvalue" in {
+		ValueParser.rvalueParse("{}").get should matchPattern {
+			case StructLit(List()) =>
+		}
+
+		ValueParser.rvalueParse("{1, 2}").get should matchPattern {
+			case StructLit(List(IntLit(1), IntLit(2))) =>
+		}
+
+		ValueParser.rvalueParse("{3, a, array[4], s.c}").get should matchPattern {
+			case StructLit(List(
+			IntLit(3),
+			Ident("a"),
+			ArrayElem(Ident("array"), List(IntLit(4))),
+			StructElem(Ident("s"), List(Ident("c"))))) =>
+		}
 	}
 
 	"ArgList: Empty" should "be not parsed as array lit" in {

@@ -2,10 +2,9 @@ package wacc.SyntaxChecker
 
 import parsley.{Parsley, Success, Failure}
 import parsley.expr.chain
-import parsley.lift.{lift2}
+import parsley.lift.{lift1, lift2}
 import parsley.errors.combinator._
 import Parsley.{attempt}
-import parsley.combinator.{sepBy}
 
 import wacc.Ast._
 
@@ -22,10 +21,9 @@ object TypeParser {
   )
 
   val structType: Parsley[StructType] = attempt(
-      lift2[Ident, List[Type], StructType](
-        StructType(_, _),
-        "struct" ~> Ident(Lexer.ident),
-        "of" ~> sepBy(type_, ",") <~ "end"
+      lift1[Ident, StructType](
+        StructType(_),
+        "struct" ~> Ident(Lexer.ident)
       )
   )
 

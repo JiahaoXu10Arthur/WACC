@@ -58,6 +58,16 @@ class ParserExprTest extends AnyFlatSpec {
 		} 
   }
 
+  "Expr: StructElem" should "be parsed as expression" in {
+	ExprParser.exprParse("a.field").get should matchPattern {
+			case StructElem(Ident("a"), List(Ident("field"))) =>
+		}
+
+	ExprParser.exprParse("a.field1.field2").get should matchPattern {
+			case StructElem(Ident("a"), List(Ident("field1"), Ident("field2"))) =>
+		}	
+  }
+
   "Expr: array element" should "be parsed as expression" in {
     ExprParser.exprParse("array[1]").get should matchPattern {
 			case ArrayElem(Ident("array"), List(IntLit(1))) =>
