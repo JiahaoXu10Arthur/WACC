@@ -41,7 +41,7 @@ object FunctionSemantic {
                   func.ident.pos,
                   func.ident.name,
                   obj.getPos(),
-                  Seq(s"Illegal redeclaration of parameter ${func.ident.name} with " +
+                  Seq(s"Illegal redeclaration of function ${func.ident.name} with " +
                       s"argument type ${newDefinedArgType} and " +
                       s"return type ${newDefinedRet}")
                 )

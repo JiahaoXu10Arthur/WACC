@@ -1,0 +1,22 @@
+# attempted to call function with wrong parameter type
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+	int f(int a) is
+		return 0
+	end
+
+  bool f(char a) is
+    return true
+  end
+
+  int x = call f(true);
+  println x
+end
