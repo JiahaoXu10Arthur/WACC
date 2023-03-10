@@ -155,12 +155,12 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     retIndex
   }
 
-// Get overload function name with index
-def getOverloadFuncName(baseFuncName: String, 
-                        expectRet: Type, 
-                        expectArgs: List[Type]): String = {
-  baseFuncName + getOverloadFuncIndex(baseFuncName, expectRet, expectArgs)                         
-}
+  // Get overload function name with index
+  def getOverloadFuncName(baseFuncName: String, 
+                          expectRet: Type, 
+                          expectArgs: List[Type]): String = {
+    baseFuncName + getOverloadFuncIndex(baseFuncName, expectRet, expectArgs)                         
+  }
 
   // find variable number in this scope
   private def findVarNum(): Int = {
