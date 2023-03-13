@@ -200,6 +200,8 @@ object OptimiseIR {
             instr2 match {
               case MovInstr(dest2, src2) =>
                 if (dest1 == src2) {
+                  // If the destination of the first move is the source of the
+                  // second move, then combine the two moves
                   Some(MovInstr(dest2, src1))
                 } else {
                   None
