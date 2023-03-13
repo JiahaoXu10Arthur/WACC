@@ -382,11 +382,10 @@ object StatTranslator {
       if (stackSpace > 0) {
         addInstr(AddInstr(SP, SP, Immediate(stackSpace)))
       }
-      addInstr(BranchInstr(WACCFuncBodyLabel(callValue.ident.name)))
+      addInstr(BranchInstr(WACCFuncBodyLabel(funcLabelName)))
       
     } else {
-      addInstr(BranchLinkInstr(WACCFuncLabel(callValue.ident.name)))
-    addInstr(BranchLinkInstr(WACCFuncLabel(funcLabelName)))
+      addInstr(BranchLinkInstr(WACCFuncLabel(funcLabelName)))
 
       // Store the result in OpR1
       addInstr(MovInstr(OpR1, OpRet))

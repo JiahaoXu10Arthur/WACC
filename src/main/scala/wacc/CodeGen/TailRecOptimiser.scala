@@ -22,6 +22,16 @@ object TailRecOptimiser {
           case Assign(id, cstmt@Call(fid, args)) if id == expr && fid == fname => {
             numInstrsToDrop = 2
             val tailRecStmt = TailRecurse(cstmt)
+
+            val expectRet = ident.returnType
+            val expectArgType = ident.argType
+
+            val thisRet = call.returnType
+            val thisArgType = call.argType
+            checkExprType
+
+            sameFunction()
+
             tailRecStmt.symb = sndToLast.symb
             List(tailRecStmt)
           }
