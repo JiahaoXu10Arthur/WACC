@@ -53,6 +53,7 @@ object ExprSemantic {
 
       case expr: Ident               => identCheck(expr)
       case ArrayElem(ident, indexes) => arrayElemCheck(ident, indexes)
+      case StructElem(ident, fields)  => structElemCheck(ident, fields)
     }
   }
 
@@ -323,4 +324,43 @@ object ExprSemantic {
     returnType
   }
 
+  def structElemCheck(
+    structName: Ident,
+    fields: List[Ident])(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
+    if (isStruct(structName)) {
+      val fieldNum = fields.length
+      var index = 1
+      // Check every field except the last is a struct
+      while (index < fieldNum) {
+        if (!isStruct(fields(index - 1))) {
+          return AnyType()
+        }
+        index += 1
+      }
+    } else {
+      return AnyType()
+    }
+    // If all fields are struct, type is the last field's type
+    checkExpr(fields.last)
+  }
+
+  private def isStruct(structName: Ident)(implicit st: SymbolTable, 
+                                                        semErr: ListBuffer[WACCError]): Boolean = {
+      val structType = checkExpr(structName)
+      println(s"This is $structName have $structType")
+
+      structType match {
+        case AnyType() => true
+        case StructType(_) => true
+        case _ => {
+          semErr += buildTypeError(
+            structName.pos,
+            structType,
+            Set(StructType(structName)),
+            Seq(s"$structName is not a struct but used as struct access")
+          )
+          false
+        }
+      }
+    }
 }

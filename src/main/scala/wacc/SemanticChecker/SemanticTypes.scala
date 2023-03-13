@@ -31,6 +31,10 @@ object SemanticTypes {
     override def toString() = s"${elemType.toString()}[]"
   }
 
+  case class StructType(ident: Ident) extends Type {
+    override def toString() = s"Struct($ident)"
+  }
+ 
   /* Type equality involve AnyType */
   def equalType(type1: Type, type2: Type): Boolean = {
     if (type1 == type2) {
@@ -62,6 +66,7 @@ object SemanticTypes {
       case Types.StrType()        => StrType()
       case Types.PairType(t1, t2) => PairType(convertType(t1), convertType(t2))
       case Types.ArrayType(t)     => ArrayType(convertType(t))
+      case Types.StructType(name) => StructType(name)
     }
   }
 
@@ -74,9 +79,9 @@ object SemanticTypes {
       case Types.StrType()       => StrType()
       case Types.PairTypeIdent() => PairType(AnyType(), AnyType())
       case Types.ArrayType(t)    => ArrayType(convertType(t))
+      case Types.StructType(name) => StructType(name)
     }
   }
-
 
   def checkExprType(
       expr: Expr
@@ -130,7 +135,8 @@ object SemanticTypes {
           }
         } 
         returnType
-      } 
+      }
+      case StructElem(_, fields) => checkExprType(fields.last)
     }
   }
 
@@ -154,6 +160,7 @@ object SemanticTypes {
 
         returnType
       }
+      case lvalue: StructElem => checkExprType(lvalue)
     }
   }
 }

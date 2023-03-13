@@ -77,6 +77,43 @@ class SemanticExprTest extends AnyFlatSpec {
 		semErr.length shouldBe 3
 	}
 
+	"Expr: Struct Elem" should "refer type in symbolTable" in {
+		implicit val st = new SymbolTable(null, VariableType())
+		implicit val semErr = new ListBuffer[WACCError]()
+
+		// a.field1
+		val testStruct1 = StructElem(Ident("a")(0,0), List(Ident("field1")(0,0)))(0,0)
+		// a.field1.field2
+		val testStruct2 = StructElem(Ident("a")(0,0), List(Ident("field1")(0,0), Ident("field2")(0,0)))(0,0)
+
+		/* No symbol table, semantic error */
+		checkExpr(testStruct1)
+		// a not defined, field not defined
+		semErr.length shouldBe 2
+
+		/* Add struct to symbol table */
+		val field1 = (Ident("field1")(0,0), VariableObj(StructType(Ident("b")(0, 0)), (0, 0)))
+		val field2 = (Ident("field2")(0,0), VariableObj(CharType(), (0, 0)))
+
+		// struct a { 
+		// 	struct b field1;
+		// }
+
+		// struct b {
+		// 	char field2;
+		// }
+
+		st.add("a", StructObjType(), new StructObj(Ident("a")(0, 0), (List(field1)), (0, 0)))
+		st.add("field1", VariableType(), VariableObj(StructType(Ident("b")(0, 0)),(0, 0)))
+
+		st.add("b", StructObjType(), new StructObj(Ident("b")(0, 0), (List(field2)), (0, 0)))	
+		st.add("field2", VariableType(), VariableObj(CharType(), (0, 0)))
+
+		checkExpr(testStruct1) shouldBe StructType(Ident("b")(0, 0))
+
+		checkExpr(testStruct2) shouldBe CharType()
+	}
+
 	"Expr: Unary Op: Not" should "return BoolType" in {
 		implicit val st = new SymbolTable(null, VariableType())
 		implicit val semErr = new ListBuffer[WACCError]()
