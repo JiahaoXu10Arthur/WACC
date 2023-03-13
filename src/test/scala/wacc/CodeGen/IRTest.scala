@@ -7,7 +7,7 @@ import wacc.CodeGen.IRBuilder._
 
 class IRTest extends AnyFlatSpec {
 
-  "Empty IR Builder" should "only have tag as instructions" in {
+   "Empty IR Builder" should "only have tag as instructions" in {
 		implicit val ir = new IRBuilder()
 		val immutableIR = returnIR()
 		immutableIR.segments should not be empty
