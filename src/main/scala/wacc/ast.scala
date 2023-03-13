@@ -9,6 +9,7 @@ import wacc.SyntaxChecker.ParserPositionBridge.{
 }
 import wacc.SyntaxChecker.Types._
 import wacc.SemanticChecker.SymbolTable
+import wacc.SemanticChecker.SemanticTypes
 
 object Ast {
   /* Program */
@@ -125,7 +126,9 @@ object Ast {
   object NewPair extends ParserBridgePos2[Expr, Expr, NewPair]
 
   case class Call(ident: Ident, args: List[Expr])(val pos: (Int, Int))
-      extends Rvalue
+      extends Rvalue {
+        var returnType: SemanticTypes.Type = null
+      }
   object Call extends ParserBridgePos2[Ident, List[Expr], Call]
 
   case class PairElem(index: String, lvalue: Lvalue)(val pos: (Int, Int))

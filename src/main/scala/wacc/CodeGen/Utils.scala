@@ -99,9 +99,10 @@ object Utils {
   /* Find variable by name in stateTable to find its location */
   def findLvalueLoc(lvalue: Lvalue, stateST: StateTable): Location =
     lvalue match {
-      case Ident(name)             => findVarLoc(name, stateST)
-      case ArrayElem(ident, index) => findVarLoc(ident.name, stateST)
-      case PairElem(index, lvalue) => findLvalueLoc(lvalue, stateST)
+      case Ident(name)               => findVarLoc(name, stateST)
+      case ArrayElem(ident, index)   => findVarLoc(ident.name, stateST)
+      case PairElem(index, lvalue)   => findLvalueLoc(lvalue, stateST)
+      case StructElem(ident, fields) => findVarLoc(ident.name, stateST)
     }
 
   def sizeOfElem(elemType: Type): Int =
