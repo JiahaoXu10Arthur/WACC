@@ -1,0 +1,26 @@
+# attempted redefinition of function with overload
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+	int f(int a) is
+		return 0
+	end
+
+  bool f(char a) is
+    return true
+  end
+
+  int f(int a) is
+    return 2
+  end
+
+  int x = call f(1);
+  println x
+end

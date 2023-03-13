@@ -1,7 +1,6 @@
 package wacc.SemanticChecker
 
 import wacc.SyntaxChecker.Types
-import wacc.SemanticChecker.SymbolObjectType._
 import wacc.Ast._
 
 object SemanticTypes {
@@ -98,11 +97,11 @@ object SemanticTypes {
 
       case And(_, _)   => BoolType()
       case Or(_, _)    => BoolType()
-      case Not(_)           => BoolType()
-      case Neg(_)           => IntType()
-      case Len(_)           => IntType()
-      case Ord(_)           => IntType()
-      case Chr(_)           => CharType()
+      case Not(_)      => BoolType()
+      case Neg(_)      => IntType()
+      case Len(_)      => IntType()
+      case Ord(_)      => IntType()
+      case Chr(_)      => CharType()
 
       case IntLit(_)       => IntType()
       case BoolLit(_)      => BoolType()
@@ -111,7 +110,7 @@ object SemanticTypes {
       case PairLit()           => AnyType()
       case Ident(name)         => {
         /* Search for identifier in all scope */
-        st.lookUpAll(name, VariableType()) match {
+        st.lookUpAllVar(name) match {
           case Some(symObj) => symObj.getType()
           case None => AnyType()
         }
@@ -155,5 +154,31 @@ object SemanticTypes {
         returnType
       }
     }
+  }
+
+  def sameFunction(expectRet: Type,
+                   funcRet:   Type,
+                   expectArgs: List[Type],
+                   funcArgs:   List[Type]): Boolean = {
+
+    // If return type is not the same, not same function
+    if (!equalType(expectRet, funcRet)) {
+      return false
+    }
+
+    // If number of arguments are not the same, not same function
+    if (expectArgs.size != funcArgs.size) {
+      return false
+    }
+
+    var sameType = true
+    var index = 0
+    // Once different type occurs, not same function
+    while (sameType && index < expectArgs.size) {
+      sameType = equalType(expectArgs(index), funcArgs(index))
+      index += 1
+    }
+
+    sameType
   }
 }

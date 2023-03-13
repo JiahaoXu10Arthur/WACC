@@ -1,0 +1,35 @@
+# attempted function overload with function call each other
+
+# Output:
+# 200
+# 100
+#
+
+# Program:
+
+begin
+	int f(int a) is
+    if a > 0
+    then
+      int x = call f(true);
+      return x
+    else
+      return 100
+    fi
+	end
+
+  int f(bool a) is
+    if a
+    then
+      return 200
+    else
+      int x = call f(-1);
+      return x
+    fi
+  end
+
+  int x = call f(5);
+  println x;
+  int y = call f(false);
+  println y
+end
