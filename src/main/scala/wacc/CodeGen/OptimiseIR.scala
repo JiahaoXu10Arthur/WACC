@@ -46,35 +46,33 @@ object OptimiseIR {
     var previousMove: Option[Instruction] = None
     var i = 0
 
-    while (i < seqs.length) {
-      var combineMove: Option[Instruction] = None
-      val curInstr = seqs(i)
-      
-      previousMove match {
-        case Some(preInstr) => combineMove = connectMove(preInstr, curInstr)
-        case None => 
+    while (i <= seqs.length) {
+      // For last operation that might stored in previousMove, 
+      // iterate one more time
+      var curInstr: Option[Instruction] = None
+      // If within bound, can find current instruction
+      if (i < seqs.length) {
+        curInstr = Some(seqs(i))
       }
+
+      val combineMove = connectMove(previousMove, curInstr)
       
       combineMove match {
         case Some(moveInstr) => {
           previousMove = combineMove
         }
-        case None => (curInstr, previousMove) match {
-          case (MovInstr(_, _), Some(instr)) => {
-            optimisedList += instr
-            previousMove = Some(curInstr)
-          }
-          case (MovInstr(_, _), None) => {
-            previousMove = Some(curInstr)
-          }
-          case (_, Some(instr)) => {
-            optimisedList += instr
-            optimisedList += curInstr
-            previousMove = None
-          }
-          case (_, None) => {
-            optimisedList += curInstr
-            previousMove = None
+        case None => {
+          // Add not None previous and current move to optimised list
+          addOptionInstr(optimisedList, addMovNotToSelf(previousMove))
+
+          // Update previousMove if current instruction is move
+          curInstr match {
+            case Some(MovInstr(_, _)) => previousMove = curInstr
+            case _ => {
+              // current instruction is not move, add to optimised list
+              addOptionInstr(optimisedList, curInstr)
+              previousMove = None
+            }
           }
         }
       }
@@ -187,28 +185,62 @@ object OptimiseIR {
     }
   }
 
-  def connectMove(mov1: Instruction,
-                  mov2: Instruction): Option[Instruction] = {
-    mov1 match {
-      case MovInstr(dest1, src1) => {
-        // If move to varaible register -> declaration, cannot combine
-        if (variableReg.contains(dest1)) {
-          return None
+  def connectMove(mov1: Option[Instruction],
+                  mov2: Option[Instruction]): Option[Instruction] = {
+
+    (mov1, mov2) match {
+      case (Some(instr1), Some(instr2)) => {
+        instr1 match {
+          case MovInstr(dest1, src1) => {
+            // If move to varaible register -> declaration, cannot combine
+            if (variableReg.contains(dest1)) {
+              return None
+            }
+
+            instr2 match {
+              case MovInstr(dest2, src2) =>
+                if (dest1 == src2) {
+                  Some(MovInstr(dest2, src1))
+                } else {
+                  None
+                }
+              case _ => None
+            }
+            
+          }
+          case _ => None
         }
-      
-        mov2 match {
-          case MovInstr(dest2, src2) =>
-            if (dest1 == src2) {
-              Some(MovInstr(dest2, src1))
+      }
+      case (_, _) => None
+    }
+  }
+
+  private def addMovNotToSelf(mov1: Option[Instruction]): Option[Instruction] = {
+    mov1 match {
+      case Some(instr1) => {
+        instr1 match {
+          case MovInstr(dest1, src1) => {
+            if (dest1 != src1) {
+              Some(MovInstr(dest1, src1))
             } else {
               None
             }
+          }
           case _ => None
         }
       }
       case _ => None
     }
   }
+
+  private def addOptionInstr(list: ListBuffer[Instruction],
+                             instr: Option[Instruction]): Unit = {
+    instr match {
+      case Some(instr) => list += instr
+      case _ => ()
+    }
+  }
+  
 
   def makeOptimisedIR(originalIR: IR): IR = {
     val mainSeq = originalIR.segments(0).instrs
