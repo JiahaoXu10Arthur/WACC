@@ -370,6 +370,12 @@ object StatTranslator {
       index += 1
     }
 
+    // Check function overloading to get correct function label
+    val funcName = callValue.ident.name
+    val expectRet  = callValue.returnType
+    val expectArgs = callValue.args.map(checkExprType(_))
+    val funcLabelName = st.getOverloadFuncName(funcName, expectRet, expectArgs)
+      
     // Create branch jump
     if (tailRec) {
       val stackSpace = para_num * PtrSize
@@ -380,6 +386,7 @@ object StatTranslator {
       
     } else {
       addInstr(BranchLinkInstr(WACCFuncLabel(callValue.ident.name)))
+    addInstr(BranchLinkInstr(WACCFuncLabel(funcLabelName)))
 
       // Store the result in OpR1
       addInstr(MovInstr(OpR1, OpRet))

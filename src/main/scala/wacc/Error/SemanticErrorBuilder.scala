@@ -37,6 +37,25 @@ object SemanticErrorBuilder {
     buildWithMsg("Scope", pos, errorMsg)
   }
 
+  def buildFunctionScopeError(
+      pos: (Int, Int),
+      id: String,
+      related: Set[(String, (Int, Int), List[SemanticTypes.Type], SemanticTypes.Type)],
+      msg: Seq[String]
+  ): WACCError = {
+    var relatedString: String = ""
+    if (related.nonEmpty) {
+      relatedString ++= "Related: \n"
+      related.foreach(x =>
+        relatedString ++=
+          s"  ${x._1} defined at line ${x._2._1}: column ${x._2._2} with " +
+          s"argument type ${x._3} and return type ${x._4}\n"
+      )
+    }
+    val errorMsg = msg :+ relatedString
+    buildWithMsg("Scope", pos, errorMsg)
+  }
+
   def buildReturnPlacementError(
       pos: (Int, Int),
       msg: Seq[String]

@@ -236,7 +236,7 @@ object ExprSemantic {
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
 
     /* Search for identifier in all scope */
-    st.lookUpAll(ident.name, VariableType()) match {
+    st.lookUpAllVar(ident.name) match {
       case Some(symObj) => symObj.getType()
       case None => {
         /* If cannot find, error */

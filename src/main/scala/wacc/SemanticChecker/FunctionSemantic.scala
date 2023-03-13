@@ -9,7 +9,7 @@ import wacc.Ast._
 import SymbolObject._
 import SymbolObjectType._
 import StatSemantic._
-import SemanticTypes.{convertType}
+import SemanticTypes._
 
 object FunctionSemantic {
   /* Load only header into main scope */
@@ -24,30 +24,49 @@ object FunctionSemantic {
     }
 
     /* Check for function redefinition */
-    st.lookUp(func.ident.name, FunctionType()) match {
+    val newDefinedRet  = convertType(func.type1)
+    val newDefinedArgType = args.map(_.t).toList
+
+    var redefFunc = false
+    st.lookUpFunc(func.ident.name) match {
       /* Function redefinition */
-      case Some(obj) => {
-        semErr += buildFuncRedefError(
-          func.ident.pos,
-          func.ident.name,
-          obj.getPos(),
-          Seq(s"Illegal redeclaration of parameter ${func.ident.name} ")
-        )
+      case Some(objs) => {
+        objs.foreach {
+          case obj: FuncObj => {
+              val objRet  = obj.returnType
+              val objArgs = obj.args.map(_.t)
+              /* All arguments are the same type, function redefinition */
+              if (sameFunction(newDefinedRet, objRet, newDefinedArgType, objArgs)) {
+                semErr += buildFuncRedefError(
+                  func.ident.pos,
+                  func.ident.name,
+                  obj.getPos(),
+                  Seq(s"Illegal redeclaration of function ${func.ident.name} with " +
+                      s"argument type ${newDefinedArgType} and " +
+                      s"return type ${newDefinedRet}")
+                )
+                redefFunc = true
+              }
+            }
+          case _ =>
+        }
       }
-      case None => {
-        /* add function to main scope */
-        st.add(
-          func.ident.name,
-          FunctionType(),
-          new FuncObj(
-            convertType(func.type1),
-            args.toList,
-            func.params.length,
-            st,
-            func.pos
-          )
+      case None =>
+    }
+
+    /* Add function definition to main scope */
+    if (!redefFunc) {
+      st.add(
+        func.ident.name,
+        FunctionType(),
+        new FuncObj(
+          newDefinedRet,
+          args.toList,
+          args.length,
+          st,
+          func.pos
         )
-      }
+      )
     }
 
   }
@@ -64,7 +83,8 @@ object FunctionSemantic {
 
     /* Check for parameter redefinition */
     func.params.foreach { p =>
-      new_st.lookUp(p.ident.name, VariableType()) match {
+      new_st.lookUpVar(p.ident.name) match {
+        /* Parameter redefinition */
         case Some(obj) => {
           semErr += buildParamRedefError(
             p.ident.pos,

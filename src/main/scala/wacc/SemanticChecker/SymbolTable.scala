@@ -4,10 +4,11 @@ import scala.collection.mutable
 
 import SymbolObject._
 import SymbolObjectType._
+import SemanticTypes._
 
 class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
-  val dictionary = mutable.Map[(String, ObjectType), SymbolObj]()
+  val dictionary = mutable.Map[(String, ObjectType), List[SymbolObj]]()
   val subSts = mutable.ListBuffer[SymbolTable]()
   val encSymTable = st
   // SymbolTable has 2 type - 
@@ -21,23 +22,152 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
   }
 
   /* Add a key-value pair to dictionary */
-  def add(name: String, objType: ObjectType, obj: SymbolObj) =
-    dictionary += ((name, objType) -> obj)
+  def add(name: String, objType: ObjectType, obj: SymbolObj) = {
+    val objs = mutable.ListBuffer[SymbolObj]()
+
+    objType match {
+      case FunctionType() => {
+        /* Add possible overloading functions to list */
+        lookUpFunc(name) match {
+          case Some(existObjs) => objs ++= existObjs
+          case _ =>
+        }
+      }
+      case _ => 
+    }
+
+    // Add new pair
+    objs += obj
+
+    // Add symbol name-object pair to dictionary
+    dictionary += ((name, objType) -> objs.toList)
+  }
+    
 
   /* Remove a key-value pair specified by key from dictionary */
   def remove(name: String, objType: ObjectType) =
     dictionary -= ((name, objType))
 
-  /* Look up a value according to key in this symbol table */
-  def lookUp(name: String, objType: ObjectType): Option[SymbolObj] =
-    dictionary.get((name, objType))
+  /* Look up a variable value according to key in this symbol table */
+  /* Use .head because variable cannot be redefined, so only 1 obj per identifier */
+  def lookUpVar(name: String): Option[SymbolObj] =
+    dictionary.get((name, VariableType())) match {
+      case Some(objs) => Some(objs.head)
+      case None       => None
+    }
+
+  /* Look up a value according to key in this symbol table and all parent table*/
+  def lookUpAllVar(name: String): Option[SymbolObj] = {
+    var s = this
+    while (s != null) {
+      val obj = s.lookUpVar(name)
+      if (obj != None) {
+        return obj
+      }
+      s = s.encSymTable
+    }
+
+    None
+  }
+
+  /* Look up a function according to key in this symbol table and all parent table*/
+  /* Function may have overloading, so return a list of function objects */
+  def lookUpFunc(name: String): Option[List[SymbolObj]] =
+    dictionary.get((name, FunctionType()))
+
+  /* Look up a value according to key in this symbol table and all parent table*/
+  def lookUpAllFunc(name: String): Option[List[SymbolObj]] = {
+    // Can only define function in main scope
+
+    var mainSt = this
+    while (mainSt.encSymTable != null) {
+      mainSt = mainSt.encSymTable
+    }
+
+    mainSt.lookUpFunc(name)
+  }
+
+  private def correctFuncObj(func: FuncObj,
+                                   expectedRet: Type, 
+                                   expectedArgs: List[Type]): Boolean = {
+    val funcRet  = func.returnType
+    val funcArgs = func.args.map(_.t)
+    if (sameFunction(expectedRet, funcRet, expectedArgs, funcArgs)) {
+      true
+    } else {
+      false
+    }
+  }
+
+  /* Find the overload function object with the same argument types */
+  def getOverloadFuncObj(name: String,
+                         expectRet:  Type,
+                         expectArgs: List[Type]): Option[FuncObj] = {
+    // Get all overloading functions of this name
+    val funcObjs = lookUpAllFunc(name)
+    var retObj: Option[FuncObj] = None
+
+    funcObjs match {
+      case Some(funcs) => {
+        /* For each overloading function, check if the argument types are the same */
+        for (func <- funcs) { 
+          func match {
+            case func: FuncObj => {
+              if (correctFuncObj(func, expectRet, expectArgs))
+                retObj = Some(func)
+            }
+            case _ =>
+          }
+        }
+      }
+      case None =>
+    }
+
+    retObj
+  }
+
+  /* Get the overload index of a function */
+  private def getOverloadFuncIndex(name: String, 
+                           expectRet: Type, 
+                           expectArgs: List[Type]): Int = {
+    // Get all overloading functions of this name
+    val funcObjs = lookUpAllFunc(name)
+    var retIndex = -1
+
+    funcObjs match {
+      case Some(funcs) => {
+        var index = 0
+        /* For each overloading function, check if the argument types are the same */
+        for (func <- funcs) {
+          func match {
+            case func: FuncObj => {
+              if (correctFuncObj(func, expectRet, expectArgs))
+                retIndex = index
+            }
+            case _ =>
+          }
+          index += 1
+        }
+      }
+      case None =>
+    }
+
+    retIndex
+  }
+
+  // Get overload function name with index
+  def getOverloadFuncName(baseFuncName: String, 
+                          expectRet: Type, 
+                          expectArgs: List[Type]): String = {
+    baseFuncName + getOverloadFuncIndex(baseFuncName, expectRet, expectArgs)                         
+  }
 
   // find variable number in this scope
   private def findVarNum(): Int = {
     var var_num = 0
     
     for (key_value <- dictionary) {
-      key_value._2 match {
+      key_value._2.head match {
         case VariableObj(_, _) => var_num += 1
         case _ =>
       }
@@ -65,20 +195,6 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     findAllVarNumHelper(this)
   }
 
-  /* Look up a value according to key in this symbol table and all parent table*/
-  def lookUpAll(name: String, objType: ObjectType): Option[SymbolObj] = {
-    var s = this
-    while (s != null) {
-      val obj = s.lookUp(name, objType)
-      if (obj != None) {
-        return obj
-      }
-      s = s.encSymTable
-    }
-
-    None
-  }
-
   /* Find similar value in this st with the given key provided as suggestion
      Similar means: without case sensitivity */
   def lookUpSimilar(
@@ -91,7 +207,7 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     dictionary.foreach { x =>
       {
         if (x._1._1.toUpperCase() == typeIn.toUpperCase())
-          similar += ((x._1._1, x._2.getPos()))
+          similar += ((x._1._1, x._2.head.getPos()))
       }
     }
 
@@ -120,8 +236,58 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     return similar.toSet
   }
 
+  /* Look up a function with all overloading according to the name 
+     Return the name, position, type of arguments required and return type */
+  private def lookUpSimilarFunc(name: String): 
+    Set[(String, (Int, Int), List[Type], Type)] = {
+    val allOverload = mutable.ListBuffer[(String, (Int, Int), List[Type], Type)]()
+
+    // Get all overloading functions of this name
+    val funcObjs = lookUpAllFunc(name)
+    funcObjs match {
+      case Some(funcs) => {
+        var index = 0
+        /* For each overloading function, check if the argument types are the same */
+        for (func <- funcs) {
+          func match {
+            case func: FuncObj => {
+              val position = func.getPos()
+              val funcRet  = func.returnType
+              val funcArgs = func.args.map(_.t)
+              allOverload += ((name, position, funcArgs, funcRet))
+            }
+            case _ =>
+          }
+          index += 1
+        }
+      }
+      case None =>
+    }
+
+    allOverload.toSet
+  }
+
+  /* Find similar Function in this st and all parent st,
+     with the given key provided as suggestion
+     Return the name, position, type of arguments required and return type
+     Similar means: without case sensitivity */
+  def lookUpAllSimilarFunc(
+      typeIn: String
+  ): Set[(String, (Int, Int), List[Type], Type)] = {
+    // Get all similar name function
+    val similarName = lookUpAllSimilar(typeIn, FunctionType()).map(_._1)
+
+    // 1.Name; 2.Position; 3.List[Argument type]; 4.Return type
+    val similar = mutable.ListBuffer[(String, (Int, Int), List[Type], Type)]()
+
+    // For each similar name, get all overload function
+    similarName.foreach{similar ++= lookUpSimilarFunc(_)}
+
+    return similar.toSet
+  }
+
   /* Get an immutable symbol table based on the current one */
-  def getImmutableTable(): (Map[(String, ObjectType), SymbolObj], 
+  def getImmutableTable(): (Map[(String, ObjectType), List[SymbolObj]], 
                             List[SymbolTable]) = {
     (dictionary.toMap, subSts.toList)
   }
