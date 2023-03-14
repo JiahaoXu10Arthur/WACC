@@ -1,0 +1,17 @@
+# program with struct that has same name as a variable
+
+# Output:
+# 5
+#
+
+# Program:
+
+begin
+  struct f of
+    int field1
+  end
+
+  struct f f = {5};
+  int a = f.field1;
+  println a
+end

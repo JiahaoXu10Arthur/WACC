@@ -5,9 +5,9 @@
 # Program:
 
 begin
-    struct foo of
-        int field1
-    end
-
-    struct foo a = {}
+  struct foo of
+    int field1
+  end  
+  
+  struct foo a = {}
 end

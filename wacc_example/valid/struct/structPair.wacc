@@ -1,0 +1,19 @@
+# ensures that structs can be unpacked directly from pairs
+
+# Output:
+# 3
+#
+
+# Program:
+
+begin
+  struct foo of
+  	pair(int, int) field1
+  end
+
+	pair(int, int) a = newpair(1, 1);
+  struct foo p = {a};
+  fst p.field1 = 3;
+	int b = fst p.field1;
+  println b
+end

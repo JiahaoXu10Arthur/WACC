@@ -1,0 +1,22 @@
+# create a struct of struct 
+
+# Output:
+# 1
+#
+
+# Program:
+
+begin
+  struct a of
+    int field1
+  end
+
+	struct b of
+		struct a field1
+	end
+  
+	struct a foo1 = {1};
+	struct b foo2 = {foo1};
+	int c = foo2.field1.field1;
+	println c
+end

@@ -1,0 +1,19 @@
+# struct array elem should not be accessed
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  struct foo of
+      int[] a
+  end
+
+  int[] b = [1,2];
+  struct foo a = {b};
+  int c = a.a[0]
+end
