@@ -1,4 +1,4 @@
-# a simple tail recursive function
+# deep tail recursion in a function with overloaded parameters
 
 # Output:
 # 0
@@ -7,6 +7,10 @@
 # Program:
 
 begin
+  int f(bool b) is 
+    return 1
+  end
+
   int f(int x) is
     if x <= 0
     then return 0

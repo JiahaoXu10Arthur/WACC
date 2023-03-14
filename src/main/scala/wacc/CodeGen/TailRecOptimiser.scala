@@ -17,9 +17,10 @@ object TailRecOptimiser {
   private def optimiseFuncBody(body: Seq[Stat], func: Func)(implicit st: SymbolTable): List[Stat] = {
     var numInstrsToDrop = 1
     val bodyLast        = body.last
+
     val newBody: List[Stat] = bodyLast match {
       case Return(expr: Lvalue) if body.length > 1 =>
-        val sndToLast = body(body.length - 2)
+        val sndToLast   = body(body.length - 2)
         val tailRecCall = checkRecursiveCall(sndToLast, expr, func)
         tailRecCall match {
           case Some(cstmt) =>
@@ -47,8 +48,10 @@ object TailRecOptimiser {
       case Assign(expr: Expr, cstmt @ Call(fid, args)) =>
         val retType  = checkLvalueType(expr)
         val argTypes = args.map(arg => checkExprType(arg))
-        if (expr == returnExpr && fid == func.ident && 
-            sameFunction(funcRetType, retType, funcParamTypes, argTypes)) {
+        if (
+          expr == returnExpr && fid == func.ident &&
+          sameFunction(funcRetType, retType, funcParamTypes, argTypes)
+        ) {
           Some(cstmt)
         } else {
           None
@@ -56,8 +59,10 @@ object TailRecOptimiser {
       case Declare(type1, id, cstmt @ Call(fid, args)) =>
         val retType  = convertType(type1)
         val argTypes = args.map(arg => checkExprType(arg))
-        if (id == returnExpr && fid == func.ident && 
-            sameFunction(funcRetType, retType, funcParamTypes, argTypes)) {
+        if (
+          id == returnExpr && fid == func.ident &&
+          sameFunction(funcRetType, retType, funcParamTypes, argTypes)
+        ) {
           Some(cstmt)
         } else {
           None
