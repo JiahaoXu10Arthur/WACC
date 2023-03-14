@@ -12,11 +12,11 @@ class TranslateTest extends AnyFlatSpec {
     val exitCode2 = 255
     val exitCode3 = -1
     val (prog1, st1) = buildExitProgram(exitCode1)
-    val ir1 = Translator.translate(prog1, st1)
+    val ir1 = Translator.translate(prog1, st1, true)
     val (prog2, st2) = buildExitProgram(exitCode2)
-    val ir2 = Translator.translate(prog2, st2)
+    val ir2 = Translator.translate(prog2, st2, true)
     val (prog3, st3) = buildExitProgram(exitCode3)
-    val ir3 = Translator.translate(prog3, st3)
+    val ir3 = Translator.translate(prog3, st3, true)
     ir1.segments should not be empty
     ir2.segments should not be empty
     ir3.segments should not be empty
@@ -49,15 +49,15 @@ class TranslateTest extends AnyFlatSpec {
     val boolExpr = "true"
     val strExpr = "\"hello\""
     val (prog1, st1) = buildPrintProgram(intExpr)
-    val ir1 = Translator.translate(prog1, st1)
+    val ir1 = Translator.translate(prog1, st1, true)
     val (prog2, st2) = buildPrintProgram(charExpr)
-    val ir2 = Translator.translate(prog2, st2)
+    val ir2 = Translator.translate(prog2, st2, true)
     val (prog3, st3) = buildPrintProgram(boolExpr)
-    val ir3 = Translator.translate(prog3, st3)
+    val ir3 = Translator.translate(prog3, st3, true)
     val (prog4, st4) = buildPrintProgram(strExpr)
-    val ir4 = Translator.translate(prog4, st4)
+    val ir4 = Translator.translate(prog4, st4, true)
     val (prog5, st5) = buildPrintlnProgram(intExpr)
-    val ir5 = Translator.translate(prog5, st5)
+    val ir5 = Translator.translate(prog5, st5, true)
     ir1.segments should not be empty
     ir2.segments should not be empty
     ir3.segments should not be empty
@@ -86,17 +86,17 @@ class TranslateTest extends AnyFlatSpec {
     val modExpr = "1 % 2"
     val complexExpr = "1 + 2 * 3 - 4"
     val (prog1, st1) = buildIntExprProgram(plusExpr)
-    val ir1 = Translator.translate(prog1, st1)
+    val ir1 = Translator.translate(prog1, st1, true)
     val (prog2, st2) = buildIntExprProgram(minusExpr)
-    val ir2 = Translator.translate(prog2, st2)
+    val ir2 = Translator.translate(prog2, st2, true)
     val (prog3, st3) = buildIntExprProgram(multExpr)
-    val ir3 = Translator.translate(prog3, st3)
+    val ir3 = Translator.translate(prog3, st3, true)
     val (prog4, st4) = buildIntExprProgram(divExpr)
-    val ir4 = Translator.translate(prog4, st4)
+    val ir4 = Translator.translate(prog4, st4, true)
     val (prog5, st5) = buildIntExprProgram(modExpr)
-    val ir5 = Translator.translate(prog5, st5)
+    val ir5 = Translator.translate(prog5, st5, true)
     val (prog6, st6) = buildIntExprProgram(complexExpr)
-    val ir6 = Translator.translate(prog6, st6)
+    val ir6 = Translator.translate(prog6, st6, true)
     ir1.segments should not be empty
     ir2.segments should not be empty
     ir3.segments should not be empty
@@ -127,17 +127,17 @@ class TranslateTest extends AnyFlatSpec {
     val leqExpr = "1 <= 2"
     val geqExpr = "1 >= 2"
     val (prog1, st1) = buildBoolExprProgram(eqExpr)
-    val ir1 = Translator.translate(prog1, st1)
+    val ir1 = Translator.translate(prog1, st1, true)
     val (prog2, st2) = buildBoolExprProgram(neqExpr)
-    val ir2 = Translator.translate(prog2, st2)
+    val ir2 = Translator.translate(prog2, st2, true)
     val (prog3, st3) = buildBoolExprProgram(ltExpr)
-    val ir3 = Translator.translate(prog3, st3)
+    val ir3 = Translator.translate(prog3, st3, true)
     val (prog4, st4) = buildBoolExprProgram(gtExpr)
-    val ir4 = Translator.translate(prog4, st4)
+    val ir4 = Translator.translate(prog4, st4, true)
     val (prog5, st5) = buildBoolExprProgram(leqExpr)
-    val ir5 = Translator.translate(prog5, st5)
+    val ir5 = Translator.translate(prog5, st5, true)
     val (prog6, st6) = buildBoolExprProgram(geqExpr)
-    val ir6 = Translator.translate(prog6, st6)
+    val ir6 = Translator.translate(prog6, st6, true)
     ir1.segments should not be empty
     ir2.segments should not be empty
     ir3.segments should not be empty
@@ -161,14 +161,14 @@ class TranslateTest extends AnyFlatSpec {
   "Branch statements" should "contain jump labels" in {
     val (prog1, st1) = buildIfProgram("true", "print true", "print false")
     val (prog2, st2) = buildWhileProgram("true", "print true")
-    val ir1 = Translator.translate(prog1, st1)
+    val ir1 = Translator.translate(prog1, st1, true)
     ir1.segments should not be empty
     val ir1Instrs = ir1.segments.map{x => x.instrs}.flatten
     (ir1Instrs.foldLeft(0){(acc, instr) => acc + (instr match {
       case CreateLabel(JumpLabel(_)) => 1
       case _ => 0
     })}) should be >= 2
-    val ir2 = Translator.translate(prog2, st2)
+    val ir2 = Translator.translate(prog2, st2, true)
     ir2.segments should not be empty
     val ir2Instrs = ir2.segments.map{x => x.instrs}.flatten
     (ir2Instrs.foldLeft(0){(acc, instr) => acc + (instr match {

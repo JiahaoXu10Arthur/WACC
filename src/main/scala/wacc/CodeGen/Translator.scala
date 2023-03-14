@@ -8,17 +8,17 @@ import StatTranslator._
 import FunctionTranslator._
 import IRBuilder._
 import TailRecOptimiser._
-import Utils.{beginBlock, endBlock, calculateSaveRegs}
+import Utils.{ beginBlock, calculateSaveRegs, endBlock }
 
 object Translator {
   implicit var branchCounter = 0
 
-  def translate(p: Program, mainST: SymbolTable): IR = {
+  def translate(p: Program, mainST: SymbolTable, tailRecOpt: Boolean): IR = {
     // Initialize implicit value
     implicit val ir = new IRBuilder()
-    val varNum = mainST.findAllVarNum()
-    val varRegs = calculateSaveRegs(varNum)
-    val pushRegs = varRegs ++ reservedReg
+    val varNum      = mainST.findAllVarNum()
+    val varRegs     = calculateSaveRegs(varNum)
+    val pushRegs    = varRegs ++ reservedReg
     branchCounter = 0
 
     /* Update state table */
@@ -35,7 +35,12 @@ object Translator {
     endBlock(restoreSP = false)
 
     /* Translate functions */
-    p.funcs.foreach(f => translateFunction(optimiseFunc(f)))
+    p.funcs.foreach(f =>
+      translateFunction(tailRecOpt match {
+        case true  => optimiseFunc(f)
+        case false => f
+      })
+    )
 
     /* Return the intermediate representation for code generation */
     returnIR()

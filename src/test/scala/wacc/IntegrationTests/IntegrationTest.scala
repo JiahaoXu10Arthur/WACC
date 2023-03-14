@@ -57,7 +57,7 @@ package wacc.IntegrationTests
                     val (errors, st) = SemanticChecker.semanticCheck(x)
                     errors shouldBe empty
                     val waccName = filename.dropRight(WACC_FILE_DROP_LEN)
-                    CodeGenerator.generateAssembly(x, st, waccName)
+                    CodeGenerator.generateAssembly(x, st, waccName, true, true)
                     val (expectOutput, expectExit) = getExpects(waccName)
                     val (_output, exit) = getOutputAndExit(waccName)
                     val output = replaceAddrs(_output,expectOutput)
