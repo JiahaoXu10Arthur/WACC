@@ -13,8 +13,8 @@ import wacc.SemanticChecker.SemanticTypes
 
 object Ast {
   /* Program */
-  case class Program(funcs: List[Func], stats: List[Stat])(val pos: (Int, Int))
-  object Program extends ParserBridgePos2[List[Func], List[Stat], Program]
+  case class Program(structs: List[Struct],funcs: List[Func], stats: List[Stat])(val pos: (Int, Int))
+  object Program extends ParserBridgePos3[List[Struct], List[Func], List[Stat], Program]
 
   /* Binary Expressions */
   sealed trait Expr extends Rvalue {

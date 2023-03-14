@@ -1,7 +1,8 @@
 package wacc.SyntaxChecker
 
 import parsley.{Parsley, Success, Failure}
-import parsley.combinator.sepBy
+import parsley.combinator.{sepBy, many}
+import Parsley.{attempt, lookAhead}
 import parsley.errors.combinator._
 
 import wacc.Ast._
@@ -25,6 +26,12 @@ object StructParser {
           "of" ~> sepBy(field, ",") <~ "end"
         )
     ).label("struct")
+
+    private val _structStartCheck = {
+      attempt(lookAhead("struct" ~> Ident(Lexer.ident) ~> "of"))
+    }
+
+    val structs: Parsley[List[Struct]] = many(_structStartCheck ~> struct)
     
     def structParse(input: String): Option[Struct] = {
     struct.parse(input) match {

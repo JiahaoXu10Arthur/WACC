@@ -327,12 +327,13 @@ object ExprSemantic {
   def structElemCheck(
     structName: Ident,
     fields: List[Ident])(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
-    if (isStruct(structName)) {
+    // Check the struct is a defined struct
+    if (isDefinedStruct(structName)) {
       val fieldNum = fields.length
       var index = 1
       // Check every field except the last is a struct
       while (index < fieldNum) {
-        if (!isStruct(fields(index - 1))) {
+        if (!isDefinedStruct(fields(index - 1))) {
           return AnyType()
         }
         index += 1
@@ -344,23 +345,37 @@ object ExprSemantic {
     checkExpr(fields.last)
   }
 
-  private def isStruct(structName: Ident)(implicit st: SymbolTable, 
+  private def isDefinedStruct(structName: Ident)(implicit st: SymbolTable, 
                                                         semErr: ListBuffer[WACCError]): Boolean = {
-      val structType = checkExpr(structName)
-      println(s"This is $structName have $structType")
-
-      structType match {
-        case AnyType() => true
-        case StructType(_) => true
-        case _ => {
-          semErr += buildTypeError(
-            structName.pos,
-            structType,
-            Set(StructType(structName)),
-            Seq(s"$structName is not a struct but used as struct access")
-          )
-          false
-        }
+		// Check the struct is struct type
+    val structType = checkExpr(structName)
+    structType match {
+      case AnyType() => true
+      case StructType(structName) => {
+				// Check the struct is defined
+				st.lookUpAll(structName.name, StructObjType()) match {
+					case Some(_) => true
+					case None => {
+						semErr += buildScopeError(
+							structName.pos,
+							structName.name,
+							st.lookUpAllSimilar(structName.name, StructObjType()),
+							Seq(s"Struct ${structName.name} has not been declared in this scope")
+						)
+						false
+					} 
+				}
+			}
+      case _ => {
+        semErr += buildTypeError(
+          structName.pos,
+          structType,
+          Set(StructType(structName)),
+          Seq(s"$structName is not a struct but used as struct access")
+        )
+        false
       }
     }
+
+  }
 }

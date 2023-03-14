@@ -9,6 +9,7 @@ import wacc.Error.SyntaxErrorBuilder
 
 import StatParser.{stmts}
 import FuncParser.{funcs}
+import StructParser.{structs}
 import Lexer.implicitVals._
 
 object Parser {
@@ -16,7 +17,7 @@ object Parser {
   implicit val eb = new SyntaxErrorBuilder
 
   val program: Parsley[Program] = fully(
-    "begin" ~> Program(funcs, stmts) <~ "end" <~ eof
+    "begin" ~> Program(structs ,funcs, stmts) <~ "end" <~ eof
   )
 
   val parse = (input: String) => program.parse(input)

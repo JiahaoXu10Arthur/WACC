@@ -15,7 +15,7 @@ object StructSemantic {
   def readInStructHeader(
     struct: Struct
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
-		/* Check for struct redefinition */
+	/* Check for struct redefinition */
     st.lookUp(struct.name.name, StructObjType()) match {
       case Some(obj) => {
         semErr += buildStructRedefError(
@@ -25,14 +25,15 @@ object StructSemantic {
           Seq(s"Illegal redeclaration of struct ${struct.name.name} ")
         )
       }
-			/* add struct to main scope */
+	/* add struct to main scope */
       case None => {
         st.add(
           struct.name.name,
           StructObjType(),
           StructObj(
-            struct.name,
+			struct.name,
             struct.fields.map(f => (f._2, VariableObj(convertType(f._1), f._2.pos))),
+			st,
             struct.pos
           )
         )
@@ -40,7 +41,7 @@ object StructSemantic {
   	}
   }
 
-	/* Create self symbol table
+  /* Create self symbol table
 			 Add obj into self scope */
   def checkStructDeclare(
       struct: Struct

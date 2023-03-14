@@ -45,7 +45,26 @@ object StatSemantic {
       st: SymbolTable,
       semErr: ListBuffer[WACCError]
   ): Unit = {
-    val targetType: Type = convertType(type1)
+    var targetType: Type = convertType(type1)
+
+    // Check targetType is defined: for struct
+    targetType match {
+      case StructType(structName) =>
+        st.lookUpAll(structName.name, StructObjType()) match {
+          case None => {
+            semErr += buildScopeError(
+							structName.pos,
+							structName.name,
+							st.lookUpAllSimilar(structName.name, StructObjType()),
+							Seq(s"Struct ${structName.name} has not been declared in this scope")
+						)
+            targetType = AnyType()
+          }
+          case _ =>
+        }
+      case _ =>
+    }
+
     val valueType: Type = checkRvalue(initValue, targetType)
     /* Check existence, Create new VariableObj */
     st.lookUp(ident.name, VariableType()) match {

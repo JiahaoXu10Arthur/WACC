@@ -103,10 +103,10 @@ class SemanticExprTest extends AnyFlatSpec {
 		// 	char field2;
 		// }
 
-		st.add("a", StructObjType(), new StructObj(Ident("a")(0, 0), (List(field1)), (0, 0)))
+		st.add("a", StructObjType(), new StructObj(Ident("a")(0, 0), (List(field1)), st, (0, 0)))
 		st.add("field1", VariableType(), VariableObj(StructType(Ident("b")(0, 0)),(0, 0)))
 
-		st.add("b", StructObjType(), new StructObj(Ident("b")(0, 0), (List(field2)), (0, 0)))	
+		st.add("b", StructObjType(), new StructObj(Ident("b")(0, 0), (List(field2)), st, (0, 0)))	
 		st.add("field2", VariableType(), VariableObj(CharType(), (0, 0)))
 
 		checkExpr(testStruct1) shouldBe StructType(Ident("b")(0, 0))
