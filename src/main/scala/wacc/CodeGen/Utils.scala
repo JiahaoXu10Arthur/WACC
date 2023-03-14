@@ -149,7 +149,6 @@ object Utils {
 
   def callerSavePush()(implicit stateST: StateTable, ir: IRBuilder) = {
     val usedParam = stateST.getUsedParamRegs()
-    addInstr(Comment(s"Pushing param registers here! Number: ${usedParam.size}"))
     if (!usedParam.isEmpty) {
       addInstr(PushInstr(usedParam))
     }
@@ -157,7 +156,6 @@ object Utils {
 
   def callerSavePop()(implicit stateST: StateTable, ir: IRBuilder) = {
     val usedParam = stateST.getUsedParamRegs()
-    addInstr(Comment(s"Poping param registers here! Number: ${usedParam.size}"))
     if (!usedParam.isEmpty) {
       addInstr(PopInstr(usedParam))
     }
