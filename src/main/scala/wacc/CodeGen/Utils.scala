@@ -114,14 +114,14 @@ object Utils {
   
   /* Mov to location or register, will check size */
   def locMovLoad(size: Int, 
-                 src: Register, 
-                 dest: Location)(implicit ir: IRBuilder) = {
-    dest match {
-      case dest: Register => addInstr(MovInstr(src, dest))
+                 dest: Register, 
+                 src: Location)(implicit ir: IRBuilder) = {
+    src match {
+      case src: Register => addInstr(MovInstr(dest, src))
       case _             => {
         size match {
-          case ByteSize => addInstr(LoadSignedByteInstr(src, dest))
-          case _        => addInstr(LoadInstr(src, dest))
+          case ByteSize => addInstr(LoadSignedByteInstr(dest, src))
+          case _        => addInstr(LoadInstr(dest, src))
         }
       }
     }
