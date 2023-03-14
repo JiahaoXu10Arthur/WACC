@@ -1,0 +1,17 @@
+# struct assign with too many arguments
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  struct foo of
+    int field1
+  end
+
+  struct foo a = {1,2}
+end

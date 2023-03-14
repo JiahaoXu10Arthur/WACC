@@ -1,0 +1,18 @@
+# function return type mismatch: int <- bool
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  struct foo of
+    int field1,
+    bool field2
+  end
+
+  struct foo a = {1, 2}
+end
