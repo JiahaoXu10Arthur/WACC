@@ -34,7 +34,7 @@ object SymbolObject {
   case class StructObj(
       val ident: Ident,
       val fields: List[(Ident, VariableObj)],
-      val symTable: SymbolTable,
+      var symTable: SymbolTable,
       val structPos: (Int, Int)
   ) extends SymbolObj {
     override def getType(): Type = StructType(ident)

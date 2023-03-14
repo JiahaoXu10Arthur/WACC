@@ -367,14 +367,20 @@ object StatTranslator {
     val struct_loc = findVarLoc(structValue.ident.name, stateST)
     locMovLoad(DefaultSize, R3, struct_loc)
 
-    var preStructName = structValue.ident.name
+    // Get struct name of outer struct
+    val fieldType = checkExprType(structValue.ident)
+    var preStructName = fieldType match {
+      case StructType(structName) => structName.name
+      case _ => null
+    }
+
+    var preSymTable = st
 
     // For each dimension access
     for (fieldIdent <- structValue.field) {
-
       var offset = 0
       // Find field offset
-      st.lookUp(preStructName, StructObjType()) match {
+      preSymTable.lookUpAll(preStructName, StructObjType()) match {
         case Some(obj: StructObj) =>
           val fields = obj.fields
           var index = 0
@@ -383,6 +389,7 @@ object StatTranslator {
             offset += sizeOfElem(fields(index)._2.getType())
             index += 1
           }
+          preSymTable = obj.symTable
         case _ => 
       }
 
@@ -413,14 +420,20 @@ object StatTranslator {
     val struct_loc = findVarLoc(structValue.ident.name, stateST)
     locMovLoad(DefaultSize, R3, struct_loc)
 
-    var preStructName = structValue.ident.name
+    // Get struct name of outer struct
+    val fieldType = checkExprType(structValue.ident)
+    var preStructName = fieldType match {
+      case StructType(structName) => structName.name
+      case _ => null
+    }
+    var preSymTable = st
 
     // For each dimension access
     for (fieldIdent <- structValue.field) {
 
       var offset = 0
       // Find field offset
-      st.lookUp(preStructName, StructObjType()) match {
+      preSymTable.lookUpAll(preStructName, StructObjType()) match {
         case Some(obj: StructObj) =>
           val fields = obj.fields
           var index = 0
@@ -429,6 +442,7 @@ object StatTranslator {
             offset += sizeOfElem(fields(index)._2.getType())
             index += 1
           }
+          preSymTable = obj.symTable
         case _ => 
       }
 

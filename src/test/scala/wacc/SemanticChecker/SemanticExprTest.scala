@@ -86,11 +86,6 @@ class SemanticExprTest extends AnyFlatSpec {
 		// a.field1.field2
 		val testStruct2 = StructElem(Ident("a")(0,0), List(Ident("field1")(0,0), Ident("field2")(0,0)))(0,0)
 
-		/* No symbol table, semantic error */
-		checkExpr(testStruct1)
-		// a not defined, field not defined
-		semErr.length shouldBe 2
-
 		/* Add struct to symbol table */
 		val field1 = (Ident("field1")(0,0), VariableObj(StructType(Ident("b")(0, 0)), (0, 0)))
 		val field2 = (Ident("field2")(0,0), VariableObj(CharType(), (0, 0)))

@@ -2,6 +2,7 @@ package wacc.SemanticChecker
 
 import wacc.SyntaxChecker.Types
 import wacc.SemanticChecker.SymbolObjectType._
+import wacc.SemanticChecker.SymbolObject._
 import wacc.Ast._
 
 object SemanticTypes {
@@ -86,7 +87,6 @@ object SemanticTypes {
   def checkExprType(
       expr: Expr
     )(implicit st: SymbolTable): Type = {
-
     expr match {
       case Add(_, _)   => IntType()
       case Sub(_, _)   => IntType()
@@ -131,12 +131,20 @@ object SemanticTypes {
             case ArrayType(elemType) => {
               returnType = elemType
             }
-            case other => AnyType()
+            case _ => AnyType()
           }
         } 
         returnType
       }
-      case StructElem(_, fields) => checkExprType(fields.last)
+      case StructElem(ident, fields) => {
+        st.lookUpAll(ident.name, StructObjType()) match {
+          case Some(obj: StructObj) => {
+            val new_struct = StructElem(fields.head, fields.drop(1))(fields.head.pos)
+            checkExprType(new_struct)(obj.symTable)
+          }
+          case _ => AnyType()
+        }
+      }
     }
   }
 

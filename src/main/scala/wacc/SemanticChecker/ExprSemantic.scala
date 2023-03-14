@@ -240,20 +240,24 @@ object ExprSemantic {
     st.lookUpAll(ident.name, VariableType()) match {
       case Some(symObj) => symObj.getType()
       case None => {
-        /* If cannot find, error */
-        semErr += buildScopeError(
-          ident.pos,
-          ident.name,
-          st.lookUpAllSimilar(ident.name, VariableType()),
-          Seq(s"Variable ${ident.name} has not been declared in this scope")
-        )
-        /* Add a fake variable to avoid further error */
-        st.add(
-          ident.name,
-          VariableType(),
-          new VariableObj(AnyType(), ident.pos)
-        )
-        AnyType()
+        // or can be struct
+        st.lookUpAll(ident.name, StructObjType()) match {
+          case Some(symObj) => symObj.getType()
+          case None => /* If cannot find, error */
+            semErr += buildScopeError(
+              ident.pos,
+              ident.name,
+              st.lookUpAllSimilar(ident.name, VariableType()),
+              Seq(s"Variable ${ident.name} has not been declared in this scope")
+            )
+            /* Add a fake variable to avoid further error */
+            st.add(
+              ident.name,
+              VariableType(),
+              new VariableObj(AnyType(), ident.pos)
+            )
+            AnyType()
+            }
       }
     }
 
@@ -327,42 +331,60 @@ object ExprSemantic {
   def structElemCheck(
     structName: Ident,
     fields: List[Ident])(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
-    // Check the struct is a defined struct
-    if (isDefinedStruct(structName)) {
-      val fieldNum = fields.length
-      var index = 1
-      // Check every field except the last is a struct
-      while (index < fieldNum) {
-        if (!isDefinedStruct(fields(index - 1))) {
-          return AnyType()
-        }
-        index += 1
+
+    var preSt = getStructTable(structName)
+
+    val fieldNum = fields.length
+    var index = 0
+
+    // Check every field except the last is a struct
+    while (index < fieldNum - 1) {
+      // Find symbol table of the next struct
+      preSt = extractFieldTable(fields(index), preSt)
+
+      // If any field is not a struct, return AnyType
+      preSt match {
+        case None => return AnyType()
+        case _ =>
       }
-    } else {
-      return AnyType()
+      index += 1
     }
+
     // If all fields are struct, type is the last field's type
-    checkExpr(fields.last)
+    preSt match {
+      case None => return AnyType()
+      case Some(st) => checkExpr(fields.last)(preSt.get, semErr)
+    }
   }
 
-  private def isDefinedStruct(structName: Ident)(implicit st: SymbolTable, 
-                                                        semErr: ListBuffer[WACCError]): Boolean = {
+  private def extractFieldTable(fieldName: Ident, st: Option[SymbolTable])(
+                                implicit semErr: ListBuffer[WACCError]): Option[SymbolTable] = {
+     st match {
+      case Some(struct_st) => getStructTable(fieldName)(struct_st, semErr)
+      case None => None
+     }
+  }
+
+  private def getStructTable(structName: Ident)(implicit st: SymbolTable, 
+                                                         semErr: ListBuffer[WACCError]): Option[SymbolTable] = {
+    // If not defined struct, return None
+    var retTable: Option[SymbolTable] = None
+
 		// Check the struct is struct type
     val structType = checkExpr(structName)
     structType match {
-      case AnyType() => true
+      case AnyType() => 
       case StructType(structName) => {
 				// Check the struct is defined
 				st.lookUpAll(structName.name, StructObjType()) match {
-					case Some(_) => true
-					case None => {
+					case Some(obj: StructObj) => retTable = Some(obj.symTable)
+					case _ => {
 						semErr += buildScopeError(
 							structName.pos,
 							structName.name,
 							st.lookUpAllSimilar(structName.name, StructObjType()),
 							Seq(s"Struct ${structName.name} has not been declared in this scope")
 						)
-						false
 					} 
 				}
 			}
@@ -373,9 +395,10 @@ object ExprSemantic {
           Set(StructType(structName)),
           Seq(s"$structName is not a struct but used as struct access")
         )
-        false
       }
     }
+
+    retTable
 
   }
 }

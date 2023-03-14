@@ -79,5 +79,12 @@ object StructSemantic {
 
     /* Add symbol table to struct */
     struct.symb = new_st
+
+		st.lookUpAll(struct.name.name, StructObjType()) match {
+			case Some(obj: StructObj) => {
+				obj.symTable = new_st
+			}
+			case _ => 
+		}
   }
 }

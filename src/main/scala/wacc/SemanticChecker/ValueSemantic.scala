@@ -131,6 +131,7 @@ object ValueSemantic {
           case "fst" => returnType = t1
           case "snd" => returnType = t2
         }
+      case AnyType() => returnType = AnyType()
       case _ => {
         semErr += buildTypeError(
           lvalue.pos,
@@ -138,7 +139,7 @@ object ValueSemantic {
           Set(PairType(AnyType(), AnyType())),
           Seq("Keywords fst and snd should be applied on pairs")
         )
-        AnyType()
+        returnType = AnyType()
       }
     }
 
