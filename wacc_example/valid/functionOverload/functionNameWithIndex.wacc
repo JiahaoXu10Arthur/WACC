@@ -1,0 +1,31 @@
+# attempted two function without overload, but they have similar name
+# after rename with index, f will become f0
+
+# Output:
+# 0
+# 1
+# 2
+#
+
+# Program:
+
+begin
+	int f(int a) is
+		return 0
+	end
+
+  int f(char a) is
+    return 1
+  end
+
+  int f0(int a) is
+    return 2
+  end
+
+  int x = call f(1);
+  println x;
+  int y = call f('a');
+  println y;
+  int z = call f0(1);
+  println z
+end

@@ -47,9 +47,9 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     val targetType: Type = convertType(type1)
-    val valueType: Type = checkRvalue(initValue)
+    val valueType: Type = checkRvalue(initValue, targetType)
     /* Check existence, Create new VariableObj */
-    st.lookUp(ident.name, VariableType()) match {
+    st.lookUpVar(ident.name) match {
       /* If varaible already declared, error */
       case Some(VariableObj(_, pos)) =>
         semErr += buildVarRedefError(
@@ -102,7 +102,7 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     val targetType = checkLvalue(target)
-    val assignType = checkRvalue(newValue)
+    val assignType = checkRvalue(newValue, targetType)
 
     /* Check target type matches assign type */
     if (!equalType(targetType, assignType)) {
@@ -125,7 +125,7 @@ object StatSemantic {
     // Check left side nested pair
     target match {
       case PairElem(_, PairElem(_, _)) => {
-        checkRvalue(newValue)
+        checkRvalue(newValue, AnyType())
         firstNested = true
       }
       case _ =>
@@ -244,9 +244,9 @@ object StatSemantic {
     var retType: Type = null
 
     /* Find functionObj declared in scope */
-    for ((name, obj) <- st.dictionary) {
+    for ((name, objs) <- st.dictionary) {
       /* find function in this scope */
-      obj match {
+      objs.head match {
         case obj: FuncObj => retType = obj.returnType
         case _            =>
       }

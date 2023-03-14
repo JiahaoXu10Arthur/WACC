@@ -8,6 +8,7 @@ import wacc.SyntaxChecker.ParserPositionBridge.{
   ParserSingletonBridgePos
 }
 import wacc.SyntaxChecker.Types._
+import wacc.SemanticChecker.SemanticTypes
 import wacc.SemanticChecker.SymbolTable
 
 object Ast {
@@ -115,7 +116,12 @@ object Ast {
   case class NewPair(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Rvalue
   object NewPair                                                    extends ParserBridgePos2[Expr, Expr, NewPair]
 
-  case class Call(ident: Ident, args: List[Expr])(val pos: (Int, Int)) extends Rvalue {
+  case class Call(ident: Ident, args: List[Expr])(val pos: (Int, Int))
+      extends Rvalue {
+    /* Will be changed after a call's return type is known
+       Added after function overloading
+       The type is initialised to anytype. */
+    var returnType: SemanticTypes.Type = SemanticTypes.AnyType()
   }
   object Call extends ParserBridgePos2[Ident, List[Expr], Call]
 

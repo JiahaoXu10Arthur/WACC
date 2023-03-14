@@ -23,14 +23,19 @@ object ValueSemantic {
   }
 
   def checkRvalue(
-      rvalue: Rvalue
+      rvalue: Rvalue,
+      targetType: Type
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
     rvalue match {
-      case NewPair(e1, e2)         => newPairCheck(e1, e2)
-      case Call(ident, args)       => callCheck(ident, args)
-      case PairElem(index, lvalue) => pairElemCheck(index, lvalue)
-      case ArrayLit(values)        => arrayLitCheck(values)
-      case rvalue: Expr            => checkExpr(rvalue)
+      case NewPair(e1, e2)               => newPairCheck(e1, e2)
+      case callValue @ Call(ident, args) => {
+        // Assign return type for callValue AST node
+        callValue.returnType = targetType
+        callCheck(ident, args, targetType)
+      }
+      case PairElem(index, lvalue)       => pairElemCheck(index, lvalue)
+      case ArrayLit(values)              => arrayLitCheck(values)
+      case rvalue: Expr                  => checkExpr(rvalue)
     }
   }
 
@@ -50,21 +55,41 @@ object ValueSemantic {
      FuncObj(returnType, args, argc, st)
      Arg2: args -> type match to FuncObj(args)
      Return: FuncObj(returnType) */
-  def callCheck(ident: Ident, args: List[Expr])(implicit
+  def callCheck(ident: Ident, args: List[Expr], targetType: Type)(implicit
       st: SymbolTable,
       semErr: ListBuffer[WACCError]
   ): Type = {
     var funcObj: FuncObj = null
+    var findFunc = false
+    val expectedArgs = args.map(checkExprType(_))
+
     /* Search funcObj in all scope*/
-    st.lookUpAll(ident.name, FunctionType()) match {
-      case Some(symObj: FuncObj) => funcObj = symObj
-      /* If no function found, error */
-      case _ => {
-        semErr += buildScopeError(
+    st.lookUpAllFunc(ident.name) match {
+      case Some(symObj) => {
+        val funcObjOpt = st.getOverloadFuncObj(ident.name, targetType, expectedArgs)
+        // If can find function with same return type and arguments
+        funcObjOpt match {
+          case Some(obj) => {
+            findFunc = true
+            funcObj = obj
+          }
+          case None =>
+        }
+
+      }
+      case _ =>
+    }
+
+    /* If no function found, error */
+    if (!findFunc) {
+      val similarFuncs = st.lookUpAllSimilarFunc(ident.name)
+      semErr += buildFunctionScopeError(
           ident.pos,
           ident.name,
-          st.lookUpAllSimilar(ident.name, FunctionType()),
-          Seq(s"Function ${ident.name} has not been defined")
+          similarFuncs,
+          Seq(s"Function ${ident.name} with " +
+              s"argument type ${expectedArgs} and " +
+              s"return type ${targetType} has not been defined")
         )
         /* Add fake function to the scope to avoid further error */
         st.add(
@@ -72,33 +97,7 @@ object ValueSemantic {
           FunctionType(),
           new FuncObj(AnyType(), List(), 0, st, ident.pos)
         )
-        return AnyType()
-      }
-    }
-
-    val lengthArgs = args.length
-    /* check number of parameters macthes function declaration  */
-    if (lengthArgs != funcObj.argc) {
-      semErr += buildArgNumError(
-        args(lengthArgs - 1).pos,
-        lengthArgs,
-        funcObj.argc,
-        Seq(s"Wrong number of arguments provided to function ${ident.name}")
-      )
-    }
-
-    /* check every parameter's type matches function declaration */
-    for (i <- 0 until lengthArgs.min(funcObj.argc)) {
-      val type1 = funcObj.args(i).getType()
-      val type2 = checkExpr(args(i))
-      if (!equalType(type1, type2)) {
-        semErr += buildTypeError(
-          args(i).pos,
-          type2,
-          Set(type1),
-          Seq("Arguments passed in need to match the type in funciton declaration")
-        )
-      }
+      return AnyType()
     }
 
     /* Return type */

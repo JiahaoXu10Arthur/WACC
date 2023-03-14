@@ -1,0 +1,23 @@
+# attempted function overload with function in opposite order
+
+# Output:
+# 0
+# 1
+#
+
+# Program:
+
+begin
+	int f(int a, char b) is
+		return 0
+	end
+
+  int f(char a, int b) is
+    return 1
+  end
+
+  int x = call f(1, 'a');
+  println x;
+  int y = call f('a', 1);
+  println y
+end
