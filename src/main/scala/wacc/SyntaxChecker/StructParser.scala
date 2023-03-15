@@ -18,22 +18,22 @@ object StructParser {
   end
   */
 
-    val field = (TypeParser.type_ <~> Ident(Lexer.ident)).label("struct field")
-    
-    val struct: Parsley[Struct] = (
-        Struct(
-          "struct" ~> Ident(Lexer.ident),
-          "of" ~> sepBy(field, ",") <~ "end"
-        )
-    ).label("struct")
+  val field = (TypeParser.type_ <~> Ident(Lexer.ident)).label("struct field")
+   
+  val struct: Parsley[Struct] = (
+      Struct(
+        "struct" ~> Ident(Lexer.ident),
+        "of" ~> sepBy(field, ",") <~ "end"
+      )
+  ).label("struct")
 
-    private val _structStartCheck = {
-      attempt(lookAhead("struct" ~> Ident(Lexer.ident) ~> "of"))
-    }
+  private val _structStartCheck = {
+    attempt(lookAhead("struct" ~> Ident(Lexer.ident) ~> "of"))
+  }
 
-    val structs: Parsley[List[Struct]] = many(_structStartCheck ~> struct)
-    
-    def structParse(input: String): Option[Struct] = {
+  val structs: Parsley[List[Struct]] = many(_structStartCheck ~> struct)
+   
+  def structParse(input: String): Option[Struct] = {
     struct.parse(input) match {
       case Success(x) => {
         Some(x)
