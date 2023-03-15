@@ -77,14 +77,16 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
   /* Look up a value according to key in this symbol table and all parent table*/
   def lookUpAllFunc(name: String): Option[List[SymbolObj]] = {
-    // Can only define function in main scope
+    // function can only be defined in the second level
+    // To check: s.encSymTable.encSymTable == null
 
-    var mainSt = this
-    while (mainSt.encSymTable != null) {
-      mainSt = mainSt.encSymTable
+    var st = this
+    while (st.encSymTable.encSymTable != null) {
+      st = st.encSymTable
     }
 
-    mainSt.lookUpFunc(name)
+    // Lookup in second level st
+    st.lookUpFunc(name)
   }
 
   private def correctFuncObj(func: FuncObj,

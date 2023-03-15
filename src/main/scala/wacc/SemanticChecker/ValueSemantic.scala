@@ -184,8 +184,7 @@ object ValueSemantic {
 
     targetType match {
       case StructType(ident) => {
-        
-        val structObj = st.lookUp(ident.name, StructObjType())
+        val structObj = st.lookUpAll(ident.name, StructObjType())
         structObj match {
           case Some(structObj: StructObj) => {
             val structFields = structObj.fields
@@ -221,7 +220,6 @@ object ValueSemantic {
         }
       }
       case _ => {
-        // May need to report error?
         return AnyType()
       }
     }

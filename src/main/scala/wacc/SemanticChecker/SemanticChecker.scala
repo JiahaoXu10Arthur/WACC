@@ -46,6 +46,6 @@ object SemanticChecker {
     // Link main symbol table to overall symbol table
     overAllSt.addSubSt(mainSt)
 
-    (semErr.toList, overAllSt)
+    (semErr.toList, mainSt)
   }
 }

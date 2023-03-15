@@ -14,6 +14,11 @@ object Translator {
   implicit var branchCounter = 0
 
   def translate(p: Program, mainST: SymbolTable, tailRecOpt: Boolean): IR = {
+
+    // Translate Class
+
+    // Translate Main
+
     // Initialize implicit value
     implicit val ir = new IRBuilder()
     val varNum      = mainST.findAllVarNum()
