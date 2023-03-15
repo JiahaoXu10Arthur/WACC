@@ -2,6 +2,7 @@ package wacc.SyntaxChecker
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
+import wacc.Ast._
 
 import Types._
 
@@ -38,5 +39,35 @@ class ParserTypeTest extends AnyFlatSpec {
 		TypeParser.typeParse("pair(bool, pair)[]").get shouldBe ArrayType(PairType(BoolType(), PairTypeIdent()))
 		TypeParser.typeParse("pair(bool, pair)[][]").get shouldBe ArrayType(ArrayType(PairType(BoolType(), PairTypeIdent())))
 		TypeParser.typeParse("pair(bool, int[])[]").get shouldBe ArrayType(PairType(BoolType(), ArrayType(IntType())))
+	}
+
+	"Struct Type: struct" should "be parsed as struct type" in {
+		TypeParser.typeParse("struct foo").get should matchPattern {
+			case StructType(Ident("foo")) =>
+		}  
+		TypeParser.typeParse("struct foo_bar").get should matchPattern {
+			case  StructType(Ident("foo_bar")) =>
+		} 
+		TypeParser.typeParse("struct foo_bar_123").get should matchPattern {
+			case  StructType(Ident("foo_bar_123")) =>
+		}
+	}
+
+	"Struct Type: pair struct" should "be parsed as struct type" in {
+		TypeParser.typeParse("pair(struct a, struct b)").get should matchPattern {
+			case PairType(StructType(Ident("a")), StructType(Ident("b"))) =>
+		}
+		TypeParser.typeParse("pair(struct a, pair)").get should matchPattern {
+			case PairType(StructType(Ident("a")), PairTypeIdent()) =>
+		}
+	}
+
+	"Struct Type: struct array" should "be parsed as struct array type" in {
+		TypeParser.typeParse("struct foo[]").get should matchPattern {
+			case ArrayType(StructType(Ident("foo"))) =>
+		}
+		TypeParser.typeParse("struct foo[][]").get should matchPattern {
+			case ArrayType(ArrayType(StructType(Ident("foo")))) =>
+		}
 	}
 }

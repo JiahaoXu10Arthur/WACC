@@ -1,6 +1,7 @@
 package wacc.SemanticChecker
 
 import SemanticTypes._
+import wacc.Ast._
 
 object SymbolObject {
 
@@ -28,5 +29,15 @@ object SymbolObject {
   ) extends SymbolObj {
     override def getType(): Type = returnType
     override def getPos(): (Int, Int) = funcPos
+  }
+
+  case class StructObj(
+      val ident: Ident,
+      val fields: List[(Ident, VariableObj)],
+      var symTable: SymbolTable,
+      val structPos: (Int, Int)
+  ) extends SymbolObj {
+    override def getType(): Type = StructType(ident)
+    override def getPos(): (Int, Int) = structPos
   }
 }

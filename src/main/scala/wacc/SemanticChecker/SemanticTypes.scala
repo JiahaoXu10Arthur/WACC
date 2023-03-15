@@ -1,6 +1,8 @@
 package wacc.SemanticChecker
 
 import wacc.SyntaxChecker.Types
+import wacc.SemanticChecker.SymbolObjectType._
+import wacc.SemanticChecker.SymbolObject._
 import wacc.Ast._
 
 object SemanticTypes {
@@ -30,6 +32,10 @@ object SemanticTypes {
     override def toString() = s"${elemType.toString()}[]"
   }
 
+  case class StructType(ident: Ident) extends Type {
+    override def toString() = s"Struct($ident)"
+  }
+ 
   /* Type equality involve AnyType */
   def equalType(type1: Type, type2: Type): Boolean = {
     if (type1 == type2) {
@@ -61,6 +67,7 @@ object SemanticTypes {
       case Types.StrType()        => StrType()
       case Types.PairType(t1, t2) => PairType(convertType(t1), convertType(t2))
       case Types.ArrayType(t)     => ArrayType(convertType(t))
+      case Types.StructType(name) => StructType(name)
     }
   }
 
@@ -73,14 +80,13 @@ object SemanticTypes {
       case Types.StrType()       => StrType()
       case Types.PairTypeIdent() => PairType(AnyType(), AnyType())
       case Types.ArrayType(t)    => ArrayType(convertType(t))
+      case Types.StructType(name) => StructType(name)
     }
   }
-
 
   def checkExprType(
       expr: Expr
     )(implicit st: SymbolTable): Type = {
-
     expr match {
       case Add(_, _)   => IntType()
       case Sub(_, _)   => IntType()
@@ -125,11 +131,20 @@ object SemanticTypes {
             case ArrayType(elemType) => {
               returnType = elemType
             }
-            case other => AnyType()
+            case _ => AnyType()
           }
         } 
         returnType
-      } 
+      }
+      case StructElem(ident, fields) => {
+        st.lookUpAll(ident.name, StructObjType()) match {
+          case Some(obj: StructObj) => {
+            val new_struct = StructElem(fields.head, fields.drop(1))(fields.head.pos)
+            checkExprType(new_struct)(obj.symTable)
+          }
+          case _ => AnyType()
+        }
+      }
     }
   }
 
@@ -153,6 +168,7 @@ object SemanticTypes {
 
         returnType
       }
+      case lvalue: StructElem => checkExprType(lvalue)
     }
   }
 

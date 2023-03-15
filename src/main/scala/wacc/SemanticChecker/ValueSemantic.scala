@@ -19,6 +19,7 @@ object ValueSemantic {
       case lvalue: Ident     => identCheck(lvalue)
       case lvalue: ArrayElem => arrayElemCheck(lvalue.ident, lvalue.index)
       case lvalue: PairElem  => pairElemCheck(lvalue.index, lvalue.lvalue)
+      case lvalue: StructElem => structElemCheck(lvalue.ident, lvalue.field)
     }
   }
 
@@ -36,8 +37,11 @@ object ValueSemantic {
       case PairElem(index, lvalue)       => pairElemCheck(index, lvalue)
       case ArrayLit(values)              => arrayLitCheck(values)
       case rvalue: Expr                  => checkExpr(rvalue)
+      case StructLit(fields)             => structLitCheck(fields, targetType)
     }
   }
+
+
 
   /* Arg1: PairElementType
      Arg2: PairElementType
@@ -121,6 +125,7 @@ object ValueSemantic {
           case "fst" => returnType = t1
           case "snd" => returnType = t2
         }
+      case AnyType() => returnType = AnyType()
       case _ => {
         semErr += buildTypeError(
           lvalue.pos,
@@ -128,7 +133,7 @@ object ValueSemantic {
           Set(PairType(AnyType(), AnyType())),
           Seq("Keywords fst and snd should be applied on pairs")
         )
-        AnyType()
+        returnType = AnyType()
       }
     }
 
@@ -167,4 +172,63 @@ object ValueSemantic {
     ArrayType(checkExpr(values(0)))
   }
 
+  def structLitCheck(
+      fields: List[Expr],
+      targetType: Type
+  )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
+    if (fields.isEmpty) {
+      return AnyType()
+    }
+
+    val fieldsType = fields.map(checkExpr(_))
+
+    targetType match {
+      case StructType(ident) => {
+        
+        val structObj = st.lookUp(ident.name, StructObjType())
+        structObj match {
+          case Some(structObj: StructObj) => {
+            val structFields = structObj.fields
+            // struct size not match
+            if (fields.size != structFields.size) {
+              semErr += buildArgNumError(
+                fields(fields.size - 1).pos,
+                fields.size,
+                structFields.size,
+                Seq("Number of struct fields does not match struct type")
+              )
+              return AnyType()
+            }
+
+            var i = 0
+            // Check every field type suits target struct type
+            while (i < fieldsType.length) {
+              if (!equalType(fieldsType(i), structFields(i)._2.getType())) {
+                semErr += buildTypeError(
+                  fields(i).pos,
+                  fieldsType(i),
+                  Set(structFields(i)._2.getType()),
+                  Seq("Struct field type does not match struct type")
+                )
+                return AnyType()
+              }
+
+              i += 1
+            }
+
+          }
+          case _ => return AnyType()
+        }
+      }
+      case _ => {
+        // May need to report error?
+        return AnyType()
+      }
+    }
+
+    // Check every field suits target struct type
+    targetType
+  }
+
 }
+

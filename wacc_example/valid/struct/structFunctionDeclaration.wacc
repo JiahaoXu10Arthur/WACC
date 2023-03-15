@@ -1,0 +1,18 @@
+# a simple function with struct return type is declared, but not called
+
+# Output:
+
+# Program:
+
+begin
+  struct foo of
+    int field1
+  end
+
+	struct foo f() is
+		struct foo a = {1};
+    return a 
+  end
+
+  skip
+end

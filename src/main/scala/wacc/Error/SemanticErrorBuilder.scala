@@ -78,6 +78,21 @@ object SemanticErrorBuilder {
     )
   }
 
+  def buildStructRedefError(
+      pos: (Int, Int),
+      errStructName: String,
+      otherStructPos: (Int, Int),
+      msg: Seq[String]
+  ): WACCError = {
+    buildRedefError(
+      pos,
+      "Struct redefinition",
+      errStructName,
+      otherStructPos,
+      msg
+    )
+  }
+
   def buildVarRedefError(
       pos: (Int, Int),
       errVarName: String,
@@ -104,6 +119,21 @@ object SemanticErrorBuilder {
       "Parameter redefinition",
       errParamName,
       otherParamPos,
+      msg
+    )
+  }
+
+  def buildStructFieldRedefError(
+      pos: (Int, Int),
+      errFieldName: String,
+      otherFieldPos: (Int, Int),
+      msg: Seq[String]
+  ): WACCError = {
+    buildRedefError(
+      pos,
+      "Struct field redefinition",
+      errFieldName,
+      otherFieldPos,
       msg
     )
   }

@@ -1,0 +1,13 @@
+# struct field type mismatch: int <- char
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  struct foo a = {1}
+end

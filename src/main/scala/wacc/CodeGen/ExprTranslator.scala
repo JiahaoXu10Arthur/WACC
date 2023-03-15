@@ -43,6 +43,7 @@ object ExprTranslator {
       case PairLit()       => translatePairLit()
       case expr: Ident     => translateIdent(expr)
       case expr: ArrayElem => loadArrayElem(expr)
+      case expr: StructElem => loadStructElem(expr)
     }
     
     // Result will be load to OpR1, push result

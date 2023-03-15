@@ -99,9 +99,10 @@ object Utils {
   /* Find variable by name in stateTable to find its location */
   def findLvalueLoc(lvalue: Lvalue, stateST: StateTable): Location =
     lvalue match {
-      case Ident(name)             => findVarLoc(name, stateST)
-      case ArrayElem(ident, index) => findVarLoc(ident.name, stateST)
-      case PairElem(index, lvalue) => findLvalueLoc(lvalue, stateST)
+      case Ident(name)               => findVarLoc(name, stateST)
+      case ArrayElem(ident, index)   => findVarLoc(ident.name, stateST)
+      case PairElem(index, lvalue)   => findLvalueLoc(lvalue, stateST)
+      case StructElem(ident, fields) => findVarLoc(ident.name, stateST)
     }
 
   def sizeOfElem(elemType: Type): Int =
@@ -113,14 +114,14 @@ object Utils {
   
   /* Mov to location or register, will check size */
   def locMovLoad(size: Int, 
-                 src: Register, 
-                 dest: Location)(implicit ir: IRBuilder) = {
-    dest match {
-      case dest: Register => addInstr(MovInstr(src, dest))
+                 dest: Register, 
+                 src: Location)(implicit ir: IRBuilder) = {
+    src match {
+      case src: Register => addInstr(MovInstr(dest, src))
       case _             => {
         size match {
-          case ByteSize => addInstr(LoadSignedByteInstr(src, dest))
-          case _        => addInstr(LoadInstr(src, dest))
+          case ByteSize => addInstr(LoadSignedByteInstr(dest, src))
+          case _        => addInstr(LoadInstr(dest, src))
         }
       }
     }

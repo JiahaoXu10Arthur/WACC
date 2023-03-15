@@ -291,4 +291,28 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
                             List[SymbolTable]) = {
     (dictionary.toMap, subSts.toList)
   }
+
+
+  /* Look up a value according to key in this symbol table */
+  def lookUp(name: String, objType: ObjectType): Option[SymbolObj] =
+    dictionary.get((name, objType)) match {
+      case Some(value) => Some(value.head)
+      case None        => None
+    }
+
+  /* Look up a value according to key in this symbol table and all parent table*/
+  def lookUpAll(name: String, objType: ObjectType): Option[SymbolObj] = {
+    var s = this
+    while (s != null) {
+      val obj = s.lookUp(name, objType)
+      if (obj != None) {
+        return obj
+      }
+      s = s.encSymTable
+    }
+
+    None
+  }
+
+
 }

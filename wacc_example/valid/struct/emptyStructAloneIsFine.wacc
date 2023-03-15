@@ -1,0 +1,13 @@
+# this is fine
+
+# Output:
+
+# Program:
+
+begin
+  struct foo of
+    int field1
+  end  
+  
+  struct foo a = {}
+end

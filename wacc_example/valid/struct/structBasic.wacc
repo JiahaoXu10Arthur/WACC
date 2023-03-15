@@ -1,0 +1,13 @@
+# basic struct declaration and assignment
+
+# Output:
+
+# Program:
+
+begin
+  struct foo of
+    int field1
+  end
+
+  struct foo a = {1}
+end

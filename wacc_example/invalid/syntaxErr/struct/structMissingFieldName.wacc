@@ -1,0 +1,16 @@
+# program missing filed type in struct
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  struct foo of
+    int
+  end
+  struct foo b = {1}
+end

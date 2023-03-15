@@ -19,11 +19,15 @@ object ValueParser {
   val arrayLit: Parsley[ArrayLit] =
     ArrayLit("[" ~> sepBy(expr, ",") <~ "]")
 
+  val structLit: Parsley[StructLit] =
+    StructLit("{" ~> sepBy(expr, ",") <~ "}")
+
   /* Pair Elem first because it needs to check keywords: fst, snd,
 		 then ArryElem need to check [] if neither matches, parse as identifier */
   val lvalue: Parsley[Lvalue] =
     pair_elem |
       attempt(ArrayElem(Ident(Lexer.ident), some("[" ~> expr <~ "]"))) |
+      attempt(StructElem(Ident(Lexer.ident),some( "." ~> Ident(Lexer.ident)))) |
       Ident(Lexer.ident)
 
   /* Pair Elem first because it needs to check keywords: fst, snd,
@@ -35,7 +39,8 @@ object ValueParser {
         ("call" ~> Ident(Lexer.ident)),
         "(" ~> sepBy(expr, ",") <~ ")",
       ) |
-      arrayLit | expr
+      arrayLit |
+      structLit | expr
 
   def lvalueParse(input: String): Option[Lvalue] = {
     lvalue.parse(input) match {

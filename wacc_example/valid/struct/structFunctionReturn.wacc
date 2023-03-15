@@ -1,0 +1,22 @@
+# a simple function with struct return type is declared and called
+
+# Output:
+# 1
+#
+
+# Program:
+
+begin
+  struct foo of
+    int field1
+  end
+
+  struct foo f() is
+  	struct foo a = {1};
+    return a 
+  end
+
+  struct foo a = call f();
+  int b = a.field1;
+  println b
+end

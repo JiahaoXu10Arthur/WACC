@@ -1,0 +1,22 @@
+# this is fine
+
+# Output:
+# a
+#
+
+# Program:
+
+begin
+  struct foo of
+    int a,
+    char field1
+  end  
+
+  char f(char u) is
+    return u
+  end
+  
+  struct foo a = {1, 'a'};
+  char b = call f(a.field1);
+  println b
+end

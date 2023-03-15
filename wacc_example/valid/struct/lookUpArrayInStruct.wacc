@@ -1,0 +1,18 @@
+# check first element of array in struct
+
+# Output:
+# 43
+#
+
+# Program:
+
+begin
+  struct foo of
+      int[] field1
+  end
+
+  int[] b = [43, 2, 18, 1] ;
+  struct foo a = {b};
+  int[] c = a.field1;
+  println c[0]
+end

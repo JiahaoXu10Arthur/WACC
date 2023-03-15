@@ -10,11 +10,12 @@ import wacc.SyntaxChecker.ParserPositionBridge.{
 import wacc.SyntaxChecker.Types._
 import wacc.SemanticChecker.SemanticTypes
 import wacc.SemanticChecker.SymbolTable
+import wacc.SemanticChecker.SemanticTypes
 
 object Ast {
   /* Program */
-  case class Program(funcs: List[Func], stats: List[Stat])(val pos: (Int, Int))
-  object Program extends ParserBridgePos2[List[Func], List[Stat], Program]
+  case class Program(structs: List[Struct],funcs: List[Func], stats: List[Stat])(val pos: (Int, Int))
+  object Program extends ParserBridgePos3[List[Struct], List[Func], List[Stat], Program]
 
   /* Binary Expressions */
   sealed trait Expr extends Rvalue {
@@ -98,12 +99,18 @@ object Ast {
   object PairLit extends ParserSingletonBridgePos[PairLit] {
     override def con(pos: (Int, Int)) = this()(pos)
   }
-
   case class Ident(name: String)(val pos: (Int, Int)) extends Expr with Lvalue
-  object Ident                                        extends ParserBridgePos1[String, Ident]
+  object Ident extends ParserBridgePos1[String, Ident]
 
   case class ArrayElem(ident: Ident, index: List[Expr])(val pos: (Int, Int)) extends Expr with Lvalue
   object ArrayElem extends ParserBridgePos2[Ident, List[Expr], ArrayElem]
+
+
+  /* call a struct by "." */
+  case class StructElem(ident: Ident, field: List[Ident])(val pos: (Int, Int))
+      extends Expr
+      with Lvalue
+  object StructElem extends ParserBridgePos2[Ident, List[Ident], StructElem]
 
   /* Values */
   sealed trait Lvalue {
@@ -129,7 +136,10 @@ object Ast {
   object PairElem extends ParserBridgePos2[String, Lvalue, PairElem]
 
   case class ArrayLit(values: List[Expr])(val pos: (Int, Int)) extends Rvalue
-  object ArrayLit                                              extends ParserBridgePos1[List[Expr], ArrayLit]
+  object ArrayLit extends ParserBridgePos1[List[Expr], ArrayLit]
+
+  case class StructLit(values: List[Expr])(val pos: (Int, Int)) extends Rvalue
+  object StructLit extends ParserBridgePos1[List[Expr], StructLit]
 
   case class ArgList(values: List[Expr])(val pos: (Int, Int))
   object ArgList extends ParserBridgePos1[List[Expr], ArgList]
@@ -193,8 +203,13 @@ object Ast {
     var symb: SymbolTable = null
   }
   object Func extends ParserBridgePos4[Type, Ident, List[Param], List[Stat], Func]
-
+  
   /* Auxillary AST nodes for optimisation -- not parsed */
   case class TailRecurse(call: Call) extends Stat
+
+  case class Struct(name: Ident, fields: List[(Type, Ident)])(val pos: (Int, Int)) {
+    var symb: SymbolTable = null
+  }
+  object Struct extends ParserBridgePos2[Ident, List[(Type, Ident)], Struct]
 
 }
