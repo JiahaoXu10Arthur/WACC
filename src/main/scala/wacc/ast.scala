@@ -8,7 +8,6 @@ import wacc.SyntaxChecker.ParserPositionBridge.{
   ParserSingletonBridgePos
 }
 import wacc.SyntaxChecker.Types._
-import wacc.SemanticChecker.SemanticTypes
 import wacc.SemanticChecker.SymbolTable
 import wacc.SemanticChecker.SemanticTypes
 
