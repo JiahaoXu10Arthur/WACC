@@ -1,4 +1,4 @@
-# functions cannot define the same argument twice
+# struct cannot define the same field twice
 
 # Output:
 # #semantic_error#

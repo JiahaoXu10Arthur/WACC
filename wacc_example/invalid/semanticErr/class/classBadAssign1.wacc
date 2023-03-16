@@ -1,0 +1,21 @@
+# class field type mismatch: int <- bool
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  class foo of
+    bool field1
+
+    int foo() is
+	    return 5
+		end
+  end
+
+  class foo a = {1}
+end
