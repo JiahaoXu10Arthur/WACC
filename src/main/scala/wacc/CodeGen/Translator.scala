@@ -15,8 +15,6 @@ object Translator {
 
   def translate(p: Program, mainST: SymbolTable, tailRecOpt: Boolean): IR = {
 
-    // Translate Class
-
     // Translate Main
 
     // Initialize implicit value
@@ -39,12 +37,16 @@ object Translator {
     addInstr(MovInstr(R0, DefaultExitCodeImm))
     endBlock(restoreSP = false)
 
+    /* Translate Class function */
+    p.classes.foreach(c => c.funcs.foreach(
+                      f => translateFunction(c.struct.name.name, f)(c.symb, ir)))
+
     /* Translate functions */
     p.funcs.foreach(f =>
-      translateFunction(tailRecOpt match {
+      translateFunction("main", tailRecOpt match {
         case true  => optimiseFunc(f)
         case false => f
-      })
+      })(f.symb, ir)
     )
 
     /* Return the intermediate representation for code generation */

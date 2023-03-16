@@ -186,7 +186,7 @@ object StatTranslator {
     addInstr(PushInstr(Seq(MPtr)))
   }
 
-  private def storeIdent(ident: Ident)(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
+  private def storeIdent(ident: Ident)(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit = {
     // Pop assign value to OpR1
     addInstr(PopInstr(Seq(OpR1)))
 
@@ -364,6 +364,14 @@ object StatTranslator {
       structValue: StructElem
   )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit = {
 
+    if (structValue.ident.name == "this") {
+      if (structValue.field.length == 1) {
+        return translateExpr(Ident(structValue.field.head.name)(structValue.pos))
+      } else {
+        return loadStructElem(StructElem(structValue.field.head, structValue.field.drop(1))(structValue.pos))
+      }
+    }
+
     // load first struct pointer
     val struct_loc = findVarLoc(structValue.ident.name, stateST)
     locMovLoad(DefaultSize, R3, struct_loc)
@@ -372,6 +380,7 @@ object StatTranslator {
     val fieldType = checkExprType(structValue.ident)
     var preStructName = fieldType match {
       case StructType(structName) => structName.name
+      case ClassType(className) => className.name
       case _ => null
     }
 
@@ -391,7 +400,18 @@ object StatTranslator {
             index += 1
           }
           preSymTable = obj.symTable
-        case _ => 
+        case _ => preSymTable.lookUpAll(preStructName, ClassObjType()) match {
+          case Some(obj: ClassObj) =>
+            val fields = obj.struct.fields
+            var index = 0
+            // Calculate offset, add each previous field size
+            while (fields(index)._2 != fieldIdent) {
+              offset += sizeOfElem(convertType(fields(index)._1))
+              index += 1
+            }
+            preSymTable = obj.symTable
+          case _ => 
+        }
       }
 
       // Update struct pointer
@@ -415,7 +435,15 @@ object StatTranslator {
   // Now only find example of 1 dimension array assign
   private def storeStructElem(
       structValue: StructElem
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit = {
+
+    if (structValue.ident.name == "this") {
+      if (structValue.field.length == 1) {
+        return storeIdent(Ident(structValue.field.head.name)(structValue.pos))
+      } else {
+        return storeStructElem(StructElem(structValue.field.head, structValue.field.drop(1))(structValue.pos))
+      }
+    }
 
     // load first struct pointer
     val struct_loc = findVarLoc(structValue.ident.name, stateST)
@@ -425,13 +453,13 @@ object StatTranslator {
     val fieldType = checkExprType(structValue.ident)
     var preStructName = fieldType match {
       case StructType(structName) => structName.name
+      case ClassType(className) => className.name
       case _ => null
     }
     var preSymTable = st
 
     // For each dimension access
     for (fieldIdent <- structValue.field) {
-
       var offset = 0
       // Find field offset
       preSymTable.lookUpAll(preStructName, StructObjType()) match {
@@ -444,7 +472,18 @@ object StatTranslator {
             index += 1
           }
           preSymTable = obj.symTable
-        case _ => 
+        case _ => preSymTable.lookUpAll(preStructName, ClassObjType()) match {
+          case Some(obj: ClassObj) =>
+            val fields = obj.struct.fields
+            var index = 0
+            // Calculate offset, add each previous field size
+            while (fields(index)._2 != fieldIdent) {
+              offset += sizeOfElem(convertType(fields(index)._1))
+              index += 1
+            }
+            preSymTable = obj.symTable
+          case _ => 
+        }
       }
 
       // Pop assign value into R8
@@ -466,7 +505,7 @@ object StatTranslator {
       callValue: Call,
       tailRec: Boolean = false
   )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
-
+  
     // If this is inside a function with parameter, push caller saved regs first
     val usedParam = stateST.getUsedParamRegs()
     if (!usedParam.isEmpty) {
@@ -507,10 +546,37 @@ object StatTranslator {
     }
 
     // Check function overloading to get correct function label
-    val funcName = callValue.ident.name
+    val funcIdent = callValue.ident
+    var funcSt = st
+
+    // Function can be from main or class
+    val (className, funcName) = funcIdent match {
+      case Ident(_) => ("main", funcIdent.getIdent.name)
+      case ClassFuncCall(classIdent, func) => {
+        val classType = checkExprType(classIdent)
+        classType match {
+          case ClassType(classIdent) => {
+            st.lookUpAll(classIdent.name, ClassObjType()) match {
+              case Some(obj: ClassObj) => {
+                // class pointer position
+                val classPtr = findVarLoc(callValue.ident.getIdent.name, stateST)
+                // Move class pointer to R12
+                locMovLoad(DefaultSize, R12, classPtr)
+
+                funcSt = obj.symTable
+              }
+              case _ => ("", "")
+            }
+            (classIdent.name, func.name)
+          }
+          case _ => ("", "")
+        }
+      }
+    }
+
     val expectRet  = callValue.returnType
     val expectArgs = callValue.args.map(checkExprType(_))
-    val funcLabelName = st.getOverloadFuncName(funcName, expectRet, expectArgs)
+    val funcLabelName = funcSt.getOverloadFuncName(className, funcName, expectRet, expectArgs)
       
     // Create branch jump
     if (tailRec) {
