@@ -27,6 +27,13 @@ object TypeParser {
       )
   )
 
+  val classType: Parsley[ClassType] = attempt(
+      lift1[Ident, ClassType](
+        ClassType(_),
+        "class" ~> Ident(Lexer.ident)
+      )
+  )
+
   val pairTypeIdent: Parsley[PairTypeIdent] = "pair" #> PairTypeIdent()
 
   val pairType: Parsley[PairType] = attempt(
@@ -39,12 +46,12 @@ object TypeParser {
 
   // label array as `[]` (array type)
   val arrayType: Parsley[ArrayType] = attempt(
-    chain.postfix1(structType | basicType | pairType, "[]".label("`[]` (array type)") #> (ArrayType))
+    chain.postfix1(classType | structType | basicType | pairType, "[]".label("`[]` (array type)") #> (ArrayType))
   )
 
-  val type_ = attempt(arrayType) | structType | basicType | pairType
+  val type_ = attempt(arrayType) | structType | classType | basicType | pairType
 
-  val pairElemType = structType | arrayType | basicType | pairTypeIdent
+  val pairElemType = classType | structType | arrayType | basicType | pairTypeIdent
 
   def typeParse(input: String): Option[Type] = {
     (type_).parse(input) match {

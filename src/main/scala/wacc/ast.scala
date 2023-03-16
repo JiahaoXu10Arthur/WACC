@@ -98,18 +98,24 @@ object Ast {
   object PairLit extends ParserSingletonBridgePos[PairLit] {
     override def con(pos: (Int, Int)) = this()(pos)
   }
-  case class Ident(name: String)(val pos: (Int, Int)) extends Expr with Lvalue
+  case class Ident(name: String)(val pos: (Int, Int)) extends Expr with Lvalue with FuncIdent {
+    override def getIdent: Ident = this
+  }
   object Ident extends ParserBridgePos1[String, Ident]
 
   case class ArrayElem(ident: Ident, index: List[Expr])(val pos: (Int, Int)) extends Expr with Lvalue
   object ArrayElem extends ParserBridgePos2[Ident, List[Expr], ArrayElem]
 
-
   /* call a struct by "." */
   case class StructElem(ident: Ident, field: List[Ident])(val pos: (Int, Int))
-      extends Expr
-      with Lvalue
+    extends Expr
+    with Lvalue
   object StructElem extends ParserBridgePos2[Ident, List[Ident], StructElem]
+
+  case class ClassFuncCall(ident: Ident, func: Ident)(val pos: (Int, Int)) extends FuncIdent {
+    override def getIdent: Ident = this.ident
+  }
+  object ClassFuncCall extends ParserBridgePos2[Ident, Ident, ClassFuncCall]
 
   /* Values */
   sealed trait Lvalue {
@@ -119,17 +125,22 @@ object Ast {
     def pos: (Int, Int)
   }
 
+  sealed trait FuncIdent {
+    def getIdent: Ident
+    def pos: (Int, Int)
+  }
+
   case class NewPair(expr1: Expr, expr2: Expr)(val pos: (Int, Int)) extends Rvalue
   object NewPair                                                    extends ParserBridgePos2[Expr, Expr, NewPair]
 
-  case class Call(ident: Ident, args: List[Expr])(val pos: (Int, Int))
+  case class Call(ident: FuncIdent, args: List[Expr])(val pos: (Int, Int))
       extends Rvalue {
     /* Will be changed after a call's return type is known
        Added after function overloading
        The type is initialised to anytype. */
     var returnType: SemanticTypes.Type = SemanticTypes.AnyType()
   }
-  object Call extends ParserBridgePos2[Ident, List[Expr], Call]
+  object Call extends ParserBridgePos2[FuncIdent, List[Expr], Call]
 
   case class PairElem(index: String, lvalue: Lvalue)(val pos: (Int, Int)) extends Lvalue with Rvalue
   object PairElem extends ParserBridgePos2[String, Lvalue, PairElem]
