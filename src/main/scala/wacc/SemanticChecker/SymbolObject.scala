@@ -40,4 +40,14 @@ object SymbolObject {
     override def getType(): Type = StructType(ident)
     override def getPos(): (Int, Int) = structPos
   }
+
+  case class ClassObj(
+    val ident: Ident,
+    val struct: Struct,
+    var symTable: SymbolTable,
+    val classPos: (Int, Int)
+  ) extends SymbolObj {
+    override def getType(): Type = ClassType(ident)
+    override def getPos(): (Int, Int) = classPos
+  }
 }

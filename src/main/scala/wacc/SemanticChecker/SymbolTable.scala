@@ -70,6 +70,32 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     None
   }
 
+  def lookUpIdent(name: String): Option[SymbolObj] = {
+    lookUpVar(name) match {
+      case Some(obj) => Some(obj)
+      case None => lookUp(name, StructObjType()) match {
+        case Some(obj) => Some(obj)
+        case None => lookUp(name, ClassObjType()) match {
+          case Some(obj) => Some(obj)
+          case None => None
+        }
+      }
+    }
+  }
+
+  def lookUpAllIdent(name: String): Option[SymbolObj] = {
+    var s = this
+    while (s != null) {
+      val obj = s.lookUpIdent(name)
+      if (obj != None) {
+        return obj
+      }
+      s = s.encSymTable
+    }
+
+    None
+  }
+
   /* Look up a function according to key in this symbol table and all parent table*/
   /* Function may have overloading, so return a list of function objects */
   def lookUpFunc(name: String): Option[List[SymbolObj]] =
@@ -158,10 +184,11 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
   }
 
   // Get overload function name with index
-  def getOverloadFuncName(baseFuncName: String, 
+  def getOverloadFuncName(className: String,
+                          baseFuncName: String, 
                           expectRet: Type, 
                           expectArgs: List[Type]): String = {
-    baseFuncName + getOverloadFuncIndex(baseFuncName, expectRet, expectArgs)                         
+    className + "_" + baseFuncName + getOverloadFuncIndex(baseFuncName, expectRet, expectArgs)                         
   }
 
   // find variable number in this scope

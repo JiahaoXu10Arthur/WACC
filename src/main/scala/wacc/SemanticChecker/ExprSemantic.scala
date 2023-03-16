@@ -235,15 +235,11 @@ object ExprSemantic {
   def identCheck(
       ident: Ident
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
-
     /* Search for identifier in all scope */
-    st.lookUpAllVar(ident.name) match {
+    st.lookUpAllIdent(ident.name) match {
       case Some(symObj) => symObj.getType()
       case None => {
-        // or can be struct
-        st.lookUpAll(ident.name, StructObjType()) match {
-          case Some(symObj) => symObj.getType()
-          case None => /* If cannot find, error */
+            /* If cannot find, error */
             semErr += buildScopeError(
               ident.pos,
               ident.name,
@@ -256,8 +252,8 @@ object ExprSemantic {
               VariableType(),
               new VariableObj(AnyType(), ident.pos)
             )
+
             AnyType()
-            }
       }
     }
 
@@ -332,6 +328,13 @@ object ExprSemantic {
     structName: Ident,
     fields: List[Ident])(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
 
+    // If this. is used, must be class function call
+    // st.encSymTable is the symbol table of the class
+    if (structName.name == "this") {
+      return checkExpr(fields.last)(st.encSymTable, semErr)
+    }
+
+    // Previous layer of symbol table
     var preSt = getStructTable(structName)
 
     val fieldNum = fields.length
@@ -388,6 +391,21 @@ object ExprSemantic {
 					} 
 				}
 			}
+      case ClassType(className) => {
+        // Check class is defined
+        st.lookUpAll(className.name, ClassObjType()) match {
+          // recursive call in class's symbol table
+          case Some(obj: ClassObj) => retTable = getStructTable(className)(obj.symTable, semErr)
+          case _ => {
+            semErr += buildScopeError(
+              className.pos,
+              className.name,
+              st.lookUpAllSimilar(className.name, ClassObjType()),
+              Seq(s"Class ${className.name} has not been declared in this scope")
+            )
+          }
+				}
+      }
       case _ => {
         semErr += buildTypeError(
           structName.pos,

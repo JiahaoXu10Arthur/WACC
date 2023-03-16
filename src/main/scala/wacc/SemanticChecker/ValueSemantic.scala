@@ -59,45 +59,36 @@ object ValueSemantic {
      FuncObj(returnType, args, argc, st)
      Arg2: args -> type match to FuncObj(args)
      Return: FuncObj(returnType) */
-  def callCheck(ident: Ident, args: List[Expr], targetType: Type)(implicit
+  def callCheck(ident: FuncIdent, args: List[Expr], targetType: Type)(implicit
       st: SymbolTable,
       semErr: ListBuffer[WACCError]
   ): Type = {
-    var funcObj: FuncObj = null
-    var findFunc = false
     val expectedArgs = args.map(checkExprType(_))
+    var funcName: String = ""
 
-    /* Search funcObj in all scope*/
-    st.lookUpAllFunc(ident.name) match {
-      case Some(symObj) => {
-        val funcObjOpt = st.getOverloadFuncObj(ident.name, targetType, expectedArgs)
-        // If can find function with same return type and arguments
-        funcObjOpt match {
-          case Some(obj) => {
-            findFunc = true
-            funcObj = obj
-          }
-          case None =>
-        }
-
-      }
-      case _ =>
+    val (funcObj, findFunc, funcSymb) = ident match {
+      case Ident(name) => 
+        funcName = name
+        callFuncCheck(name, targetType, expectedArgs)
+      case ClassFuncCall(ident, func) => 
+        funcName = ident.getIdent.name + "." + func.name
+        callClassFuncCheck(ident, func, targetType, expectedArgs)
     }
 
     /* If no function found, error */
     if (!findFunc) {
-      val similarFuncs = st.lookUpAllSimilarFunc(ident.name)
+      val similarFuncs = st.lookUpAllSimilarFunc(ident.getIdent.name)
       semErr += buildFunctionScopeError(
           ident.pos,
-          ident.name,
+          funcName,
           similarFuncs,
-          Seq(s"Function ${ident.name} with " +
+          Seq(s"Function ${funcName} with " +
               s"argument type ${expectedArgs} and " +
               s"return type ${targetType} has not been defined")
         )
         /* Add fake function to the scope to avoid further error */
-        st.add(
-          ident.name,
+        funcSymb.add(
+          ident.getIdent.name,
           FunctionType(),
           new FuncObj(AnyType(), List(), 0, st, ident.pos)
         )
@@ -106,6 +97,59 @@ object ValueSemantic {
 
     /* Return type */
     funcObj.returnType
+  }
+
+  private def callFuncCheck(funcName: String, 
+                            targetType: Type, 
+                            expectedArgs: List[Type])(implicit
+      st: SymbolTable): (FuncObj, Boolean, SymbolTable) = {
+
+    /* Search funcObj in all scope*/
+    st.lookUpAllFunc(funcName) match {
+      case Some(symObj) => {
+        val funcObjOpt = st.getOverloadFuncObj(funcName, targetType, expectedArgs)
+        // If can find function with same return type and arguments
+        funcObjOpt match {
+          case Some(obj) => return (obj, true, st)
+          case None =>
+        }
+
+      }
+      case _ =>
+    }
+
+    (null, false, st)
+  }
+
+  private def callClassFuncCheck(classIdent: Ident, 
+                                 func: Ident,
+                                 targetType: Type, 
+                                 expectedArgs: List[Type])(implicit
+      st: SymbolTable,
+      semErr: ListBuffer[WACCError]): (FuncObj, Boolean, SymbolTable) = {
+
+    val classType = checkExpr(classIdent)
+    classType match {
+      case AnyType() => 
+      case ClassType(className) => {
+        // Check class is defined
+        st.lookUpAll(className.name, ClassObjType()) match {
+          // recursive call in class's symbol table
+          case Some(obj: ClassObj) => return callFuncCheck(className.name, targetType, expectedArgs)(obj.symTable)
+          case _ => 
+				}
+      }
+      case _ => {
+        semErr += buildScopeError(
+              classIdent.pos,
+              classIdent.name,
+              st.lookUpAllSimilar(classIdent.name, ClassObjType()),
+              Seq(s"Class ${classIdent.name} has not been declared in this scope")
+            )
+      }
+    }
+
+    (null, false, st)
   }
 
   /* Arg1: fst/snd
@@ -194,7 +238,7 @@ object ValueSemantic {
                 fields(fields.size - 1).pos,
                 fields.size,
                 structFields.size,
-                Seq("Number of struct fields does not match struct type")
+                Seq("Number of struct/class fields does not match defined type")
               )
               return AnyType()
             }
@@ -207,7 +251,7 @@ object ValueSemantic {
                   fields(i).pos,
                   fieldsType(i),
                   Set(structFields(i)._2.getType()),
-                  Seq("Struct field type does not match struct type")
+                  Seq("Struct/Class field type does not match defined type")
                 )
                 return AnyType()
               }
@@ -216,6 +260,13 @@ object ValueSemantic {
             }
 
           }
+          case _ => return AnyType()
+        }
+      }
+      case ClassType(ident) => {
+        val classObj = st.lookUpAll(ident.name, ClassObjType())
+        classObj match {
+          case Some(classObj: ClassObj) => structLitCheck(fields, StructType(ident))(classObj.symTable, semErr)
           case _ => return AnyType()
         }
       }

@@ -6,6 +6,9 @@ import wacc.Error.Errors._
 import StatSemantic._
 import FunctionSemantic._
 import StructSemantic._
+import ClassSemantic._
+import SymbolObjectType._
+import SymbolObject._
 
 object SemanticChecker {
 
@@ -21,18 +24,8 @@ object SemanticChecker {
 
     /* Class */
     p.classes.foreach { c => 
-      // Create class symbol table
-      val classSt: SymbolTable = new SymbolTable(overAllSt, null)
-      // Read in struct
-      readInStructHeader(c.struct)(classSt, semErr)
-      checkStructDeclare(c.struct)(classSt, semErr)
-
-      // Read in function
-      c.funcs.foreach(readInFunctionHeader(_)(classSt, semErr))
-      c.funcs.foreach(checkFuncDeclare(_)(classSt, semErr))
-
-      // Link class symbol table to overall symbol table
-      overAllSt.addSubSt(classSt) 
+      readInClassHeader(c)(overAllSt, semErr)
+      checkClassDeclaration(c)(overAllSt, semErr)
     }
 
     /* Main */
