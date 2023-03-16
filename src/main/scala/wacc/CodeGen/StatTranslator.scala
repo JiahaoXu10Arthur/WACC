@@ -547,32 +547,8 @@ object StatTranslator {
 
     // Check function overloading to get correct function label
     val funcIdent = callValue.ident
-    var funcSt = st
 
-    // Function can be from main or class
-    val (className, funcName) = funcIdent match {
-      case Ident(_) => ("main", funcIdent.getIdent.name)
-      case ClassFuncCall(classIdent, func) => {
-        val classType = checkExprType(classIdent)
-        classType match {
-          case ClassType(classIdent) => {
-            st.lookUpAll(classIdent.name, ClassObjType()) match {
-              case Some(obj: ClassObj) => {
-                // class pointer position
-                val classPtr = findVarLoc(callValue.ident.getIdent.name, stateST)
-                // Move class pointer to R12
-                locMovLoad(DefaultSize, R12, classPtr)
-
-                funcSt = obj.symTable
-              }
-              case _ => ("", "")
-            }
-            (classIdent.name, func.name)
-          }
-          case _ => ("", "")
-        }
-      }
-    }
+    val (className, funcName, funcSt) = findClassFuncName(callValue, funcIdent)
 
     val expectRet  = callValue.returnType
     val expectArgs = callValue.args.map(checkExprType(_))
@@ -605,6 +581,54 @@ object StatTranslator {
 
       addInstr(PushInstr(Seq(OpR1)))
     }
+  }
+
+  private def findClassFuncName(callValue: Call,
+                                funcIdent: FuncIdent)(implicit st: SymbolTable, 
+                                stateST: StateTable, ir: IRBuilder): (String, String, SymbolTable) = {
+
+    // Function can be from main or class
+    funcIdent match {
+      case Ident(_) => return ("main", funcIdent.getIdent.name, st)
+
+      case ClassFuncCall(classIdent, func) => {
+        // private function call
+        if (classIdent.name == "this") {
+          var (className, funcName, funcSt): (String, String, SymbolTable) = ("", "", st)
+          // Find this class name
+          st.dictionary.foreach { key =>
+            key._2.head match {
+              case obj: StructObj => 
+                className = obj.ident.name
+                funcName = func.name
+                funcSt = st
+              case _ =>
+            }
+          }
+          return (className, funcName, funcSt)
+        } else {
+          // outer function call
+          val classType = checkExprType(classIdent)
+          classType match {
+          case ClassType(classIdent) => {
+            st.lookUpAll(classIdent.name, ClassObjType()) match {
+              case Some(obj: ClassObj) => {
+                // class pointer position
+                val classPtr = findVarLoc(callValue.ident.getIdent.name, stateST)
+                // Move class pointer to R12
+                locMovLoad(DefaultSize, R12, classPtr)
+                return (classIdent.name, func.name, obj.symTable)
+              }
+              case _ =>
+            }
+          }
+          case _ =>
+        }
+      }
+      }
+    }
+
+    ("", "", st)
   }
 
   private def translateAssign(target: Lvalue, newValue: Rvalue)(implicit

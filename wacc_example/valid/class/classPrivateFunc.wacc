@@ -1,0 +1,29 @@
+# call function in a class
+
+# Output:
+# 1
+# 1
+#
+
+# Program:
+
+begin
+  class foo of
+    int field1
+
+    int aaa() is
+      return 1
+	  end
+
+    int bbb() is
+      int a = call this.aaa();
+      return a
+	  end
+  end
+
+  class foo a = {};
+  int b = call a.aaa();
+  println b;
+  int c = call a.bbb();
+  println c
+end

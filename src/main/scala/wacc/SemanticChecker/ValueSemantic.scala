@@ -103,22 +103,15 @@ object ValueSemantic {
                             targetType: Type, 
                             expectedArgs: List[Type])(implicit
       st: SymbolTable): (FuncObj, Boolean, SymbolTable) = {
-
     /* Search funcObj in all scope*/
-    st.lookUpAllFunc(funcName) match {
-      case Some(symObj) => {
-        val funcObjOpt = st.getOverloadFuncObj(funcName, targetType, expectedArgs)
-        // If can find function with same return type and arguments
-        funcObjOpt match {
-          case Some(obj) => return (obj, true, st)
-          case None =>
-        }
+    val funcObjOpt = st.getOverloadFuncObj(funcName, targetType, expectedArgs)
 
-      }
-      case _ =>
+    // If can find function with same return type and arguments
+    funcObjOpt match {
+      case Some(obj: FuncObj) => return (obj, true, st)
+      case None => (null, false, st)
     }
 
-    (null, false, st)
   }
 
   private def callClassFuncCheck(classIdent: Ident, 
@@ -128,6 +121,11 @@ object ValueSemantic {
       st: SymbolTable,
       semErr: ListBuffer[WACCError]): (FuncObj, Boolean, SymbolTable) = {
 
+    // if this.foo() --> in private class's function call
+    if (classIdent.name == "this") {
+      return callFuncCheck(func.name, targetType, expectedArgs)
+    }
+
     val classType = checkExpr(classIdent)
     classType match {
       case AnyType() => 
@@ -135,7 +133,8 @@ object ValueSemantic {
         // Check class is defined
         st.lookUpAll(className.name, ClassObjType()) match {
           // recursive call in class's symbol table
-          case Some(obj: ClassObj) => return callFuncCheck(className.name, targetType, expectedArgs)(obj.symTable)
+          case Some(obj: ClassObj) => 
+            return callFuncCheck(func.name, targetType, expectedArgs)(obj.symTable)
           case _ => 
 				}
       }
