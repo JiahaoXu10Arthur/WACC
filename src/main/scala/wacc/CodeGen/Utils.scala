@@ -166,4 +166,8 @@ object Utils {
     ident.name == SelfPtrStr
   }
 
+  def isClassAccess(ident: Ident): Boolean = {
+    ident.name != MainClassStr
+  }
+
 }

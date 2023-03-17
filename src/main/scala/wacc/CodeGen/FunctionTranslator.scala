@@ -6,7 +6,7 @@ import wacc.SemanticChecker.SemanticTypes._
 
 import StatTranslator._
 import IRBuilder._
-import Utils.{beginBlock, calculateSaveRegs, sizeOfElem}
+import Utils.{beginBlock, calculateSaveRegs, sizeOfElem, isClassAccess}
 import wacc.SemanticChecker.SymbolTable
 import wacc.SemanticChecker.SymbolObject._
 import wacc.SemanticChecker.SymbolObjectType._
@@ -32,15 +32,15 @@ object FunctionTranslator {
     /* Caculate how many stack space needed for more parameters */
     stateST.updateParamPtr((pushedRegNum + paraNum - (paramReg.size + 1)) * ptrSize)
 
-    /* If class, add each field position to state table */
-    if (className != "main") {
+    // If class, struct ptr will be in CPtr after call
+    if (isClassAccess(func.ident)) {
       st.lookUpAll(className, ClassObjType()) match {
         case Some(obj: ClassObj) => {
           var offset = 0
           val classFields = obj.struct.fields
 
           var i = 0
-            // Check every field type suits target struct type
+            // Add each field to state table
             while (i < classFields.length) {
               stateST.dictionary += (classFields(i)._2.name -> RegIntOffset(CPtr, offset))
               offset += sizeOfElem(convertType(classFields(i)._1))
