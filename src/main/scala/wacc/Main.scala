@@ -16,8 +16,8 @@ object Main {
   final private val SEMANTIC_ERR       = 200
   final private val WACC_FILE_DROP_LEN = 5
 
-  final private val waccFileRegex    = """^(?:\w+\/)*\w+\.wacc$""".r
-  final private val generalFileRegex = """^(?:\w+\/)*\w+\.\w+$""".r
+  final private val waccFileRegex    = "^(?:\\/?[\\w-]+)+\\.wacc$".r
+  final private val generalFileRegex = "^(?:\\/?[\\w-]+)+\\.*$".r
 
   sealed trait CmdOpt
   case object PeepholeOpt extends CmdOpt
