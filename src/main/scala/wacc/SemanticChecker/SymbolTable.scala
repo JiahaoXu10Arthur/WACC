@@ -115,19 +115,16 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     st.lookUpFunc(name)
   }
 
+  /* Check if a funcObj followed expected return type and argument types */
   private def correctFuncObj(func: FuncObj,
                                    expectedRet: Type, 
                                    expectedArgs: List[Type]): Boolean = {
     val funcRet  = func.returnType
     val funcArgs = func.args.map(_.t)
-    if (sameFunction(expectedRet, funcRet, expectedArgs, funcArgs)) {
-      true
-    } else {
-      false
-    }
+    sameFunction(expectedRet, funcRet, expectedArgs, funcArgs)
   }
 
-  /* Find the overload function object with the same argument types */
+  /* Find the overload function object with the expected return and argument types */
   def getOverloadFuncObj(name: String,
                          expectRet:  Type,
                          expectArgs: List[Type]): Option[FuncObj] = {
@@ -183,7 +180,7 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     retIndex
   }
 
-  // Get overload function name with index
+  // Get overload function name with className and index
   def getOverloadFuncName(className: String,
                           baseFuncName: String, 
                           expectRet: Type, 

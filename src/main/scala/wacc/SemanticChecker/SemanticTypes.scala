@@ -183,6 +183,7 @@ object SemanticTypes {
     }
   }
 
+  /* Check return type and arguments type are the same */
   def sameFunction(expectRet: Type,
                    funcRet:   Type,
                    expectArgs: List[Type],

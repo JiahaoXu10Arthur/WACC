@@ -5,6 +5,7 @@ import scala.collection.mutable.ListBuffer
 import wacc.Ast._
 import wacc.Error.SemanticErrorBuilder._
 import wacc.Error.Errors._
+import wacc.CodeGen.Utils.{isSelfAccess}
 
 import SemanticTypes._
 import ExprSemantic._
@@ -98,6 +99,7 @@ object ValueSemantic {
     funcObj.returnType
   }
 
+  /* Check for main function call */
   private def callFuncCheck(funcName: String, 
                             targetType: Type, 
                             expectedArgs: List[Type])(implicit
@@ -113,6 +115,7 @@ object ValueSemantic {
 
   }
 
+  /* Check for class function call */
   private def callClassFuncCheck(classIdent: Ident, 
                                  func: Ident,
                                  targetType: Type, 
@@ -121,10 +124,11 @@ object ValueSemantic {
       semErr: ListBuffer[WACCError]): (FuncObj, Boolean, SymbolTable) = {
 
     // if this.foo() --> in private class's function call
-    if (classIdent.name == "this") {
+    if (isSelfAccess(classIdent)) {
       return callFuncCheck(func.name, targetType, expectedArgs)
     }
 
+    // Check class is declared
     val classType = checkExpr(classIdent)
     classType match {
       case AnyType() => 
@@ -133,6 +137,7 @@ object ValueSemantic {
         st.lookUpAll(className.name, ClassObjType()) match {
           // recursive call in class's symbol table
           case Some(obj: ClassObj) => 
+            // Check function in class's symbol table
             return callFuncCheck(func.name, targetType, expectedArgs)(obj.symTable)
           case _ => 
 				}
@@ -222,6 +227,7 @@ object ValueSemantic {
       return AnyType()
     }
 
+    // Check every field's type
     val fieldsType = fields.map(checkExpr(_))
 
     // Check every field suits target struct type

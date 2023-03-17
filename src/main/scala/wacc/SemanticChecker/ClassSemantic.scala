@@ -66,7 +66,7 @@ object ClassSemantic {
     val classSt: SymbolTable = new SymbolTable(st, VariableType())
 
     val struct = waccClass.struct
-    // Read in struct - do not need to check for redefinition again
+    // Read in struct - but do not need to check for redefinition again
 		classSt.add(
           struct.name.name,
           StructObjType(),
@@ -76,6 +76,7 @@ object ClassSemantic {
 					classSt,
           struct.pos))
 
+    // Check struct declaration
 		val args = new ListBuffer[(Ident, VariableObj)]()
 		/* Add obj into self scope */
 		struct.fields.foreach { 

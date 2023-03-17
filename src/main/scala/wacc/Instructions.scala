@@ -87,6 +87,8 @@ object Instructions {
   final val ArrayLenOffset = -4
   final val MovImmMax      = 255
 
+  final val SelfPtrStr = "this"
+
   sealed trait Instruction
 
   sealed trait ExprInstr extends Instruction

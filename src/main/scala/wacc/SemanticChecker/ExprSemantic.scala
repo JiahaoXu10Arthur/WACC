@@ -9,6 +9,7 @@ import wacc.Error.Errors._
 import SemanticTypes._
 import SymbolObject._
 import SymbolObjectType._
+import wacc.CodeGen.Utils.{isSelfAccess}
 
 object ExprSemantic {
 
@@ -327,8 +328,8 @@ object ExprSemantic {
   def structElemCheck(
     structName: Ident,
     fields: List[Ident])(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
-    // If this. is used, must be class function call
-    if (structName.name == "this") {
+    // If is self access, check as expression in class's symbol table
+    if (isSelfAccess(structName)) {
       val class_st = st.findSecondLevelSt
       return checkExpr(fields.last)(class_st, semErr)
     }
@@ -359,6 +360,7 @@ object ExprSemantic {
     }
   }
 
+  /* Get the symbol table of the struct */
   private def extractFieldTable(fieldName: Ident, st: Option[SymbolTable])(
                                 implicit semErr: ListBuffer[WACCError]): Option[SymbolTable] = {
      st match {
@@ -367,6 +369,7 @@ object ExprSemantic {
      }
   }
 
+  /* Get next layer of symbol table of struct */
   private def getStructTable(structName: Ident)(implicit st: SymbolTable, 
                                                          semErr: ListBuffer[WACCError]): Option[SymbolTable] = {
     // If not defined struct, return None

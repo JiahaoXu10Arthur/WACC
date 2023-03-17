@@ -162,4 +162,8 @@ object Utils {
     }
   }
 
+  def isSelfAccess(ident: Ident): Boolean = {
+    ident.name == SelfPtrStr
+  }
+
 }
