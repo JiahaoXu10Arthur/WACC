@@ -1,0 +1,38 @@
+# test that the passed parameter can be updated and used
+# and that y remains the same
+
+# Output:
+# y is 1
+# x is 1
+# x is now 5
+# y is still 1
+#
+
+# Program:
+
+begin
+  class foo of
+    int field1
+
+    int foo() is
+	    return 5
+		end
+  end
+
+  class foo f(int x) is
+    print "x is ";
+    println x;
+    class foo a = {5};
+    print "x is now ";
+    int x = a.field1;
+    println x;
+    return a
+  end
+
+  int y = 1;
+  print "y is ";
+  println y;
+  class foo x = call f(y);
+  print "y is still ";
+  println y
+end

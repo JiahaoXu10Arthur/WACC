@@ -1,0 +1,45 @@
+# test that the passed parameter can be updated and used
+# and that y remains the same
+# private function can have the same name as the public one
+
+# Output:
+# y is 1
+# x is 1
+# x is now 5
+# y is still 1
+# field1 is now 6
+#
+
+# Program:
+
+begin
+  class foo of
+    int field1
+
+    int f(int x) is
+      this.field1 = x + 1;
+	    return this.field1
+		end
+  end
+
+  class foo f(int x) is
+    print "x is ";
+    println x;
+    class foo a = {5};
+    print "x is now ";
+    int x = a.field1;
+    println x;
+    int z = call a.f(x);
+    return a
+  end
+
+  int y = 1;
+  print "y is ";
+  println y;
+  class foo x = call f(y);
+  print "y is still ";
+  println y;
+  int z = x.field1;
+  print "field1 is now ";
+  println z
+end

@@ -1,0 +1,31 @@
+# this is fine
+
+# Output:
+# a
+#
+
+# Program:
+
+begin
+  struct foo of
+    int a,
+    char field1
+  end
+
+  class foo of
+    int field1
+    struct foo field2
+
+    int foo() is
+			return 5
+		end
+  end
+
+  char f(char u) is
+    return u
+  end
+  
+  struct foo a = {1, 'a'};
+  char b = call f(a.field1);
+  println b
+end

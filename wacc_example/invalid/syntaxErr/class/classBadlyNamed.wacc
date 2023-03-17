@@ -1,0 +1,20 @@
+# class header and name are conflated
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  classfoo of
+    int field1
+
+    int foo() is
+			return 5
+		end
+  end
+  struct foo b = {1}
+end

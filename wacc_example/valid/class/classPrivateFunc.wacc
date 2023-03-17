@@ -11,19 +11,19 @@ begin
   class foo of
     int field1
 
-    int aaa() is
+    int f() is
       return 1
 	  end
 
-    int bbb() is
-      int a = call this.aaa();
+    int g() is
+      int a = call this.f();
       return a
 	  end
   end
 
   class foo a = {};
-  int b = call a.aaa();
+  int b = call a.f();
   println b;
-  int c = call a.bbb();
+  int c = call a.g();
   println c
 end
