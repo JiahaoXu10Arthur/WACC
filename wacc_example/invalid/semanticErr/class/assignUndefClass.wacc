@@ -1,4 +1,4 @@
-# assign to an undefined struct
+# assign to an undefined class
 
 # Output:
 # #semantic_error#
@@ -9,5 +9,5 @@
 # Program:
 
 begin
-  struct foo a = {1}
+  class foo a = {1}
 end

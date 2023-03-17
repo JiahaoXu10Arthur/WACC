@@ -1,0 +1,21 @@
+# simple class assignment and lookup
+
+# Output:
+# 1
+#
+
+# Program:
+
+begin
+  class foo of
+    int field1
+
+    int foo() is
+			return 5
+		end
+  end
+
+  class foo a = {1};
+  int b = a.field1;
+  println b
+end

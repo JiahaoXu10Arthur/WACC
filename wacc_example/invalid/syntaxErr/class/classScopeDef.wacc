@@ -1,0 +1,22 @@
+# attempted class definition in new scope
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  begin
+    class foo of
+      int field1
+  
+      int foo() is
+	  		return 5
+	  	end
+    end
+    class foo b = {1}
+  end
+end

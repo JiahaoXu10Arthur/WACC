@@ -70,6 +70,32 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     None
   }
 
+  def lookUpIdent(name: String): Option[SymbolObj] = {
+    lookUpVar(name) match {
+      case Some(obj) => Some(obj)
+      case None => lookUp(name, StructObjType()) match {
+        case Some(obj) => Some(obj)
+        case None => lookUp(name, ClassObjType()) match {
+          case Some(obj) => Some(obj)
+          case None => None
+        }
+      }
+    }
+  }
+
+  def lookUpAllIdent(name: String): Option[SymbolObj] = {
+    var s = this
+    while (s != null) {
+      val obj = s.lookUpIdent(name)
+      if (obj != None) {
+        return obj
+      }
+      s = s.encSymTable
+    }
+
+    None
+  }
+
   /* Look up a function according to key in this symbol table and all parent table*/
   /* Function may have overloading, so return a list of function objects */
   def lookUpFunc(name: String): Option[List[SymbolObj]] =
@@ -77,14 +103,16 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
 
   /* Look up a value according to key in this symbol table and all parent table*/
   def lookUpAllFunc(name: String): Option[List[SymbolObj]] = {
-    // Can only define function in main scope
+    // function can only be defined in the second level
+    // To check: s.encSymTable.encSymTable == null
 
-    var mainSt = this
-    while (mainSt.encSymTable != null) {
-      mainSt = mainSt.encSymTable
+    var st = this
+    while (st.encSymTable.encSymTable != null) {
+      st = st.encSymTable
     }
 
-    mainSt.lookUpFunc(name)
+    // Lookup in second level st
+    st.lookUpFunc(name)
   }
 
   private def correctFuncObj(func: FuncObj,
@@ -156,10 +184,11 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
   }
 
   // Get overload function name with index
-  def getOverloadFuncName(baseFuncName: String, 
+  def getOverloadFuncName(className: String,
+                          baseFuncName: String, 
                           expectRet: Type, 
                           expectArgs: List[Type]): String = {
-    baseFuncName + getOverloadFuncIndex(baseFuncName, expectRet, expectArgs)                         
+    className + "_" + baseFuncName + getOverloadFuncIndex(baseFuncName, expectRet, expectArgs)                         
   }
 
   // find variable number in this scope
@@ -312,6 +341,18 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     }
 
     None
+  }
+
+  /* Find main/class symbol table */
+  def findSecondLevelSt: SymbolTable = {
+    var recurse_st: SymbolTable = this
+
+    /* Second level symbol table (main/class) */
+    while (recurse_st.encSymTable.encSymTable != null) {
+      recurse_st = recurse_st.encSymTable
+    }
+
+    recurse_st
   }
 
 

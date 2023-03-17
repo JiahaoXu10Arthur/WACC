@@ -169,9 +169,9 @@ class StateTable(stateT: Option[StateTable]) {
   def updateParamBackToReg() = {
     for (key_value <- paramDictionary) {
       (key_value) match {
-        case (name, RegIntOffset(R12, 0)) => updateParam(name, R0)
-        case (name, RegIntOffset(R12, 4)) => updateParam(name, R1)
-        case (name, RegIntOffset(R12, 8)) => updateParam(name, R2)
+        case (name, RegIntOffset(MPtr, 0)) => updateParam(name, R0)
+        case (name, RegIntOffset(MPtr, 4)) => updateParam(name, R1)
+        case (name, RegIntOffset(MPtr, 8)) => updateParam(name, R2)
         case _ =>
       }
     }

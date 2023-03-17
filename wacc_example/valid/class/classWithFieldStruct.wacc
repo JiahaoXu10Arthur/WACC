@@ -1,0 +1,40 @@
+# this is fine
+
+# Output:
+# a
+# a
+# a
+#
+
+# Program:
+
+begin
+  struct foo of
+    int field1,
+    char field2
+  end
+
+  class goo of
+    struct foo field1,
+    int field2
+    
+
+    int foo() is
+			return 5
+		end
+  end
+
+  char f(char u) is
+    return u
+  end
+  
+  struct foo a = {1, 'a'};
+  class goo b = {a, 2};
+ 
+  char c = call f(a.field2);
+  println c;
+  char e = b.field1.field2;
+  println e;
+  char d = call f(b.field1.field2);
+  println d
+end

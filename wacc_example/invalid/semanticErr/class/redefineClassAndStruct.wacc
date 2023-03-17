@@ -1,0 +1,25 @@
+# attempted redefinition of class
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  struct foo of
+    int field1
+  end
+
+  class foo of
+    int field1
+
+    int foo() is
+	    return 5
+		end
+  end
+
+  class foo a = {1}
+end

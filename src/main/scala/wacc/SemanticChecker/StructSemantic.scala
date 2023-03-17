@@ -16,7 +16,7 @@ object StructSemantic {
     struct: Struct
   )(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Unit = {
 	/* Check for struct redefinition */
-    st.lookUp(struct.name.name, StructObjType()) match {
+    st.lookUpAll(struct.name.name, StructObjType()) match {
       case Some(obj) => {
         semErr += buildStructRedefError(
           struct.name.pos,
@@ -80,6 +80,7 @@ object StructSemantic {
     /* Add symbol table to struct */
     struct.symb = new_st
 
+		/* link symbol table to structObj */
 		st.lookUpAll(struct.name.name, StructObjType()) match {
 			case Some(obj: StructObj) => {
 				obj.symTable = new_st

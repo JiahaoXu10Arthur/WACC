@@ -1,0 +1,22 @@
+# class cannot define the same field twice
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  class foo of
+    int field1,
+    int field1
+
+    int foo() is
+	    return 5
+		end
+  end
+
+  class foo a = {1, 2}
+end

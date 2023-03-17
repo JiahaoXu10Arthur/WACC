@@ -93,6 +93,21 @@ object SemanticErrorBuilder {
     )
   }
 
+  def buildClassRedefError(
+      pos: (Int, Int),
+      errClassName: String,
+      otherClassPos: (Int, Int),
+      msg: Seq[String]
+  ): WACCError = {
+    buildRedefError(
+      pos,
+      "Class redefinition",
+      errClassName,
+      otherClassPos,
+      msg
+    )
+  }
+
   def buildVarRedefError(
       pos: (Int, Int),
       errVarName: String,

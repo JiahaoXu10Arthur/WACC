@@ -1,0 +1,21 @@
+# program has struct before begin
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+class foo of
+    int field1
+
+    int foo() is
+			return 5
+		end
+end
+
+begin
+  class foo b = {1}
+end

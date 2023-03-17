@@ -1,0 +1,26 @@
+# call function in a class
+
+# Output:
+# 2
+# 2
+#
+
+# Program:
+
+begin
+  class foo of
+    int field1,
+    int field2
+
+    int foo() is
+      this.field2 = this.field1 + 1;
+		  return this.field2
+	  end
+  end
+
+  class foo a = {1, 5};
+  int b = call a.foo();
+  println b;
+  int c = a.field2;
+  println c
+end

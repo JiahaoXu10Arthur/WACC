@@ -35,6 +35,10 @@ object SemanticTypes {
   case class StructType(ident: Ident) extends Type {
     override def toString() = s"Struct($ident)"
   }
+
+  case class ClassType(ident: Ident) extends Type {
+    override def toString() = s"Class($ident)"
+  }
  
   /* Type equality involve AnyType */
   def equalType(type1: Type, type2: Type): Boolean = {
@@ -68,6 +72,7 @@ object SemanticTypes {
       case Types.PairType(t1, t2) => PairType(convertType(t1), convertType(t2))
       case Types.ArrayType(t)     => ArrayType(convertType(t))
       case Types.StructType(name) => StructType(name)
+      case Types.ClassType(name)  => ClassType(name)
     }
   }
 
@@ -81,6 +86,7 @@ object SemanticTypes {
       case Types.PairTypeIdent() => PairType(AnyType(), AnyType())
       case Types.ArrayType(t)    => ArrayType(convertType(t))
       case Types.StructType(name) => StructType(name)
+      case Types.ClassType(name)  => ClassType(name)
     }
   }
 
@@ -131,12 +137,17 @@ object SemanticTypes {
             case ArrayType(elemType) => {
               returnType = elemType
             }
-            case _ => AnyType()
+            case _ => returnType = AnyType()
           }
-        } 
+        }
         returnType
       }
       case StructElem(ident, fields) => {
+        /* Check function private access */
+        if (ident.name == "this") {
+          return checkExprType(fields.last)
+        }
+
         st.lookUpAll(ident.name, StructObjType()) match {
           case Some(obj: StructObj) => {
             val new_struct = StructElem(fields.head, fields.drop(1))(fields.head.pos)

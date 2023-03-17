@@ -1,0 +1,20 @@
+# program missing field name in class
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  class foo of
+    int
+
+    int foo() is
+			return 5
+		end
+  end
+  class foo b = {1}
+end

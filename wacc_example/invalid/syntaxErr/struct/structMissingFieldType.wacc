@@ -1,4 +1,4 @@
-# program missing field name in struct
+# program missing field type in struct
 
 # Output:
 # #syntax_error#

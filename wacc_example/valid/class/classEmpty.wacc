@@ -1,0 +1,17 @@
+# this is fine
+
+# Output:
+
+# Program:
+
+begin
+  class foo of
+    int field1
+
+    int foo() is
+			return 5
+		end
+  end
+
+  class foo a = {}
+end

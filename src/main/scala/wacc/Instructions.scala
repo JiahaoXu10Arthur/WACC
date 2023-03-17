@@ -61,8 +61,10 @@ object Instructions {
   /* Array/Pair registers */
   val MPtr = R12 // Memory allocation pointer
 
+  val CPtr = R7  // Class this. pointer
+
   val paramReg    = List(R0, R1, R2)
-  val variableReg = List(R4, R5, R6, R7)
+  val variableReg = List(R4, R5, R6)
   val reservedReg = List(R8, R10, R12)
 
   /* Constant */

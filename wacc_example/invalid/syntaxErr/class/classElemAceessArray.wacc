@@ -1,0 +1,23 @@
+# should not use array elem on class elem
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  class foo of
+    int[] field1
+
+    int foo() is
+			return 5
+		end
+  end
+
+  int[] b = [1,2];
+  class foo a = {b};
+  int c = a.a[0]
+end

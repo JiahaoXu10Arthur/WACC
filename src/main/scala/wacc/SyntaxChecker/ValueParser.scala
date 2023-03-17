@@ -22,6 +22,9 @@ object ValueParser {
   val structLit: Parsley[StructLit] =
     StructLit("{" ~> sepBy(expr, ",") <~ "}")
 
+  val funcIdent: Parsley[FuncIdent] =
+    attempt(ClassFuncCall(Ident(Lexer.ident), "." ~> Ident(Lexer.ident))) | Ident(Lexer.ident)
+
   /* Pair Elem first because it needs to check keywords: fst, snd,
 		 then ArryElem need to check [] if neither matches, parse as identifier */
   val lvalue: Parsley[Lvalue] =
@@ -36,7 +39,7 @@ object ValueParser {
     pair_elem |
       NewPair(("newpair" ~> "(" ~> expr), ("," ~> expr <~ ")")) |
       Call(
-        ("call" ~> Ident(Lexer.ident)),
+        ("call" ~> funcIdent),
         "(" ~> sepBy(expr, ",") <~ ")",
       ) |
       arrayLit |

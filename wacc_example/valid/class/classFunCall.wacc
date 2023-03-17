@@ -1,0 +1,21 @@
+# call function in a class
+
+# Output:
+# 5
+#
+
+# Program:
+
+begin
+  class foo of
+    int field1
+
+    int foo() is
+	    return 5
+		end
+  end
+
+  class foo a = {1};
+  int b = call a.foo();
+  println b
+end

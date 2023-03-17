@@ -1,4 +1,4 @@
-# function return type mismatch: int <- bool
+# struct field type mismatch: int <- bool
 
 # Output:
 # #semantic_error#

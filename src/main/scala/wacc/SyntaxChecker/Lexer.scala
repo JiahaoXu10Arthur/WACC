@@ -53,7 +53,8 @@ object Lexer {
     "char",
     "string",
     "null",
-    "struct"
+    "struct",
+    "class"
   )
 
   private val keywords =
@@ -146,6 +147,7 @@ object Lexer {
           case "char"   => Label("character type")
           case "string" => Label("string type")
           case "struct" => Label("struct type")
+          case "class"  => Label("class type")
           case x        => Label(s"$x")
         }
       }

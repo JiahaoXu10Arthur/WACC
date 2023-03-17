@@ -7,6 +7,7 @@ object Types {
   case class PairType(elem1: PairElemType, elem2: PairElemType) extends Type
   case class ArrayType(elemType: Type) extends Type with PairElemType
   case class StructType(name: Ident) extends Type with PairElemType
+  case class ClassType(name: Ident) extends Type with PairElemType
 
   sealed trait PairElemType
   case class PairTypeIdent() extends PairElemType

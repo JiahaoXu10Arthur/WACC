@@ -47,8 +47,8 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     var targetType: Type = convertType(type1)
-
-    // Check targetType is defined: for struct
+    
+    // Check targetType is defined: for struct & class
     targetType match {
       case StructType(structName) =>
         st.lookUpAll(structName.name, StructObjType()) match {
@@ -58,6 +58,19 @@ object StatSemantic {
 							structName.name,
 							st.lookUpAllSimilar(structName.name, StructObjType()),
 							Seq(s"Struct ${structName.name} has not been declared in this scope")
+						)
+            targetType = AnyType()
+          }
+          case _ =>
+        }
+      case ClassType(className) =>
+        st.lookUpAll(className.name, ClassObjType()) match {
+          case None => {
+            semErr += buildScopeError(
+							className.pos,
+							className.name,
+							st.lookUpAllSimilar(className.name, ClassObjType()),
+							Seq(s"Class ${className.name} has not been declared in this scope")
 						)
             targetType = AnyType()
           }
