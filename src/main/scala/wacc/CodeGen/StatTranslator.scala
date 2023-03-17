@@ -324,7 +324,6 @@ object StatTranslator {
   private def storeArrayElem(
       arrayValue: ArrayElem
   )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder) = {
-
     // Find array pointer
     var array_loc = findVarLoc(arrayValue.ident.name, stateST)
 
@@ -361,14 +360,17 @@ object StatTranslator {
   }
 
   def loadStructElem(
-      structValue: StructElem
-  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit = {
+      structValue: StructElem,
+      storeCall: Boolean = false
+  )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): SymbolTable = {
 
     if (structValue.ident.name == "this") {
       if (structValue.field.length == 1) {
-        return translateExpr(Ident(structValue.field.head.name)(structValue.pos))
+        translateExpr(Ident(structValue.field.head.name)(structValue.pos))
+        return st
       } else {
-        return loadStructElem(StructElem(structValue.field.head, structValue.field.drop(1))(structValue.pos))
+        loadStructElem(StructElem(structValue.field.head, structValue.field.drop(1))(structValue.pos))
+        return st
       }
     }
 
@@ -381,8 +383,10 @@ object StatTranslator {
     // symbol table of outer struct
     var preSymTable = st
 
+    var index = 0
     // For each dimension access
-    for (fieldIdent <- structValue.field) {
+    while (index < structValue.field.size) {
+      val fieldIdent = structValue.field(index)
       var offset = 0
       // Find field offset
       preSymTable.lookUpAll(preStructName, StructObjType()) match {
@@ -417,13 +421,19 @@ object StatTranslator {
         }
       }
 
-      // Update struct pointer
-      val fieldSize = sizeOfElem(checkLvalueType(fieldIdent)(preSymTable))
-      locMovLoad(fieldSize, R3, RegIntOffset(R3, offset))
+      // Only skip this layer if store call's last layer
+      if (!storeCall || index < structValue.field.size - 1) {
+        val fieldSize = sizeOfElem(checkLvalueType(fieldIdent)(preSymTable))
+        locMovLoad(fieldSize, R3, RegIntOffset(R3, offset))
+      }
+      
+      index += 1
     }
 
     // Move array pointer to OpR1 for push
     addInstr(MovInstr(OpR1, R3))
+
+    preSymTable
   }
 
   /* Get struct/class name of ident */
@@ -454,60 +464,16 @@ object StatTranslator {
       }
     }
 
-    // load first struct pointer
-    val struct_loc = findVarLoc(structValue.ident.name, stateST)
-    locMovLoad(DefaultSize, R3, struct_loc)
+    // load struct pointer
+    val preSymTable = loadStructElem(structValue, true)
+    addInstr(MovInstr(R3, OpR1))
 
-    // Get struct name of outer struct
-    val fieldType = checkExprType(structValue.ident)
-    var preStructName = fieldType match {
-      case StructType(structName) => structName.name
-      case ClassType(className) => className.name
-      case _ => null
-    }
-    var preSymTable = st
+    // Pop assign value into R8
+    addInstr(PopInstr(Seq(R8)))
 
-    // For each dimension access
-    for (fieldIdent <- structValue.field) {
-      var offset = 0
-      // Find field offset
-      preSymTable.lookUpAll(preStructName, StructObjType()) match {
-        case Some(obj: StructObj) =>
-          val fields = obj.fields
-          var index = 0
-          // Calculate offset, add each previous field size
-          while (fields(index)._1 != fieldIdent) {
-            offset += sizeOfElem(fields(index)._2.getType())
-            index += 1
-          }
-          preSymTable = obj.symTable
-        case _ => preSymTable.lookUpAll(preStructName, ClassObjType()) match {
-          case Some(obj: ClassObj) =>
-            val fields = obj.struct.fields
-            var index = 0
-            // Calculate offset, add each previous field size
-            while (fields(index)._2 != fieldIdent) {
-              offset += sizeOfElem(convertType(fields(index)._1))
-              index += 1
-            }
-            preSymTable = obj.symTable
-          case _ => 
-        }
-      }
-
-      // Pop assign value into R8
-      addInstr(PopInstr(Seq(R8)))
-
-      // Update struct pointer
-      val fieldSize = sizeOfElem(checkLvalueType(fieldIdent))
-      locMovStore(fieldSize, R8, RegIntOffset(R3, offset))
-
-      // update previous struct name
-      preStructName = fieldIdent.name
-    }
-
-    // Move array pointer to OpR1 for push
-    addInstr(MovInstr(OpR1, R3))
+    // store in struct pointer
+    val fieldSize = sizeOfElem(checkLvalueType(structValue.field.last)(preSymTable))
+    locMovStore(fieldSize, R8, RegIntOffset(R3, 0))
   }
 
   private def translateCall(
@@ -694,6 +660,7 @@ object StatTranslator {
     addInstr(MovInstr(OpRet, OpR1))
 
     val _type = checkExprType(expr)
+
     val printType = _type match {
       case IntType()             => PrintInt
       case BoolType()            => PrintBool

@@ -4,6 +4,7 @@
 # a
 # a
 # a
+# 10
 #
 
 # Program:
@@ -36,5 +37,9 @@ begin
   char e = b.field1.field2;
   println e;
   char d = call f(b.field1.field2);
-  println d
+  println d;
+
+  b.field1.field1 = 10;
+  println b.field1.field1
+
 end

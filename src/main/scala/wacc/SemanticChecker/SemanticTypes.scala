@@ -148,13 +148,51 @@ object SemanticTypes {
           return checkExprType(fields.last)
         }
 
-        st.lookUpAll(ident.name, StructObjType()) match {
-          case Some(obj: StructObj) => {
-            val new_struct = StructElem(fields.head, fields.drop(1))(fields.head.pos)
-            checkExprType(new_struct)(obj.symTable)
+        val structType = checkExprType(ident)
+        // For next layer of checking
+        val newExpr = fields.size match {
+          case 1 => fields.head
+          case _ => StructElem(fields.head, fields.drop(1))(fields.head.pos)
+        }
+
+        structType match {
+          case StructType(structName) => {
+            st.lookUpAll(structName.name, StructObjType()) match {
+            case Some(obj: StructObj) => {
+              checkExprType(newExpr)(obj.symTable)
+            }
+            case _ => AnyType()
+            }
           }
+
+          case ClassType(className) => {
+            st.lookUpAll(className.name, ClassObjType()) match {
+            case Some(obj: ClassObj) => {
+              checkExprType(newExpr)(obj.symTable)
+            }
+            case _ => AnyType()
+            }
+          }
+
           case _ => AnyType()
         }
+
+      //   println("Check "+ expr)
+      //   st.dictionary.foreach(println)
+
+      //   st.lookUpAll(ident.name, StructObjType()) match {
+      //     case Some(obj: StructObj) => {
+      //       val new_struct = StructElem(fields.head, fields.drop(1))(fields.head.pos)
+      //       checkExprType(new_struct)(obj.symTable)
+      //     }
+      //     case _ => st.lookUpAll(ident.name, ClassObjType()) match {
+      //       case Some(obj: ClassObj) => {
+      //         checkExprType(expr)(obj.symTable)
+      //       }
+      //       case _ => AnyType()
+      //     }
+      //   }
+      // }
       }
     }
   }
