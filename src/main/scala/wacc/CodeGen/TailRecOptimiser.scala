@@ -19,9 +19,9 @@ object TailRecOptimiser {
     val bodyLast        = body.last
 
     val newBody: List[Stat] = bodyLast match {
-      case Return(expr: Lvalue) if body.length > 1 =>
+      case Return(id: Ident) if body.length > 1 =>
         val sndToLast   = body(body.length - 2)
-        val tailRecCall = checkRecursiveCall(sndToLast, expr, func)
+        val tailRecCall = checkRecursiveCall(sndToLast, id, func)
         tailRecCall match {
           case Some(cstmt) =>
             numInstrsToDrop = 2
@@ -41,15 +41,15 @@ object TailRecOptimiser {
     newFuncBody
   }
 
-  private def checkRecursiveCall(stat: Stat, returnExpr: Expr, func: Func)(implicit st: SymbolTable): Option[Call] = {
+  private def checkRecursiveCall(stat: Stat, returnId: Ident, func: Func)(implicit st: SymbolTable): Option[Call] = {
     val funcRetType    = convertType(func.type1)
     val funcParamTypes = func.params.map(p => convertType(p.paramType))
     stat match {
-      case Assign(expr: Expr, cstmt @ Call(fid, args)) =>
-        val retType  = checkLvalueType(expr)
+      case Assign(id: Ident, cstmt @ Call(fid, args)) =>
+        val retType  = checkLvalueType(id)
         val argTypes = args.map(arg => checkExprType(arg))
         if (
-          expr == returnExpr && fid == func.ident &&
+          id == returnId && fid == func.ident &&
           sameFunction(funcRetType, retType, funcParamTypes, argTypes)
         ) {
           Some(cstmt)
@@ -60,7 +60,7 @@ object TailRecOptimiser {
         val retType  = convertType(type1)
         val argTypes = args.map(arg => checkExprType(arg))
         if (
-          id == returnExpr && fid == func.ident &&
+          id == returnId && fid == func.ident &&
           sameFunction(funcRetType, retType, funcParamTypes, argTypes)
         ) {
           Some(cstmt)
