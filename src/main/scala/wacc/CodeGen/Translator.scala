@@ -39,7 +39,7 @@ object Translator {
 
     /* Translate Class function */
     p.classes.foreach(c => c.funcs.foreach(
-                      f => translateFunction(c.struct.name.name, f)(c.symb, ir)))
+                      f => translateFunction(c.struct.name.name, f)(f.symb, ir)))
 
     /* Translate functions */
     p.funcs.foreach(f =>

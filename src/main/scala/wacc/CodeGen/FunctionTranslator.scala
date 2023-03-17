@@ -42,7 +42,7 @@ object FunctionTranslator {
           var i = 0
             // Check every field type suits target struct type
             while (i < classFields.length) {
-              stateST.dictionary += (classFields(i)._2.name -> RegIntOffset(R12, offset))
+              stateST.dictionary += (classFields(i)._2.name -> RegIntOffset(CPtr, offset))
               offset += sizeOfElem(convertType(classFields(i)._1))
               i += 1
             }

@@ -9,7 +9,6 @@ import wacc.Ast._
 import SymbolObject._
 import SymbolObjectType._
 import FunctionSemantic._
-import StructSemantic._
 import SemanticTypes.{convertType}
 
 object ClassSemantic {

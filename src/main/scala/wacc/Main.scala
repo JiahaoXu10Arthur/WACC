@@ -41,7 +41,7 @@ object Main {
   private def exitWithCode(code: Int, msg: String): Unit = {
     println(msg)
     println(s"Exiting with code $code...")
-    // System.exit(code)
+    System.exit(code)
   }
 
   private def compile(fString: String, fpath: String, opts: OptionMap): Unit = {

@@ -7,8 +7,6 @@ import StatSemantic._
 import FunctionSemantic._
 import StructSemantic._
 import ClassSemantic._
-import SymbolObjectType._
-import SymbolObject._
 
 object SemanticChecker {
 

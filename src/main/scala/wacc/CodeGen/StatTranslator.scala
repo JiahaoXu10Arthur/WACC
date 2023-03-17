@@ -377,13 +377,8 @@ object StatTranslator {
     locMovLoad(DefaultSize, R3, struct_loc)
 
     // Get struct name of outer struct
-    val fieldType = checkExprType(structValue.ident)
-    var preStructName = fieldType match {
-      case StructType(structName) => structName.name
-      case ClassType(className) => className.name
-      case _ => null
-    }
-
+    var preStructName = getClassStructName(structValue.ident)
+    // symbol table of outer struct
     var preSymTable = st
 
     // For each dimension access
@@ -399,7 +394,11 @@ object StatTranslator {
             offset += sizeOfElem(fields(index)._2.getType())
             index += 1
           }
+
+          // update symbol table
           preSymTable = obj.symTable
+          // update next layer struct/class name
+          preStructName = getClassStructName(fieldIdent)(preSymTable)
         case _ => preSymTable.lookUpAll(preStructName, ClassObjType()) match {
           case Some(obj: ClassObj) =>
             val fields = obj.struct.fields
@@ -409,21 +408,31 @@ object StatTranslator {
               offset += sizeOfElem(convertType(fields(index)._1))
               index += 1
             }
+
+            // update symbol table
             preSymTable = obj.symTable
+            // update next layer struct/class name
+            preStructName = getClassStructName(fieldIdent)(preSymTable)
           case _ => 
         }
       }
 
       // Update struct pointer
-      val fieldSize = sizeOfElem(checkLvalueType(fieldIdent))
+      val fieldSize = sizeOfElem(checkLvalueType(fieldIdent)(preSymTable))
       locMovLoad(fieldSize, R3, RegIntOffset(R3, offset))
-
-      // update previous struct name
-      preStructName = fieldIdent.name
     }
 
     // Move array pointer to OpR1 for push
     addInstr(MovInstr(OpR1, R3))
+  }
+
+  /* Get struct/class name of ident */
+  private def getClassStructName(ident: Ident)(implicit st: SymbolTable): String = {
+    checkExprType(ident) match {
+      case StructType(structName) => structName.name
+      case ClassType(className) => className.name
+      case _ => null
+    }
   }
 
   /* Special convention for arrStore
@@ -595,8 +604,10 @@ object StatTranslator {
         // private function call
         if (classIdent.name == "this") {
           var (className, funcName, funcSt): (String, String, SymbolTable) = ("", "", st)
+          // get class table
+          val class_st = st.findSecondLevelSt
           // Find this class name
-          st.dictionary.foreach { key =>
+          class_st.dictionary.foreach { key =>
             key._2.head match {
               case obj: StructObj => 
                 className = obj.ident.name
@@ -614,9 +625,9 @@ object StatTranslator {
             st.lookUpAll(classIdent.name, ClassObjType()) match {
               case Some(obj: ClassObj) => {
                 // class pointer position
-                val classPtr = findVarLoc(callValue.ident.getIdent.name, stateST)
-                // Move class pointer to R12
-                locMovLoad(DefaultSize, R12, classPtr)
+                val classPtr = findVarLoc(funcIdent.getIdent.name, stateST)
+                // Move class this. pointer to R7
+                locMovLoad(DefaultSize, CPtr, classPtr)
                 return (classIdent.name, func.name, obj.symTable)
               }
               case _ =>

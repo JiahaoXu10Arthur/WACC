@@ -327,11 +327,10 @@ object ExprSemantic {
   def structElemCheck(
     structName: Ident,
     fields: List[Ident])(implicit st: SymbolTable, semErr: ListBuffer[WACCError]): Type = {
-
     // If this. is used, must be class function call
-    // st.encSymTable is the symbol table of the class
     if (structName.name == "this") {
-      return checkExpr(fields.last)(st.encSymTable, semErr)
+      val class_st = st.findSecondLevelSt
+      return checkExpr(fields.last)(class_st, semErr)
     }
 
     // Previous layer of symbol table

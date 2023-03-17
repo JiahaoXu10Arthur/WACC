@@ -2,7 +2,7 @@ package wacc.SyntaxChecker
 
 import parsley.{Parsley, Success, Failure}
 import parsley.combinator.{sepBy, many}
-import Parsley.{attempt, lookAhead}
+import Parsley.{attempt, lookAhead, notFollowedBy}
 import parsley.errors.combinator._
 
 import wacc.Ast._
@@ -20,7 +20,7 @@ object ClassParser {
       end
   end
   */
-  val field = (TypeParser.type_ <~> Ident(Lexer.ident)).label("class field")
+  val field = attempt(TypeParser.type_ <~> Ident(Lexer.ident) <~ notFollowedBy("(")).label("class field")
   
   val classStruct: Parsley[Struct] = (
     Struct("class" ~> Ident(Lexer.ident),

@@ -2,19 +2,22 @@
 
 # Output:
 # a
+# a
+# a
 #
 
 # Program:
 
 begin
   struct foo of
-    int a,
-    char field1
+    int field1,
+    char field2
   end
 
-  class foo of
-    int field1
-    struct foo field2
+  class goo of
+    struct foo field1,
+    int field2
+    
 
     int foo() is
 			return 5
@@ -26,6 +29,12 @@ begin
   end
   
   struct foo a = {1, 'a'};
-  char b = call f(a.field1);
-  println b
+  class goo b = {a, 2};
+ 
+  char c = call f(a.field2);
+  println c;
+  char e = b.field1.field2;
+  println e;
+  char d = call f(b.field1.field2);
+  println d
 end

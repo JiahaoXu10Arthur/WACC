@@ -137,12 +137,17 @@ object SemanticTypes {
             case ArrayType(elemType) => {
               returnType = elemType
             }
-            case _ => AnyType()
+            case _ => returnType = AnyType()
           }
-        } 
+        }
         returnType
       }
       case StructElem(ident, fields) => {
+        /* Check function private access */
+        if (ident.name == "this") {
+          return checkExprType(fields.last)
+        }
+
         st.lookUpAll(ident.name, StructObjType()) match {
           case Some(obj: StructObj) => {
             val new_struct = StructElem(fields.head, fields.drop(1))(fields.head.pos)

@@ -47,7 +47,7 @@ object StatSemantic {
       semErr: ListBuffer[WACCError]
   ): Unit = {
     var targetType: Type = convertType(type1)
-
+    
     // Check targetType is defined: for struct & class
     targetType match {
       case StructType(structName) =>

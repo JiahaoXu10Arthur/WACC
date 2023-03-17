@@ -41,8 +41,6 @@ object ValueSemantic {
     }
   }
 
-
-
   /* Arg1: PairElementType
      Arg2: PairElementType
      Return: PairType(Arg1Type, Arg2Type) */
@@ -63,9 +61,10 @@ object ValueSemantic {
       st: SymbolTable,
       semErr: ListBuffer[WACCError]
   ): Type = {
-    val expectedArgs = args.map(checkExprType(_))
+    val expectedArgs = args.map(checkExpr(_))
     var funcName: String = ""
 
+    // Check call type(main function / class function)
     val (funcObj, findFunc, funcSymb) = ident match {
       case Ident(name) => 
         funcName = name
@@ -77,7 +76,7 @@ object ValueSemantic {
 
     /* If no function found, error */
     if (!findFunc) {
-      val similarFuncs = st.lookUpAllSimilarFunc(ident.getIdent.name)
+      val similarFuncs = funcSymb.lookUpAllSimilarFunc(ident.getIdent.name)
       semErr += buildFunctionScopeError(
           ident.pos,
           funcName,
@@ -225,7 +224,17 @@ object ValueSemantic {
 
     val fieldsType = fields.map(checkExpr(_))
 
-    targetType match {
+    // Check every field suits target struct type
+    structLitFieldCheck(fields, fieldsType, targetType, targetType)
+  }
+
+  private def structLitFieldCheck(fields: List[Expr],
+                                  fieldsType: List[Type], 
+                                  layerType: Type,
+                                  targetType: Type)(implicit st: SymbolTable, 
+                                                             semErr: ListBuffer[WACCError]): Type = {
+    layerType match {
+      // If assign to a struct
       case StructType(ident) => {
         val structObj = st.lookUpAll(ident.name, StructObjType())
         structObj match {
@@ -244,7 +253,7 @@ object ValueSemantic {
 
             var i = 0
             // Check every field type suits target struct type
-            while (i < fieldsType.length) {
+            while (i < fieldsType.size) {
               if (!equalType(fieldsType(i), structFields(i)._2.getType())) {
                 semErr += buildTypeError(
                   fields(i).pos,
@@ -257,15 +266,18 @@ object ValueSemantic {
 
               i += 1
             }
-
+            // All check pass, return target type
+            targetType
           }
           case _ => return AnyType()
         }
       }
       case ClassType(ident) => {
+        // If assign to a class, check according to class's struct in class's symbol table
         val classObj = st.lookUpAll(ident.name, ClassObjType())
         classObj match {
-          case Some(classObj: ClassObj) => structLitCheck(fields, StructType(ident))(classObj.symTable, semErr)
+          case Some(classObj: ClassObj) => 
+            structLitFieldCheck(fields, fieldsType, StructType(ident), targetType)(classObj.symTable, semErr)
           case _ => return AnyType()
         }
       }
@@ -273,9 +285,6 @@ object ValueSemantic {
         return AnyType()
       }
     }
-
-    // Check every field suits target struct type
-    targetType
   }
 
 }

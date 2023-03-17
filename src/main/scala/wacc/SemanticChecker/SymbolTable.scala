@@ -343,5 +343,17 @@ class SymbolTable(st: SymbolTable, tableType: SymbolObjectType.ObjectType) {
     None
   }
 
+  /* Find main/class symbol table */
+  def findSecondLevelSt: SymbolTable = {
+    var recurse_st: SymbolTable = this
+
+    /* Second level symbol table (main/class) */
+    while (recurse_st.encSymTable.encSymTable != null) {
+      recurse_st = recurse_st.encSymTable
+    }
+
+    recurse_st
+  }
+
 
 }
