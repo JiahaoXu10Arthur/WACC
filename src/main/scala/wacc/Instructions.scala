@@ -88,6 +88,7 @@ object Instructions {
   final val MovImmMax      = 255
 
   final val SelfPtrStr = "this"
+  final val MainClassStr = "main"
 
   sealed trait Instruction
 

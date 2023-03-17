@@ -364,14 +364,14 @@ object StatTranslator {
       storeCall: Boolean = false
   )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): SymbolTable = {
 
-    if (structValue.ident.name == "this") {
+    if (isSelfAccess(structValue.ident)) {
+      // If only 1 layer self access
       if (structValue.field.length == 1) {
         translateExpr(Ident(structValue.field.head.name)(structValue.pos))
-        return st
       } else {
         loadStructElem(StructElem(structValue.field.head, structValue.field.drop(1))(structValue.pos))
-        return st
       }
+      return st
     }
 
     // load first struct pointer
@@ -456,13 +456,17 @@ object StatTranslator {
       structValue: StructElem
   )(implicit st: SymbolTable, stateST: StateTable, ir: IRBuilder): Unit = {
 
-    if (structValue.ident.name == "this") {
+    if (isSelfAccess(structValue.ident)) {
       if (structValue.field.length == 1) {
+        // If one layer access, find ident in class's symbolTable
         return storeIdent(Ident(structValue.field.head.name)(structValue.pos))
       } else {
+        // If multiple layer access, store structElem again
         return storeStructElem(StructElem(structValue.field.head, structValue.field.drop(1))(structValue.pos))
       }
     }
+    // load struct pointer
+    translateExprTo(structValue, R3)
 
     // load struct pointer
     val preSymTable = loadStructElem(structValue, true)
